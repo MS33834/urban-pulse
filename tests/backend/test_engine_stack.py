@@ -165,8 +165,9 @@ def test_full_pipeline_still_works_without_extras():
     assert 38000 < pred_2026 < 45000, f"2026 预测 {pred_2026} 异常"
     # arima method 应带 backend 标签
     method = out["models"]["arima"]["method"]
-    backend = stack.get("statsforecast") or stack.get("pmdarima") or "statsmodels"
-    assert backend in method
+    from backend.core.engine_stack import primary_arima_backend
+    backend = primary_arima_backend()
+    assert backend in method, f"Expected '{backend}' in '{method}'"
     print(f"✓ Full pipeline(无 extras, backend={backend}): 2026 pred={pred_2026:.0f}")
     print(f"    arima method = {method}")
 
