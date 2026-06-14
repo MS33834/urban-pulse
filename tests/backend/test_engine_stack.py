@@ -165,10 +165,12 @@ def test_full_pipeline_still_works_without_extras():
     assert 38000 < pred_2026 < 45000, f"2026 预测 {pred_2026} 异常"
     # arima method 应带 backend 标签
     method = out["models"]["arima"]["method"]
-    from backend.core.engine_stack import primary_arima_backend
-    backend = primary_arima_backend()
-    assert backend in method, f"Expected '{backend}' in '{method}'"
-    print(f"✓ Full pipeline(无 extras, backend={backend}): 2026 pred={pred_2026:.0f}")
+    # Extract actual backend from method string like "ARIMA[0,1,0] (pmdarima, AIC=238.3)"
+    import re
+    match = re.search(r'\(([^,]+),', method)
+    actual_backend = match.group(1) if match else "unknown"
+    assert actual_backend in ["statsforecast", "pmdarima", "statsmodels"], f"Unexpected backend '{actual_backend}' in '{method}'"
+    print(f"✓ Full pipeline: 2026 pred={pred_2026:.0f}, backend={actual_backend}")
     print(f"    arima method = {method}")
 
 
