@@ -1,23 +1,33 @@
-<!DOCTYPE html>
+<
+
+    // -- 竞争力指数 --
+    app.on("index", async () => {
+      init = true;
+      if (!window.__indexTab) {
+        window.__indexTab = new IndexTab(api);
+      }
+      await window.__indexTab.load();
+    });
+!DOCTYPE html>
 <html lang="zh-CN" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="区域产业经济分析平台 - 企业选址评估、政府产业分析、多城市横向对比、GDP 预测等数据智能决策支持">
-<meta name="keywords" content="产业经济,选址分析,GDP 预测,城市对比,投资决策,数据智能">
-<meta name="author" content="Regional Economic Analysis Team">
+<meta name="description" content="Urban Pulse - 10座中国城市、16年经济数据、5年预测。一个想做很久的城市经济观测站。">
+<meta name="keywords" content="城市经济,GDP 预测,城市对比,数据分析,ECharts">
+<meta name="author" content="badhope">
 <meta name="theme-color" content="#0E1F3F" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0A1429" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
-<meta property="og:title" content="区域产业经济分析平台">
-<meta property="og:description" content="企业选址 · 政府招商 · 城市对比 · GDP 预测 · 一站式数据智能分析">
+<meta property="og:title" content="Urban Pulse · 城市脉搏">
+<meta property="og:description" content="一个城市经济数据的观测站。10城、16年、5年预测。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:site_name" content="Regional Economic Analysis Platform">
+<meta property="og:site_name" content="Urban Pulse">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="区域产业经济分析平台">
-<meta name="twitter:description" content="一站式数据智能分析">
+<meta name="twitter:title" content="Urban Pulse · 城市脉搏">
+<meta name="twitter:description" content="一个城市经济数据的观测站。">
 <meta name="api-base" content="">
 <meta name="endpoint-count" content="40">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230E1F3F'/%3E%3Cpath d='M22 70 L40 50 L55 60 L78 30' stroke='%23D08560' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='78' cy='30' r='5' fill='%23D08560'/%3E%3C/svg%3E">
@@ -34,7 +44,7 @@
   - style-src 'unsafe-inline': ECharts 等组件可能注入 style 属性
 -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' ws://localhost:8000 wss://localhost:8000 http://localhost:8000 http://127.0.0.1:8000; base-uri 'self'; form-action 'self'; object-src 'none'">
-<title>区域产业经济分析平台 · Regional Economic Analysis</title>
+<title>Urban Pulse · 城市脉搏</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js" integrity="sha384-pPi0zxBAoDu6+JXW/C68UZLvBUUtU+7zonhif43rqj7pxsGyqyqzcian2Rj37Rss" crossorigin="anonymous"></script>
 <style>
 /* ============================================================
@@ -1283,9 +1293,9 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
     <div class="app-header__brand">
       <div class="app-header__logo" aria-hidden="true">E</div>
       <div class="app-header__title">
-        <div class="eyebrow app-header__eyebrow">REGIONAL · ECONOMIC · ANALYTICS</div>
-        <div class="app-header__name">区域产业经济分析平台</div>
-        <div class="app-header__subtitle" id="headerSubtitle">Multi-Region Industrial Economic Analysis · v4.0</div>
+        <div class="eyebrow app-header__eyebrow">URBAN · PULSE</div>
+        <div class="app-header__name">城市脉搏</div>
+        <div class="app-header__subtitle" id="headerSubtitle">City Economic Observatory · v1.0</div>
       </div>
     </div>
     <div class="app-header__status">
@@ -1333,6 +1343,14 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
       </span>
       <span class="tab-btn__label">城市数据对比</span>
     </button>
+    <button class="tab-btn" type="button" role="tab" id="tab-btn-index" aria-selected="false" aria-controls="tab-index" data-tab="index" tabindex="-1">
+      <span class="tab-btn__num" aria-hidden="true">05</span>
+      <span class="tab-btn__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M18 20V4M6 20v-4"/><path d="M3 21h18"/></svg>
+      </span>
+      <span class="tab-btn__label">竞争力指数</span>
+    </button>
+
   </nav>
 
   <main id="main-content" class="app-main" role="main" aria-busy="true">
@@ -1472,7 +1490,7 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
         <div class="panel-header__title">
           <span class="eyebrow">SECTION 02 · ENTERPRISE</span>
           <h2>企业选址分析</h2>
-          <p class="lede">基于统计分位数的多维度企业选址友好度评估。</p>
+          <p class="lede">各城市核心指标一览，谁在跑、谁在追、谁掉了队。</p>
         </div>
       </header>
 
@@ -1493,7 +1511,7 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
               </div>
               <button id="btnEntAnalyze" type="button" class="btn btn--primary btn--block" style="margin-top:var(--space-5)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
-                <span>开始选址分析</span>
+                <span>刷新数据</span>
               </button>
             </div>
           </article>
@@ -1736,11 +1754,105 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
         </div>
       </article>
     </section>
+    <section id="tab-index" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-index" hidden>
+      <header class="panel-header">
+        <div class="panel-header__title">
+          <span class="eyebrow">SECTION 05 · CITY INDEX</span>
+          <h2>城市竞争力指数</h2>
+          <p class="lede" id="indexLede">基于倪鹏飞弩弦箭模型·熵权法赋权·MinMax标准化。正在加载...</p>
+        </div>
+        <div class="panel-header__meta">
+          <span>方法论 <strong id="indexMethodology">熵权法</strong></span>
+          <span aria-hidden="true">·</span>
+          <span>覆盖城市: <strong id="indexCityCount">--</strong></span>
+        </div>
+      </header>
+
+      <div class="stat-grid">
+        <article class="stat-card" id="indexOverallCard" hidden>
+          <div class="stat-card__head">
+            <span class="stat-card__label">综合排名 Top 3</span>
+            <span class="stat-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9h.01M6 15h.01M10 9h8M10 15h8"/></svg>
+            </span>
+          </div>
+          <div class="stat-card__body">
+            <ol id="indexTopThree" style="padding:0;list-style:none;margin:0;">
+              <li style="padding:8px 0;border-bottom:1px solid var(--sand-200);">加载中...</li>
+            </ol>
+          </div>
+        </article>
+
+        <article class="stat-card" id="indexDimensionCard" hidden>
+          <div class="stat-card__head">
+            <span class="stat-card__label">数据覆盖</span>
+            <span class="stat-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </span>
+          </div>
+          <div class="stat-card__body" id="indexCoverageBody" style="font-size:var(--fs-sm);color:var(--stone-600);">
+            加载中...
+          </div>
+        </article>
+
+        <article class="stat-card" id="indexMethodCard" hidden>
+          <div class="stat-card__head">
+            <span class="stat-card__label">数据总览</span>
+          </div>
+          <div class="stat-card__body" id="indexMethodBody" style="font-size:var(--fs-sm);color:var(--stone-600);">
+            加载中...
+          </div>
+        </article>
+      </div>
+
+      <div class="chart-grid chart-grid--2col">
+        <article class="card" id="indexRankingCard">
+          <div class="card__head">
+            <span class="card__title">综合竞争力排名</span>
+          </div>
+          <div class="card__body">
+            <div id="chartIndexRanking" style="width:100%;height:400px"></div>
+          </div>
+        </article>
+        <article class="card" id="indexRadarCard">
+          <div class="card__head">
+            <span class="card__title">
+              维度得分
+              <select id="indexCitySelector" style="margin-left:12px;padding:4px 8px;border:1px solid var(--sand-300);border-radius:6px;background:var(--paper-50);color:var(--stone-800);font-size:13px;">
+              </select>
+            </span>
+          </div>
+          <div class="card__body">
+            <div id="chartIndexRadar" style="width:100%;height:400px"></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="chart-grid chart-grid--1col">
+        <article class="card" id="indexHeatmapCard">
+          <div class="card__head">
+            <span class="card__title">城市 × 维度 得分矩阵</span>
+          </div>
+          <div class="card__body">
+            <div id="chartIndexHeatmap" style="width:100%;height:500px"></div>
+          </div>
+        </article>
+        <article class="card" id="indexMissingCard">
+          <div class="card__head">
+            <span class="card__title">缺失维度 &amp; 贡献指南</span>
+          </div>
+          <div class="card__body" id="indexMissingBody" style="font-size:var(--fs-sm);color:var(--stone-600);padding:16px;">
+            加载中...
+          </div>
+        </article>
+      </div>
+    </section>
+
   </main>
 
   <footer class="app-footer">
     <div class="app-footer__brand">
-      <span>区域产业经济分析平台</span>
+      <span>Urban Pulse · 城市脉搏</span>
       <span class="app-footer__sep" aria-hidden="true">·</span>
       <span>数据分析师作品集</span>
     </div>
@@ -3173,3 +3285,231 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
 </script>
 </body>
 </html>
+
+  // ============================================================
+  // 13. Competitiveness Index Tab
+  // ============================================================
+  class IndexTab {
+    constructor(api) {
+      this.api = api;
+      this.indexResult = null;
+      this.currentCity = null;
+    }
+
+    async load() {
+      const lede = document.getElementById("indexLede");
+      try {
+        lede.textContent = "正在计算竞争力指数...";
+        const resp = await this.api.post("/index/compute", { method: "entropy" });
+        this.indexResult = resp;
+
+        const cities = Object.keys(resp.overall || {}).length;
+        document.getElementById("indexCityCount").textContent = cities;
+        document.getElementById("indexMethodology").textContent = resp.methodology || "熵权法";
+
+        this._renderTopThree(resp.rankings?.overall || []);
+        this._renderCoverage(resp);
+        this._renderStats(resp, cities);
+        this._renderRankingChart(resp);
+        this._initRadarSelector(resp);
+        this._renderHeatmap(resp);
+        this._renderMissing(resp);
+
+        lede.textContent = `已完成 \u2014 ${cities} 个城市竞争力指数分析`;
+        document.getElementById("indexOverallCard").hidden = false;
+        document.getElementById("indexDimensionCard").hidden = false;
+        document.getElementById("indexMethodCard").hidden = false;
+      } catch (e) {
+        lede.textContent = "未能加载竞争力指数，请确保后端运行中";
+        console.error("IndexTab.load error:", e);
+      }
+    }
+
+    _renderTopThree(rankings) {
+      const ol = document.getElementById("indexTopThree");
+      if (!ol || rankings.length === 0) return;
+      const medals = ["\u{1F947}", "\u{1F948}", "\u{1F949}"];
+      ol.innerHTML = rankings.slice(0, 3).map(([city, score], i) =>
+        `<li style="padding:8px 0;border-bottom:${i < 2 ? '1px solid var(--sand-200)' : 'none'};font-weight:${i === 0 ? 700 : 500};color:${i === 0 ? 'var(--copper-600)' : 'var(--stone-800)'}">${medals[i] || ""} ${city} \u2014 <strong>${score.toFixed(1)}</strong></li>`
+      ).join("");
+    }
+
+    _renderCoverage(resp) {
+      const el = document.getElementById("indexCoverageBody");
+      if (!el) return;
+      const covered = Object.keys(resp.dimensions || {}).length;
+      const missing = (resp.missing_dimensions || []).length;
+      const total = covered + missing;
+      el.innerHTML = `
+        <div>维度覆盖: <strong>${covered}/${total}</strong></div>
+        <div style="margin-top:8px;background:var(--sand-200);height:6px;border-radius:3px;">
+          <div style="background:var(--copper-500);height:6px;border-radius:3px;width:${total > 0 ? (covered/total*100).toFixed(0) : 0}%;"></div>
+        </div>
+        <div style="margin-top:4px;color:var(--stone-500);font-size:11px;">
+          缺失: ${missing} 个维度(结构力/环境力/秩序力/文化力/开放力)
+        </div>
+      `;
+    }
+
+    _renderStats(resp, cityCount) {
+      const el = document.getElementById("indexMethodBody");
+      if (!el) return;
+      const scores = Object.values(resp.overall || {});
+      const avg = scores.length > 0 ? (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1) : "--";
+      const maxScore = scores.length > 0 ? Math.max(...scores).toFixed(1) : "--";
+      const minScore = scores.length > 0 ? Math.min(...scores).toFixed(1) : "--";
+      el.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div><span style="color:var(--stone-500)">平均分</span><br><strong style="font-size:var(--fs-lg)">${avg}</strong></div>
+          <div><span style="color:var(--stone-500)">最高分</span><br><strong style="font-size:var(--fs-lg);color:var(--success)">${maxScore}</strong></div>
+          <div><span style="color:var(--stone-500)">最低分</span><br><strong style="font-size:var(--fs-lg);color:var(--danger)">${minScore}</strong></div>
+          <div><span style="color:var(--stone-500)">极差</span><br><strong style="font-size:var(--fs-lg)">${(parseFloat(maxScore) - parseFloat(minScore)).toFixed(1)}</strong></div>
+        </div>
+      `;
+    }
+
+    _renderRankingChart(resp) {
+      const el = document.getElementById("chartIndexRanking");
+      if (!el || !resp.rankings?.overall) return;
+      const data = resp.rankings.overall;
+      const cities = data.map(([c]) => c).reverse();
+      const scores = data.map(([, s]) => s).reverse();
+
+      window.__citylens_charts.setOption(el, {
+        tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+        grid: { left: 80, right: 60, top: 20, bottom: 40 },
+        xAxis: { type: "value", max: 100, axisLabel: { fontSize: 10 } },
+        yAxis: {
+          type: "category", data: cities, axisLabel: { fontSize: 11, fontWeight: 500 },
+          axisLine: { show: false }, axisTick: { show: false }
+        },
+        series: [{
+          type: "bar",
+          data: scores.map((v, i) => ({
+            value: v,
+            itemStyle: {
+              color: i >= scores.length - 3 ? "#D08560" : "#2D4D75",
+              borderRadius: [0, 4, 4, 0]
+            }
+          })),
+          barWidth: 24,
+          label: {
+            show: true, position: "right",
+            formatter: (p) => p.value.toFixed(1),
+            fontSize: 11, fontWeight: 600,
+            color: "#2D4D75"
+          }
+        }]
+      });
+    }
+
+    _initRadarSelector(resp) {
+      const sel = document.getElementById("indexCitySelector");
+      if (!sel || !resp.overall) return;
+      const cities = Object.keys(resp.overall);
+      sel.innerHTML = cities.map(c => `<option value="${c}">${c}</option>`).join("");
+      this.currentCity = cities[0] || null;
+      this._renderRadar(resp, this.currentCity);
+      sel.addEventListener("change", () => {
+        this.currentCity = sel.value;
+        this._renderRadar(resp, this.currentCity);
+      });
+    }
+
+    _renderRadar(resp, city) {
+      const el = document.getElementById("chartIndexRadar");
+      if (!el || !resp.dimensions || !city) return;
+      const dimData = Object.entries(resp.dimensions).map(([name, scores]) => ({
+        name, score: scores[city] || 0
+      }));
+      const indicators = dimData.map(d => ({ name: d.name, max: 100 }));
+      const values = dimData.map(d => d.score);
+
+      window.__citylens_charts.setOption(el, {
+        tooltip: {},
+        radar: {
+          indicator: indicators,
+          radius: "68%",
+          center: ["50%", "55%"],
+          splitArea: { areaStyle: { color: ["rgba(184,113,74,0.04)", "rgba(14,31,63,0.02)"] } },
+          axisName: { color: "var(--stone-700)", fontSize: 10 }
+        },
+        series: [{
+          type: "radar",
+          symbol: "circle",
+          symbolSize: 6,
+          data: [{ value: values, name: city, areaStyle: { opacity: 0.2 } }],
+          lineStyle: { width: 2, color: "#D08560" },
+          itemStyle: { color: "#D08560" }
+        }]
+      });
+    }
+
+    _renderHeatmap(resp) {
+      const el = document.getElementById("chartIndexHeatmap");
+      if (!el || !resp.dimensions) return;
+      const dims = Object.keys(resp.dimensions);
+      const cities = Object.keys(resp.overall);
+      if (dims.length === 0 || cities.length === 0) return;
+
+      const data = [];
+      dims.forEach((dim, di) => {
+        cities.forEach((city, ci) => {
+          data.push([ci, di, resp.dimensions[dim][city] || 0]);
+        });
+      });
+
+      window.__citylens_charts.setOption(el, {
+        tooltip: {
+          position: "top",
+          formatter: (p) => `${cities[p.data[0]]} \u00b7 ${dims[p.data[1]]}<br><strong>${p.data[2].toFixed(1)}</strong>`
+        },
+        grid: { left: 100, right: 60, top: 20, bottom: 100 },
+        xAxis: {
+          type: "category", data: cities, position: "top",
+          axisLabel: { fontSize: 10, rotate: 30 }
+        },
+        yAxis: {
+          type: "category", data: dims,
+          axisLabel: { fontSize: 10 }
+        },
+        visualMap: {
+          min: 0, max: 100, calculable: true,
+          orient: "horizontal", left: "center", bottom: 10,
+          inRange: { color: ["#e8e0d8", "#b8724a", "#5a3e2b", "#2d1f14"] }
+        },
+        series: [{
+          type: "heatmap", data: data,
+          label: { show: true, fontSize: 9, color: "#333" },
+          emphasis: { itemStyle: { shadowBlur: 6 } }
+        }]
+      });
+    }
+
+    _renderMissing(resp) {
+      const el = document.getElementById("indexMissingBody");
+      if (!el) return;
+      const missing = resp.missing_dimensions || [];
+      if (missing.length === 0) {
+        el.innerHTML = '<div style="color:var(--success);font-weight:500;">所有维度均有数据覆盖 ✓</div>';
+        return;
+      }
+      el.innerHTML = `
+        <div style="margin-bottom:12px;color:var(--stone-600);">
+          以下 <strong>${missing.length}</strong> 个维度暂无数据覆盖：
+        </div>
+        <ul style="padding-left:16px;margin:0 0 12px 0;">
+          ${missing.map(d => `<li style="margin-bottom:4px;">${d}</li>`).join('')}
+        </ul>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--sand-200);">
+          <div style="font-weight:500;margin-bottom:8px;">💡 贡献数据</div>
+          <div style="font-size:12px;line-height:1.6;">
+            如果你有教育(高校数量/在校生)、环境(AQI/绿化率)、医疗(床位数/医师数)、交通(地铁里程/机场吞吐量)等数据，欢迎通过
+            <a href="https://github.com/badhope/urban-pulse/issues" target="_blank" style="color:var(--copper-600);">GitHub Issues</a>
+            或 PR 提交。
+          </div>
+        </div>
+      `;
+    }
+  }
+

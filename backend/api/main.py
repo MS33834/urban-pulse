@@ -21,11 +21,62 @@ from config import settings
 
 logger = logging.getLogger(__name__)
 
+# ── helper: seed city_manager from backend.data.city_data ──────────────────
+def _seed_city_manager() -> None:
+    """Load CITY_DATA + HISTORICAL_DATA into city_manager for time-series & compare endpoints."""
+    from backend.core.multi_city import CityData, city_manager
+
+    name_to_code = {
+        "深圳": "sz", "上海": "sh", "北京": "bj", "广州": "gz",
+        "杭州": "hz", "武汉": "wh", "成都": "cd", "南京": "nj",
+    }
+    try:
+        from backend.data.city_data import CITY_DATA, HISTORICAL_DATA
+    except ImportError:
+        logger.warning("backend.data.city_data not available -- city_manager remains unseeded")
+        return
+
+    loaded = 0
+    # 1) Current-year snapshot from CITY_DATA
+    for city_name, fields in CITY_DATA.items():
+        code = name_to_code.get(city_name)
+        if code is None or city_manager.get_city(code) is None:
+            continue
+        year = fields.get("year", 2025)
+        indicators = {k: v for k, v in fields.items()
+                       if k not in ("name", "year", "region", "industry",
+                                    "industry_code", "data_source", "data_quality")}
+        cd = CityData(city_code=code, city_name=city_name,
+                      year=year, indicators=indicators,
+                      source=fields.get("data_source", "nbs"))
+        city_manager.add_city_data(cd)
+        loaded += 1
+
+    # 2) Historical time-series from HISTORICAL_DATA
+    for city_name, rows in HISTORICAL_DATA.items():
+        code = name_to_code.get(city_name)
+        if code is None or city_manager.get_city(code) is None:
+            continue
+        for row in rows:
+            year = row.get("year")
+            if year is None:
+                continue
+            indicators = {k: v for k, v in row.items() if k != "year"}
+            cd = CityData(city_code=code, city_name=city_name,
+                          year=year, indicators=indicators,
+                          source="nbs/historical")
+            city_manager.add_city_data(cd)
+            loaded += 1
+
+    logger.info("seeded city_manager: %d CityData records across %d cities",
+                loaded, len(city_manager.city_data))
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("starting %s v%s", settings.PROJECT_NAME, settings.VERSION)
     logger.info("loaded %d cities", len(getattr(settings, "CITY_NAMES", [])))
+    _seed_city_manager()
     yield
     logger.info("shutting down")
 
@@ -77,6 +128,7 @@ from backend.api.routes import (
     cities_v2_router,
     data_router,
     forecast_router,
+    index_router,
     static_router,
 )
 
@@ -86,6 +138,7 @@ app.include_router(analysis_v3_router, prefix=settings.API_V1_STR)
 app.include_router(cities_router, prefix=settings.API_V1_STR)
 app.include_router(cities_v2_router, prefix=settings.API_V1_STR)
 app.include_router(forecast_router, prefix=settings.API_V1_STR)
+app.include_router(index_router, prefix=settings.API_V1_STR)
 app.include_router(static_router)
 
 frontend_index = Path(__file__).parent.parent.parent / "frontend" / "index.html"
