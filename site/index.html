@@ -1,199 +1,208 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Urban Pulse — City Economic Intelligence</title>
+<title>Urban Pulse — 城市脉搏</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:#0f172a; color:#e2e8f0; line-height:1.6; }
-  .container { max-width:900px; margin:0 auto; padding:40px 20px; }
 
-  header { text-align:center; padding:60px 0 40px; }
-  header .logo { font-size:48px; color:#60a5fa; }
-  header h1 { font-size:36px; margin:12px 0 8px; }
-  header .sub { color:#94a3b8; font-size:18px; }
-  header .links { margin:24px 0; display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
-  header .links a { display:inline-flex; align-items:center; gap:6px; padding:10px 20px; border-radius:8px; text-decoration:none; font-size:14px; font-weight:500; transition: all .15s; }
-  .btn-primary { background:#2563eb; color:#fff; }
-  .btn-primary:hover { background:#1d4ed8; }
-  .btn-secondary { background:#1e293b; color:#e2e8f0; border:1px solid #334155; }
-  .btn-secondary:hover { background:#334155; }
+  @font-face {
+    font-family: 'Departure Mono';
+    src: url('https://github.com/hectorm/otf-fonts/raw/main/DepartureMono/DepartureMono-Regular.otf.woff') format('woff');
+    font-display: swap;
+  }
 
-  section { margin:40px 0; }
-  h2 { font-size:22px; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
-  h2 .accent { color:#60a5fa; }
-  .card { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:24px; margin-bottom:16px; }
-  .card h3 { font-size:16px; color:#60a5fa; margin-bottom:8px; }
-  .card p { color:#94a3b8; font-size:14px; }
-  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-  @media (max-width:640px) { .grid2 { grid-template-columns:1fr; } }
+  body {
+    font-family: 'Departure Mono', 'JetBrains Mono', 'Courier New', monospace;
+    background: #0d0d0d;
+    color: #d4d4d4;
+    line-height: 1.65;
+  }
 
-  .arch { background:#0f172a; border:1px solid #334155; border-radius:8px; padding:16px; font-family:'Courier New', monospace; font-size:13px; line-height:1.5; color:#94a3b8; overflow-x:auto; }
-  .arch .hl { color:#60a5fa; }
-  .arch .g { color:#34d399; }
-  .arch .y { color:#fbbf24; }
+  .page { max-width: 800px; margin: 0 auto; padding: 60px 24px; }
 
-  .badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:500; margin:2px; }
-  .badge-py { background:#3776AB33; color:#3776AB; }
-  .badge-ts { background:#3178C633; color:#3178C6; }
-  .badge-js { background:#F7DF1E33; color:#F7DF1E; }
+  /* terminal / logbook aesthetic */
+  .prompt { color: #8b5cf6; }
+  .path { color: #2dd4bf; }
+  .sep { color: #525252; }
 
-  .features { list-style:none; }
-  .features li { padding:8px 0; border-bottom:1px solid #1e293b; font-size:14px; display:flex; align-items:center; gap:8px; }
-  .features li:last-child { border:none; }
+  h1 { font-size: 28px; font-weight: 400; margin: 40px 0 8px; letter-spacing: -0.3px; }
+  h1 .highlight { color: #60a5fa; }
+  h2 { font-size: 18px; font-weight: 400; margin: 48px 0 16px; color: #a78bfa; }
+  h2::before { content: '## '; color: #525252; }
+  h3 { font-size: 15px; font-weight: 400; margin: 24px 0 8px; color: #2dd4bf; }
+  h3::before { content: '  -> '; color: #525252; }
 
-  .stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(120px,1fr)); gap:12px; margin:24px 0; }
-  .stat { text-align:center; padding:16px; background:#1e293b; border-radius:8px; border:1px solid #334155; }
-  .stat .num { font-size:24px; font-weight:700; color:#60a5fa; }
-  .stat .lbl { font-size:12px; color:#64748b; margin-top:4px; }
+  p, li { font-size: 14px; color: #a3a3a3; margin: 8px 0; }
+  a { color: #60a5fa; text-decoration: none; }
+  a:hover { text-decoration: underline; }
 
-  hr { border:none; border-top:1px solid #334155; margin:40px 0; }
-  .footer { text-align:center; padding:20px; color:#64748b; font-size:13px; }
+  .tagline { color: #525252; font-size: 13px; margin: 4px 0 24px; }
+  .tagline::before { content: '# '; }
 
-  .screenshot { width:100%; border-radius:8px; border:1px solid #334155; margin-top:12px; }
+  hr { border: none; border-top: 1px solid #262626; margin: 48px 0; }
 
-  .tech-stack { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
-  .tech-stack span { background:#334155; color:#94a3b8; padding:4px 10px; border-radius:4px; font-size:12px; }
+  .stat-box {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+    background: #262626; margin: 24px 0; border: 1px solid #262626;
+  }
+  .stat-box > div { background: #0d0d0d; padding: 16px; text-align: center; }
+  .stat-box .num { font-size: 24px; color: #60a5fa; }
+  .stat-box .lbl { font-size: 11px; color: #525252; margin-top: 4px; }
+
+  ul { list-style: none; padding: 0; }
+  ul li { padding: 4px 0; }
+  ul li::before { content: '  * '; color: #525252; }
+
+  code { background: #1a1a1a; padding: 1px 6px; border-radius: 3px; font-size: 13px; color: #d4d4d4; }
+
+  pre {
+    background: #1a1a1a; border: 1px solid #262626; border-radius: 6px;
+    padding: 16px; font-size: 13px; overflow-x: auto; margin: 16px 0;
+    line-height: 1.5;
+  }
+  pre .hl { color: #60a5fa; }
+  pre .gr { color: #34d399; }
+  pre .yl { color: #fbbf24; }
+  pre .cm { color: #525252; }
+
+  .badge { display: inline-block; border: 1px solid #262626; padding: 2px 8px; font-size: 11px; margin: 2px; border-radius: 3px; }
+
+  .footer { text-align: center; margin-top: 80px; padding: 24px 0; color: #525252; font-size: 12px; }
 </style>
 </head>
 <body>
-<div class="container">
-  <header>
-    <div class="logo">⟁</div>
-    <h1>Urban Pulse</h1>
-    <div class="sub">City Economic Intelligence Platform</div>
-    <div class="links">
-      <a href="https://github.com/badhope/urban-pulse" class="btn-primary">🐙 GitHub Repository</a>
-      <a href="https://github.com/badhope/urban-pulse/blob/main/README.md" class="btn-secondary">📖 Readme</a>
-    </div>
-  </header>
+<div class="page">
 
-  <div class="stats">
-    <div class="stat"><div class="num">10</div><div class="lbl">Cities Tracked</div></div>
-    <div class="stat"><div class="num">5</div><div class="lbl">Indicators</div></div>
-    <div class="stat"><div class="num">16</div><div class="lbl">Data Years</div></div>
-    <div class="stat"><div class="num">116</div><div class="lbl">Tests Passing</div></div>
-  </div>
+<div class="path">~/projects/urban-pulse <span class="sep">$</span></div>
+<h1><span class="highlight">Urban Pulse</span> · 城市脉搏</h1>
+<div class="tagline">一个想做很久的城市经济观测站。10座中国城市，16年数据，5年预测。</div>
 
-  <section>
-    <h2><span class="accent">⟁</span> What is Urban Pulse?</h2>
-    <p style="color:#94a3b8;font-size:15px;margin-bottom:16px;">
-      An open-source city economic intelligence platform that collects, analyzes, and forecasts
-      urban economic indicators. Built as a graduation project, designed for long-term growth as
-      a community-powered economic observatory.
-    </p>
-    <ul class="features">
-      <li>📊 <strong>Multi-city comparison</strong> — 10 major Chinese cities, side-by-side</li>
-      <li>🔮 <strong>Ensemble forecasting</strong> — SARIMA, Holt-Winters, Monte Carlo simulation</li>
-      <li>📈 <strong>Interactive dashboard</strong> — ECharts-powered visual analytics (run locally)</li>
-      <li>🔄 <strong>Extensible pipeline</strong> — 4 plugin types: data source, analysis, forecast, visualization</li>
-      <li>📅 <strong>Auto data refresh</strong> — yearly scheduled pipeline via GitHub Actions</li>
-    </ul>
-  </section>
+<div class="stat-box">
+  <div><div class="num">10</div><div class="lbl">城市</div></div>
+  <div><div class="num">16</div><div class="lbl">年数据</div></div>
+  <div><div class="num">5</div><div class="lbl">预测年</div></div>
+  <div><div class="num">116</div><div class="lbl">测试通过</div></div>
+</div>
 
-  <section>
-    <h2>🏗 Architecture</h2>
-    <div class="arch">
-<span class="g">┌──────────────────────┐</span><br>
-<span class="g">│</span> <span class="hl">FastAPI Backend</span>        <span class="g">│</span>  ← Data collection, forecasting engine, API<br>
-<span class="g">│</span>  🗄 CityDataManager      <span class="g">│</span><br>
-<span class="g">│</span>  🔄 Forecast Pipeline   <span class="g">│</span><br>
-<span class="g">└────────┬─────────────┘</span><br>
-         <span class="y">│</span><br>
-<span class="g">┌────────▼─────────────┐</span><br>
-<span class="g">│</span> <span class="hl">ECharts Dashboard</span>      <span class="g">│</span>  ← Local frontend (clone + run)<br>
-<span class="g">│</span>  (frontend/index.html) <span class="g">│</span><br>
-<span class="g">└──────────────────────┘</span><br>
-<br>
-<span class="y">📦 Docker Compose: `docker compose up`</span>
-    </div>
-  </section>
+<hr>
 
-  <section>
-    <h2>🚀 Quick Start</h2>
-    <div class="grid2">
-      <div class="card">
-        <h3>🐳 Docker (recommended)</h3>
-        <p>
-          git clone https://github.com/badhope/urban-pulse<br>
-          cd urban-pulse<br>
-          docker compose up<br>
-          → <strong>http://localhost:8000</strong>
-        </p>
-      </div>
-      <div class="card">
-        <h3>🐍 Native Python</h3>
-        <p>
-          pip install -r requirements.txt<br>
-          uvicorn backend.api.main:app --reload<br>
-          → <strong>http://localhost:8000</strong>
-        </p>
-      </div>
-    </div>
-  </section>
+<h2>这是什么</h2>
 
-  <section>
-    <h2>🛠 Tech Stack</h2>
-    <div class="card">
-      <div class="tech-stack">
-        <span>Python</span><span>FastAPI</span><span>Pandas</span><span>NumPy</span>
-        <span>Scikit-learn</span><span>Statsmodels</span><span>SARIMA</span>
-        <span>GARCH</span><span>Monte Carlo</span><span>ECharts</span>
-        <span>Docker</span><span>GitHub Actions</span><span>Pydantic</span>
-        <span>SQLAlchemy</span><span>Pytest</span>
-      </div>
-    </div>
-  </section>
+<p>毕业设计。但毕业后不想扔在那吃灰。</p>
 
-  <section>
-    <h2>📈 Dashboard Preview</h2>
-    <div class="card">
-      <p>The interactive ECharts dashboard runs locally after cloning the repository.</p>
-      <p style="margin-top:8px;color:#94a3b8;font-size:14px;">
-        Features: trend charts, multi-city comparison, 5-year forecasts with confidence intervals,
-        growth radar charts — all driven by the real FastAPI backend.
-      </p>
-      <a href="https://github.com/badhope/urban-pulse" style="display:inline-block;margin-top:12px;color:#60a5fa;">
-        View on GitHub →</a>
-    </div>
-  </section>
+<p>一直想看城市经济数据怎么变化——不只是单个城市自己的走势，而是十座城市放在一起，谁在加速、谁在减速、谁在换挡。GDP 增速放缓是暂时的还是趋势性的？哪些城市在抢人、哪些在留人？</p>
 
-  <hr>
+<p>Urban Pulse 就是干这个的。自动采集数据、跑预测、生成报表。每年1月15号自动触发一次数据更新，然后重新跑一遍全量预测。长期跑着，年复一年。</p>
 
-  <section>
-    <h2>📄 Data</h2>
-    <div class="grid2">
-      <div class="card">
-        <h3>🏙 Ten Cities</h3>
-        <p>
-          Beijing, Shanghai, Shenzhen, Guangzhou,<br>
-          Chengdu, Wuhan, Hangzhou, Nanjing,<br>
-          Suzhou, Xi'an
-        </p>
-      </div>
-      <div class="card">
-        <h3>📊 Five Indicators</h3>
-        <p>
-          GDP, GDP Growth Rate, Population,<br>
-          Fiscal Revenue, R&D Intensity
-        </p>
-      </div>
-    </div>
-    <div class="card">
-      <h3>⏳ Data Policy</h3>
-      <p>
-        Historical data: 2010–2025 (yearly).<br>
-        Forecasts: 5-year ahead with 95% confidence intervals.<br>
-        Auto-refresh: Annual pipeline triggered every January 15.<br>
-        Open data: All data stored in <code>data/cities/</code> as JSON.
-      </p>
-    </div>
-  </section>
+<hr>
 
-  <div class="footer">
-    Urban Pulse · MIT License · Built by <a href="https://github.com/badhope" style="color:#60a5fa;text-decoration:none;">@badhope</a>
-  </div>
+<h2>怎么用</h2>
+
+<h3>🐳 Docker（推荐）</h3>
+<pre>
+<span class="cm"># 两行命令跑起来</span>
+git clone https://github.com/badhope/urban-pulse
+cd urban-pulse
+docker compose up
+<span class="cm"># 打开 http://localhost:8000</span>
+</pre>
+
+<h3>🐍 Python</h3>
+<pre>
+pip install -r requirements.txt
+uvicorn backend.api.main:app --reload
+</pre>
+
+<p>浏览器打开 <code>http://localhost:8000/dashboard</code> 看仪表盘，<code>/docs</code> 看 API。</p>
+
+<hr>
+
+<h2>架构怎么回事</h2>
+
+<pre>
+<span class="cm"># 数据流向</span>
+
+<span class="gr">┌──────────────────┐</span>
+<span class="gr">│</span> 数据采集层        <span class="gr">│</span>  ← JSON / API / 手动导入
+<span class="gr">│</span> data_collection/  <span class="gr">│</span>
+<span class="gr">└────────┬─────────┘</span>
+         <span class="yl">│</span>
+<span class="gr">┌────────▼─────────┐</span>
+<span class="gr">│</span> 预测引擎          <span class="gr">│</span>  ← SARIMA + Holt-Winters + Monte Carlo
+<span class="gr">│</span> forecast_engine/ <span class="gr">│</span>
+<span class="gr">└────────┬─────────┘</span>
+         <span class="yl">│</span>
+<span class="gr">┌────────▼─────────┐</span>
+<span class="gr">│</span> FastAPI 后端      <span class="gr">│</span>  ← 数据服务 + 预测 API
+<span class="gr">│</span> backend/api/     <span class="gr">│</span>
+<span class="gr">└────────┬─────────┘</span>
+         <span class="yl">│</span>
+<span class="gr">┌────────▼─────────┐</span>
+<span class="gr">│</span> ECharts 仪表盘    <span class="gr">│</span>  ← 单页 HTML，接后端 API
+<span class="gr">│</span> frontend/        <span class="gr">│</span>
+<span class="gr">└──────────────────┘</span>
+</pre>
+
+<hr>
+
+<h2>技术栈</h2>
+
+<p>
+  <span class="badge">Python</span>
+  <span class="badge">FastAPI</span>
+  <span class="badge">Pandas</span>
+  <span class="badge">NumPy</span>
+  <span class="badge">Statsmodels</span>
+  <span class="badge">SARIMA</span>
+  <span class="badge">GARCH</span>
+  <span class="badge">ECharts</span>
+  <span class="badge">Docker</span>
+  <span class="badge">GitHub Actions</span>
+</p>
+
+<hr>
+
+<h2>数据从哪来</h2>
+
+<p>公开数据源，手动整理成 JSON 扔进 <code>data/cities/</code>。十个城市各一个文件，每个文件按年份存五个指标：</p>
+
+<ul>
+  <li>GDP（亿元）</li>
+  <li>GDP 增速（%）</li>
+  <li>常住人口（万人）</li>
+  <li>财政收入（亿元）</li>
+  <li>R&amp;D 投入强度（%）</li>
+</ul>
+
+<p>每年1月15号 GitHub Actions 自动触发，跑一遍采集脚本，重新训练预测模型，更新报表。长期跑着，年复一年。</p>
+
+<hr>
+
+<h2>还差什么（TODOs）</h2>
+
+<ul>
+  <li>Jupyter Notebooks —— 答辩的时候直接甩给老师看</li>
+  <li>Dockerfile 验证 —— 写了但没测过完整流程</li>
+  <li>截图放进 README —— 让人一眼知道这东西长什么样</li>
+  <li>更多城市 —— 目前 10 城，想加到 15-20 城</li>
+</ul>
+
+<hr>
+
+<h2>说人话</h2>
+
+<p>这玩意是个毕业设计项目，但我打算一直维护下去。每年自动跑、自动更新，就像你种了一棵树然后看着它长。</p>
+
+<p>数据可能不完美，预测可能不准，但总比没有好。欢迎 PR。</p>
+
+<div class="footer">
+  <a href="https://github.com/badhope/urban-pulse">github.com/badhope/urban-pulse</a>
+  · <span class="sep">MIT</span>
+  · <span class="sep">built by</span> <a href="https://github.com/badhope">@badhope</a>
+</div>
+
 </div>
 </body>
 </html>

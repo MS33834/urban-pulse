@@ -1,185 +1,92 @@
-# Urban Pulse
+# Urban Pulse · 城市脉搏
 
-> **City economic observatory — 10 Chinese cities, 16 years, infinite extensibility.**
->
-> A long-running open-source project that automatically collects, forecasts, and
-> publishes city economic data year after year.
+毕业设计。但毕业后不想扔在那吃灰。
 
 [![CI](https://github.com/badhope/urban-pulse/actions/workflows/ci.yml/badge.svg)](https://github.com/badhope/urban-pulse/actions)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688.svg)](https://fastapi.tiangolo.com)
 [![License](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
-[![Pages](https://img.shields.io/badge/📊_Live_Dashboard-urban--pulse.pages.dev-blue)](https://badhope.github.io/urban-pulse)
 
 ---
 
-## What This Is
+**10 座中国城市 · 16 年数据 · 5 年预测**
 
-Urban Pulse is an **open city economic data platform** that:
-
-- **Collects** public data from 10 major Chinese cities (2010–2025, 12+ indicators)
-- **Forecasts** GDP, population, fiscal revenue using ensemble time-series models
-- **Publishes** everything as a free static dashboard on GitHub Pages
-- **Self-updates** yearly via GitHub Actions when new data is released
-- **Extends** via a plugin system — add new cities, countries, or indicators
-
-**No servers to maintain. No API keys. Free forever.**
+一个长期维护的城市经济观测站。自动采集公开数据、跑预测、出报表。每年 1 月 15 号自动更新一次，重新跑一遍全量预测。长期跑着，年复一年。
 
 ---
 
-## Quick Start
+## 怎么用
 
 ```bash
-# Interactive API
-pip install -r requirements.txt
-uvicorn backend.api.main:app --reload --port 8000
+# Docker（推荐）
+docker compose up
 # → http://localhost:8000/dashboard
 # → http://localhost:8000/docs
 
-# Static site (no backend needed)
-python scripts/build_site.py
-cd _site && python -m http.server 8080
+# Python 原生
+pip install -r requirements.txt
+uvicorn backend.api.main:app --reload
 ```
 
----
-
-## Architecture
+## 架构
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│  GitHub Actions (CI + Yearly Cron)                       │
-│  ┌────────┐   ┌──────────┐   ┌────────────┐            │
-│  │ Test   │──▶│ Build    │──▶│ Deploy to  │            │
-│  │ suite  │   │ static   │   │ Pages      │            │
-│  └────────┘   │ site     │   └────────────┘            │
-│               └──────────┘                              │
-├──────────────────────────────────────────────────────────┤
-│  GitHub Pages (free hosting, zero cost)                  │
-│  ├── index.html  (bilingual ECharts dashboard)          │
-│  └── data/       (pre-computed forecasts as JSON)       │
-├──────────────────────────────────────────────────────────┤
-│  FastAPI (optional, for local dev)                       │
-│  ├── 47 REST endpoints (cities, analysis, forecast)     │
-│  ├── ARIMA + ETS + Ridge ensemble forecasting           │
-│  ├── VaR / GARCH / Monte Carlo risk analysis            │
-│  └── Plugin auto-discovery (extensible architecture)    │
-├──────────────────────────────────────────────────────────┤
-│  Data Pipeline                                           │
-│  ├── akshare / NBS collectors                           │
-│  ├── Yearly auto-update via Actions cron                │
-│  ├── Forecast aging tracker (compare old vs actual)     │
-│  └── Git-versioned data (every dataset has history)     │
-└──────────────────────────────────────────────────────────┘
+数据采集 ──→ 预测引擎 ──→ FastAPI ──→ ECharts 仪表盘
+                    ↓
+              GitHub Actions
+              （每年自动更新）
 ```
 
----
+## 十个城市
 
-## Extensibility
+北京 · 上海 · 深圳 · 广州 · 成都 · 武汉 · 杭州 · 南京 · 苏州 · 西安
 
-Drop in a file → it works. No config changes needed.
+五个指标：GDP / GDP 增速 / 常住人口 / 财政收入 / R&D 投入强度
 
-```python
-# backend/data_collection/world_bank.py
-class WorldBankCollector(DataCollector):
-    def collect(self) -> dict:
-        # Pull World Bank API for global cities
-        ...
-```
+数据放在 `data/cities/` 里，每个城市一个 JSON 文件，按年存。
 
-**What you can extend:**
-- **Data sources**: Add countries, cities, custom indicators
-- **Analysis**: New economic models, composite scores
-- **Forecasters**: Prophet, LSTM, Transformer — add your own
-- **Visualizers**: New chart types, report formats
+## 技术栈
 
-Full docs: [`docs/PLUGIN_ARCHITECTURE.md`](docs/PLUGIN_ARCHITECTURE.md)
-
----
-
-## Data Pipeline
-
-| Event | When | What happens |
-|-------|------|-------------|
-| Every push | CI runs | Tests + builds static site |
-| Every Jan 15 | Yearly cron | Pulls latest city data, re-forecasts, deploys |
-| Manual | `python scripts/build_site.py` | Rebuilds static site locally |
-
-After 5 years, Urban Pulse becomes a **forecast accuracy archive** — you can see
-exactly how well last year's model predicted this year's reality.
-
-Full docs: [`docs/DATA_PIPELINE.md`](docs/DATA_PIPELINE.md)
-
----
-
-## Cities & Indicators
-
-| City | Code | Indicators | Years |
-|------|------|-----------|-------|
-| Beijing | bj | GDP, Population, Fiscal Rev, … | 2010–2025 |
-| Shanghai | sh | … | 2010–2025 |
-| Shenzhen | sz | … | 2010–2025 |
-| Guangzhou | gz | … | 2010–2025 |
-| Chengdu | cd | … | 2010–2025 |
-| Hangzhou | hz | … | 2010–2025 |
-| Wuhan | wh | … | 2010–2025 |
-| Nanjing | nj | … | 2010–2025 |
-| Suzhou | su | … | 2010–2025 |
-| Xi'an | xa | … | 2010–2025 |
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Backend | FastAPI (Pydantic v2, Async) |
-| Forecasting | statsforecast, statsmodels, arch |
-| Data | pandas, numpy, scipy, pyyaml |
-| Collection | akshare, requests, beautifulsoup4 |
-| Frontend | ECharts 5 (CDN, zero-build) |
+| 层 | 用的啥 |
+|---|--------|
+| 后端 | FastAPI |
+| 预测 | statsforecast / statsmodels / arch |
+| 数据处理 | pandas / numpy |
+| 前端 | ECharts 5（单页 HTML，零构建） |
 | CI/CD | GitHub Actions + Pages |
-| Testing | pytest, hypothesis, httpx |
-| Container | Docker |
+| 容器 | Docker |
 
----
-
-## Project Structure
+## 项目结构
 
 ```
 urban-pulse/
-├── backend/           # FastAPI + core engine + data pipeline
-│   ├── api/           # REST API (47 routes)
-│   ├── core/          # Forecast engine, risk engine, plugin registry
-│   ├── analysis/      # Domain analysis modules
-│   ├── data_collection/  # Plugin-based data collectors
-│   ├── data_processing/  # Validation, cleaning, transformation
-│   └── data/          # Static datasets (YAML + CSV)
-├── site/              # Static dashboard source
-├── scripts/           # Build tools
-├── docs/              # Architecture, pipeline, plugin docs
-├── tests/             # Pytest suite
-├── .github/workflows/ # CI + yearly cron
-├── config/            # Application config
+├── backend/           # FastAPI + 预测引擎
+│   ├── api/           # REST API 路由
+│   ├── core/          # 预测引擎、风险引擎
+│   ├── analysis/      # 分析模块
+│   └── data_collection/  # 数据采集
+├── frontend/          # ECharts 仪表盘（本地运行）
+├── site/              # GitHub Pages 展示页
+├── docs/              # 文档
+├── tests/             # 116 个测试
+├── data/cities/       # 城市数据（JSON）
+├── config/            # 应用配置
 ├── Dockerfile
 └── pyproject.toml
 ```
 
----
+## TODO
 
-## Contributing
-
-- Add a new city's data → `backend/data_collection/`
-- Add a new forecast model → `backend/core/` (implement `ForecastingPlugin`)
-- Improve the dashboard → `site/index.html`
-- Report forecast accuracy → Open an issue with data
-
----
+- [ ] Jupyter Notebooks —— 答辩用
+- [ ] Dockerfile 完整验证
+- [ ] 截图放进 README
+- [ ] 加到 15-20 个城市
+- [ ] 前几年预测 vs 实际数据的准确率追踪
 
 ## License
 
-GPL-3.0-or-later — see [LICENSE](LICENSE).
+GPL-3.0-or-later
 
 ---
 
-*Built from 10 Chinese cities × 16 years of real public economic data.
-Started as a graduation project, built to last forever.*
+*Built by [@badhope](https://github.com/badhope). Started as a graduation project, built to last forever.*

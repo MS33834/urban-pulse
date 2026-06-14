@@ -1,5 +1,5 @@
 """
-Urban Pulse — city economic data & analysis routes.
+Urban Pulse - REST API routes. Nothing fancy.
 """
 
 from backend.api.routes.analysis import router as analysis_router
@@ -19,3 +19,4 @@ __all__ = [
     "forecast_router",
     "static_router",
 ]
+

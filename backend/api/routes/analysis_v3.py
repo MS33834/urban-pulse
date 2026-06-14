@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/analysis", tags=["企业分析V3"])
+router = APIRouter(prefix="/analysis", tags=["企业端"])
 
 
 @router.get("/enterprise/v3/{city_name}", summary="企业选址分析V3")
@@ -112,3 +112,4 @@ async def get_semiconductor_case() -> dict[str, Any]:
     except Exception as e:
         logger.error(f"案例分析失败: {e}")
         raise HTTPException(status_code=500, detail="案例分析失败")
+

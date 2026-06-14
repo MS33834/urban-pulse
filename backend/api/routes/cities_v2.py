@@ -20,7 +20,7 @@ from backend.data.city_data import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/cities", tags=["城市数据"])
+router = APIRouter(prefix="/cities", tags=["城市"])
 
 
 @router.get("/list", summary="获取所有城市列表")
@@ -109,3 +109,4 @@ async def get_data_quality_report() -> dict[str, Any]:
     - 更新时间
     """
     return generate_data_quality_report()
+

@@ -17,7 +17,7 @@ from backend.core.multi_city import city_manager
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/cities", tags=["城市数据"])
+router = APIRouter(prefix="/cities", tags=["城市"])
 
 
 # --------------------------------------------------------------------------- #
@@ -558,3 +558,4 @@ def _collect_all_city_records() -> list[dict[str, Any]]:
                 except (TypeError, ValueError):
                     continue
     return records
+

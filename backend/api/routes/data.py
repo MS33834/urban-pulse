@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 
 
-router = APIRouter(prefix="/data", tags=["数据管理"])
+router = APIRouter(prefix="/data", tags=["数据"])
 
 
 # 模拟数据库
@@ -167,4 +167,5 @@ def get_map_data(indicator: str = Query("output"), year: int = Query(2025)):
         ],
         "geoJson": {},  # 实际项目需加载真实的GeoJSON
     }
+
 

@@ -31,7 +31,7 @@ from backend.data.city_data import get_all_cities, get_all_forecast_cities
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/forecast", tags=["预测分析"])
+router = APIRouter(prefix="/forecast", tags=["预测"])
 
 
 # --------------------------------------------------------------------------- #
@@ -308,3 +308,4 @@ async def get_full_forecast_report(
             "note": "真实预测区间;statsforecast 不可用时透明 fallback 到 OLS+t",
         },
     }
+

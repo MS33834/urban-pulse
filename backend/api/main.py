@@ -1,7 +1,7 @@
 """
 Urban Pulse — FastAPI backend for city economic intelligence.
 
-Serves REST API + single-page ECharts dashboard from one process.
+REST API + ECharts dashboard. One process, no frontend build step.
 """
 
 import logging
@@ -33,8 +33,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="REST API for multi-city economic comparison, sales forecasting, "
-    "and scenario analysis across Chinese cities.",
+    description="REST API — 10 Chinese cities, 16 years of data, ensemble forecasting. Built because I wanted to watch how cities grow.",
     license_info={
         "name": "GPL-3.0-or-later",
         "url": "https://www.gnu.org/licenses/gpl-3.0.html",
@@ -154,3 +153,4 @@ def run() -> None:
 
 if __name__ == "__main__":
     run()
+

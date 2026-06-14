@@ -8,7 +8,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
-router = APIRouter(prefix="/api/v1/static", tags=["静态文件"])
+router = APIRouter(prefix="/api/v1/static", tags=["静态"])
 
 # 获取项目根目录
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
@@ -71,3 +71,4 @@ async def list_charts():
         return {"status": "success", "charts": charts}
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
+

@@ -14,7 +14,7 @@ from backend.analysis.enterprise_analyzer_v2 import enterprise_analyzer_v2
 from backend.analysis.real_data_analysis import real_data_analyzer
 from config.analysis_config import AnalysisConfig
 
-router = APIRouter(prefix="/analysis", tags=["产业分析"])
+router = APIRouter(prefix="/analysis", tags=["产业端"])
 
 
 class AnalysisRequest(BaseModel):
@@ -153,3 +153,4 @@ def government_analysis(request: AnalysisRequest):
         error_detail = f"{str(e)}"
         logger.error(f"政府端分析失败: {error_detail}", exc_info=True)
         raise HTTPException(status_code=500, detail="政府端分析失败，请稍后重试")
+
