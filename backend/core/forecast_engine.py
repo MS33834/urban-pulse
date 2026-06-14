@@ -205,7 +205,7 @@ def arima_forecast(values: list[float], years: int, confidence: float = 0.95) ->
             from statsforecast import StatsForecast
             from statsforecast.models import AutoARIMA as SF_AutoARIMA
 
-            sf = StatsForecast(models=[SF_AutoARIMA(season_length=1)], freq=1, n_jobs=1)
+            sf = StatsForecast(models=[SF_AutoARIMA(season_length=1)], freq='YS', n_jobs=1)
             df = pd.DataFrame(
                 {
                     "unique_id": ["y"] * n,
