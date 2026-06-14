@@ -115,7 +115,7 @@ def auto_arima_native(values: list[float], max_p: int = 5, max_d: int = 2, max_q
             from statsforecast.models import AutoARIMA as SF_AutoARIMA
 
             logger.debug("ARIMA: using statsforecast.AutoARIMA")
-            sf = StatsForecast(models=[SF_AutoARIMA(season_length=1)], freq=1, n_jobs=1)
+            sf = StatsForecast(models=[SF_AutoARIMA(season_length=1)], freq='YS', n_jobs=1)
             df = pd.DataFrame(
                 {
                     "unique_id": ["y"] * n,

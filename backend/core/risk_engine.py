@@ -112,10 +112,12 @@ def garch_volatility(values: list[float], horizon: int = 1, p: int = 1, q: int =
             warnings.simplefilter("ignore")
             res = am.fit(disp="off", show_warning=False)
 
-        cond_vol = float(res.conditional_volatility.iloc[-1])
+        cv = res.conditional_volatility
+        cond_vol = float(cv.iloc[-1] if hasattr(cv, 'iloc') else cv[-1])
         # horizon 步预测
         fc = res.forecast(horizon=horizon)
-        forecast_vol = float(np.sqrt(np.asarray(fc.variance.iloc[-1]).mean()))
+        fv = fc.variance
+        forecast_vol = float(np.sqrt(np.asarray(fv.iloc[-1] if hasattr(fv, 'iloc') else fv[-1]).mean()))
 
         params = res.params
         alpha = float(params.get("alpha[1]", 0.0))
