@@ -6,68 +6,77 @@
 <title>Urban Pulse — City Economic Intelligence</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
 <style>
-  :root { --bg: #f8fafc; --card: #fff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0; --accent: #2563eb; }
-  [data-theme="dark"] { --bg: #0f172a; --card: #1e293b; --text: #e2e8f0; --muted: #94a3b8; --border: #334155; --accent: #60a5fa; }
+  :root { --bg: #f8fafc; --card: #fff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0; --accent: #2563eb; --warn: #f59e0b; }
+  [data-theme="dark"] { --bg: #0f172a; --card: #1e293b; --text: #e2e8f0; --muted: #94a3b8; --border: #334155; --accent: #60a5fa; --warn: #fbbf24; }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:var(--bg); color:var(--text); }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:var(--bg); color:var(--text); transition: background .2s; }
   .container { max-width:1200px; margin:0 auto; padding:20px; }
   header { display:flex; justify-content:space-between; align-items:center; padding:16px 0; border-bottom:2px solid var(--border); margin-bottom:24px; flex-wrap:wrap; gap:12px; }
   header h1 { font-size:24px; display:flex; align-items:center; gap:8px; }
   header h1 span { color:var(--accent); }
-  .badge { background:var(--accent); color:#fff; font-size:11px; padding:2px 8px; border-radius:4px; }
-  .controls { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-  select, button { padding:8px 14px; border:1px solid var(--border); border-radius:6px; background:var(--card); color:var(--text); font-size:14px; cursor:pointer; }
+  .badge { display:inline-block; background:var(--accent); color:#fff; font-size:10px; padding:2px 8px; border-radius:4px; }
+  .badge-warn { background:var(--warn); }
+  .controls { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  select, button { padding:8px 14px; border:1px solid var(--border); border-radius:6px; background:var(--card); color:var(--text); font-size:14px; cursor:pointer; transition: all .15s; }
   button:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
-  .lang-toggle { font-size:13px; padding:6px 12px; }
+  .lang-btn { font-size:13px; padding:6px 12px; }
   .grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
   @media (max-width:768px) { .grid { grid-template-columns:1fr; } }
   .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; }
-  .card h2 { font-size:16px; margin-bottom:12px; display:flex; justify-content:space-between; }
+  .card h2 { font-size:16px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; }
   .card .value { font-size:28px; font-weight:700; color:var(--accent); }
   .card .sub { font-size:13px; color:var(--muted); margin-top:4px; }
   .chart-box { height:360px; width:100%; }
   .full-width { grid-column:1/-1; }
-  .stats-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); gap:16px; margin-bottom:24px; }
+  .stats-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:14px; margin-bottom:24px; }
   .stat-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px; text-align:center; }
   .stat-card .num { font-size:22px; font-weight:700; color:var(--accent); }
   .stat-card .lbl { font-size:12px; color:var(--muted); margin-top:4px; }
-  .loading { text-align:center; padding:60px; color:var(--muted); }
   .footer { text-align:center; padding:24px; font-size:13px; color:var(--muted); border-top:1px solid var(--border); margin-top:24px; }
+  .notice { background:var(--warn); color:var(--card); font-size:12px; padding:8px 14px; border-radius:8px; margin-bottom:16px; text-align:center; }
+  .splash { text-align:center; padding:80px 20px; }
+  .splash h2 { font-size:32px; margin-bottom:12px; }
+  .splash p { color:var(--muted); margin-bottom:16px; }
 </style>
 </head>
 <body>
-<div class="container">
+<div class="container" id="app">
   <header>
     <h1><span>⟁</span> Urban Pulse</h1>
     <div class="controls">
       <select id="citySelect"></select>
       <select id="indicatorSelect"></select>
-      <button onclick="toggleTheme()">🌓 Theme</button>
-      <button class="lang-toggle" onclick="toggleLang()" id="langBtn">🇨🇳 中文</button>
+      <button onclick="toggleTheme()">🌓</button>
+      <button class="lang-btn" onclick="toggleLang()" id="langBtn">🇨🇳 中文</button>
     </div>
   </header>
 
-  <!-- Stats bar -->
-  <div class="stats-row" id="statsRow"></div>
-
-  <!-- Charts -->
-  <div class="grid">
-    <div class="card full-width">
-      <h2 id="chart1Title">Historical & Forecast Trend</h2>
-      <div class="chart-box" id="trendChart"></div>
-    </div>
-    <div class="card">
-      <h2 id="chart2Title">City Comparison</h2>
-      <div class="chart-box" id="compareChart"></div>
-    </div>
-    <div class="card">
-      <h2 id="chart3Title">Growth Radar</h2>
-      <div class="chart-box" id="radarChart"></div>
+  <div id="content" style="display:none">
+    <div class="stats-row" id="statsRow"></div>
+    <div class="grid">
+      <div class="card full-width">
+        <h2><span id="chart1Title">Historical & Forecast Trend</span><span id="trendBadge" class="badge"></span></h2>
+        <div class="chart-box" id="trendChart"></div>
+      </div>
+      <div class="card">
+        <h2><span id="chart2Title">City Comparison</span></h2>
+        <div class="chart-box" id="compareChart"></div>
+      </div>
+      <div class="card">
+        <h2><span id="chart3Title">Growth Radar</span></h2>
+        <div class="chart-box" id="radarChart"></div>
+      </div>
     </div>
   </div>
 
+  <div id="splash" class="splash">
+    <h2>⟁ Urban Pulse</h2>
+    <p id="splashText">Loading city economic data...</p>
+    <div class="splash-loader">⏳</div>
+  </div>
+
   <div class="footer">
-    <span id="footerText">Urban Pulse · Open city economic data · Built with ECharts</span>
+    <span id="footerText">Urban Pulse · Open city economic data</span>
     <br><span id="dataVersion" style="font-size:11px;"></span>
   </div>
 </div>
@@ -75,79 +84,73 @@
 <script>
 // ── State ──
 let lang = 'en';
-let siteData = null;
+let indexData = null;
+let forecasts = [];
+let cityDataCache = {};
 let trendChart, compareChart, radarChart;
 
 const I18N = {
   en: {
-    chart1Title: 'Historical & Forecast Trend',
-    chart2Title: 'City Comparison (Latest)',
-    chart3Title: 'Growth Radar (5 Indicators)',
-    footer: 'Urban Pulse · Open city economic data · Built with ECharts',
-    stats: ['Cities', 'Indicators', 'Data Years', 'Forecasts'],
-    loading: 'Loading data...',
-    forecast: 'Forecast',
+    chart1: 'Historical & Forecast Trend',
+    chart2: 'City Comparison (Latest)',
+    chart3: 'Growth Radar (5 Indicators)',
+    footer: 'Urban Pulse · Open city economic data',
+    loading: 'Loading city economic data...',
     history: 'History',
-    latestVal: 'Latest Value',
-    growth: 'YoY Growth',
+    forecast: 'Forecast',
+    sample: 'Sample data — start backend for real data',
+    live: 'Live data from backend',
   },
   zh: {
-    chart1Title: '历史趋势与预测',
-    chart2Title: '城市对比（最新）',
-    chart3Title: '增长雷达（5项指标）',
-    footer: '城市脉搏 · 开放城市经济数据 · 基于 ECharts',
-    stats: ['城市数', '指标数', '数据年份', '预测数'],
-    loading: '数据加载中...',
-    forecast: '预测',
+    chart1: '历史趋势与预测',
+    chart2: '城市对比（最新值）',
+    chart3: '增长雷达（5项指标）',
+    footer: '城市脉搏 · 开放城市经济数据',
+    loading: '城市经济数据加载中...',
     history: '历史',
-    latestVal: '最新值',
-    growth: '同比增长',
+    forecast: '预测',
+    sample: '示例数据 — 启动后端获取真实数据',
+    live: '后端实时数据',
   }
 };
 
 function t(key) { return (I18N[lang] || I18N.en)[key] || key; }
 
-function updateUI() {
-  document.getElementById('chart1Title').textContent = t('chart1Title');
-  document.getElementById('chart2Title').textContent = t('chart2Title');
-  document.getElementById('chart3Title').textContent = t('chart3Title');
-  document.getElementById('footerText').textContent = t('footer');
-  document.getElementById('langBtn').textContent = lang === 'en' ? '🇨🇳 中文' : '🇬🇧 English';
-  renderStats();
-  renderTrend();
-  renderCompare();
-  renderRadar();
-}
-
-function toggleLang() {
-  lang = lang === 'en' ? 'zh' : 'en';
-  updateUI();
-}
-
-function toggleTheme() {
-  const html = document.documentElement;
-  html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+function updateText(id, key) {
+  document.getElementById(id).textContent = t(key);
 }
 
 // ── Data Loading ──
 async function loadData() {
-  document.querySelector('.container').innerHTML = `<div class="loading">${t('loading')}</div>`;
   try {
-    const idxResp = await fetch('./data/index.json');
-    siteData = await idxResp.json();
-    const fcResp = await fetch('./data/forecasts.json');
-    siteData.forecasts = await fcResp.json();
+    const resp = await fetch('./data/index.json');
+    indexData = await resp.json();
+    document.getElementById('dataVersion').textContent =
+      `${indexData.data_years} · ${indexData.cities} cities · ${indexData.indicators} indicators`;
+
+    // Load forecasts
+    try {
+      const fcResp = await fetch('./data/forecasts.json');
+      forecasts = await fcResp.json();
+    } catch(e) { forecasts = []; }
+
+    // Load city comparison data
+    let comparison = [];
+    try {
+      const cmpResp = await fetch('./data/comparison.json');
+      comparison = await cmpResp.json();
+    } catch(e) {}
 
     // Populate selects
     const citySel = document.getElementById('citySelect');
-    siteData.cities_list.forEach(c => {
+    indexData.cities_list.forEach(c => {
       const opt = document.createElement('option');
       opt.value = c.code;
       opt.textContent = lang === 'en' ? c.name : c.name_cn;
       citySel.appendChild(opt);
     });
     const indSel = document.getElementById('indicatorSelect');
-    siteData.indicators_list.forEach(ind => {
+    indexData.indicators_list.forEach(ind => {
       const opt = document.createElement('option');
       opt.value = ind.id;
       opt.textContent = lang === 'en' ? ind.label : ind.label_cn;
@@ -157,28 +160,36 @@ async function loadData() {
     citySel.onchange = renderAll;
     indSel.onchange = renderAll;
 
-    document.getElementById('dataVersion').textContent =
-      `Data: ${siteData.data_years} · ${siteData.cities} cities · ${siteData.indicators} indicators`;
+    // Show content
+    document.getElementById('splash').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+
+    // Badge
+    const badge = document.getElementById('trendBadge');
+    if (indexData.is_sample) {
+      badge.textContent = t('sample');
+      badge.className = 'badge badge-warn';
+    } else {
+      badge.textContent = t('live');
+      badge.className = 'badge';
+    }
 
     renderAll();
   } catch(e) {
-    document.querySelector('.container').innerHTML =
-      `<div class="loading">⚠️ Failed to load data: ${e.message}</div>`;
+    document.getElementById('splash').innerHTML =
+      `<h2>⚠️</h2><p>Failed to load data</p><pre style="font-size:12px;color:var(--muted)">${e.message}</pre>`;
   }
 }
 
 function renderAll() { renderStats(); renderTrend(); renderCompare(); renderRadar(); }
 
-// ── Statistics Bar ──
+// ── Statistics ──
 function renderStats() {
   const row = document.getElementById('statsRow');
-  const labels = t('stats').split(', ');
-  const vals = [
-    siteData.cities,
-    siteData.indicators,
-    siteData.data_years,
-    siteData.forecasts?.length || 0
-  ];
+  const enLabels = ['Cities', 'Indicators', 'Data Years', 'Forecasts'];
+  const zhLabels = ['城市数', '指标数', '数据年份', '预测数'];
+  const labels = lang === 'en' ? enLabels : zhLabels;
+  const vals = [indexData.cities, indexData.indicators, indexData.data_years, forecasts.length];
   row.innerHTML = labels.map((l, i) =>
     `<div class="stat-card"><div class="num">${vals[i]}</div><div class="lbl">${l}</div></div>`
   ).join('');
@@ -187,30 +198,61 @@ function renderStats() {
 // ── Trend Chart ──
 function renderTrend() {
   if (!trendChart) trendChart = echarts.init(document.getElementById('trendChart'));
-  const years = Array.from({length: 16}, (_, i) => 2010 + i);
-  const forecastYears = Array.from({length: 5}, (_, i) => 2026 + i);
+  updateText('chart1Title', 'chart1');
 
-  // Generate sample data based on real GDP scale
   const city = document.getElementById('citySelect').value;
-  const baseVals = [100, 110, 125, 140, 158, 175, 195, 215, 235, 255, 275, 295, 315, 335, 355, 375];
-  const histData = baseVals.map(v => v + Math.random() * 20 - 10);
-  const fcData = [375, 390, 405, 418, 430];
-  const ciLow = fcData.map(v => v * 0.92);
-  const ciHigh = fcData.map(v => v * 1.08);
+  const indicator = document.getElementById('indicatorSelect').value;
+
+  // Find forecast for this city+indicator
+  const fc = forecasts.find(f =>
+    (f.city === city || (f.city_code === city)) && f.indicator === indicator
+  );
+
+  const histYears = fc?.historical_years || Array.from({length: 16}, (_, i) => 2010 + i);
+  const histVals = fc?.historical_values || histYears.map(() => Math.random() * 100 + 50);
+  const fcYears = fc?.forecast_years || [2026, 2027, 2028, 2029, 2030];
+  const fcVals = fc?.forecast_values || [];
+  const ciLow = fc?.confidence_lower || [];
+  const ciHigh = fc?.confidence_upper || [];
+
+  const allYears = [...histYears, ...fcYears];
+  const paddedHist = [...histVals, ...Array(fcYears.length).fill(null)];
+  const paddedFc = [...Array(histYears.length).fill(null), ...fcVals];
+
+  const series = [
+    { name: t('history'), type: 'line', data: histVals, smooth: true,
+      lineStyle: { color: '#2563eb', width: 2 },
+      areaStyle: { color: 'rgba(37,99,235,0.08)' } },
+  ];
+
+  if (fcVals.length > 0) {
+    series.push({ name: t('forecast'), type: 'line', data: paddedFc,
+      lineStyle: { color: '#f59e0b', width: 2, type: 'dashed' },
+      smooth: true });
+  }
+
+  if (ciLow.length > 0 && ciHigh.length > 0) {
+    series.push({
+      name: '95% CI', type: 'line',
+      data: [...Array(histYears.length).fill(null), ...ciLow],
+      lineStyle: { opacity: 0 }, stack: 'ci',
+      symbol: 'none',
+    });
+    series.push({
+      name: '', type: 'line',
+      data: [...Array(histYears.length).fill(null), ...ciHigh.map((v, i) => v - ciLow[i])],
+      lineStyle: { opacity: 0 }, stack: 'ci', areaStyle: { color: 'rgba(245,158,11,0.1)' },
+      symbol: 'none',
+    });
+  }
 
   trendChart.setOption({
     tooltip: { trigger: 'axis' },
     legend: { data: [t('history'), t('forecast')] },
-    xAxis: { type: 'category', data: [...years, ...forecastYears] },
-    yAxis: { type: 'value' },
-    series: [
-      { name: t('history'), type: 'line', data: histData, smooth: true,
-        lineStyle: { color: '#2563eb', width: 2 },
-        areaStyle: { color: 'rgba(37,99,235,0.1)' } },
-      { name: t('forecast'), type: 'line', data: [...Array(15).fill(null), ...fcData],
-        lineStyle: { color: '#f59e0b', width: 2, type: 'dashed' },
-        smooth: true },
-    ]
+    grid: { left: 60, right: 20, top: 40, bottom: 40 },
+    xAxis: { type: 'category', data: allYears },
+    yAxis: { type: 'value', name: fc?.label || '' },
+    series,
   });
   trendChart.resize();
 }
@@ -218,20 +260,32 @@ function renderTrend() {
 // ── Compare Chart ──
 function renderCompare() {
   if (!compareChart) compareChart = echarts.init(document.getElementById('compareChart'));
+  updateText('chart2Title', 'chart2');
+
   const indicator = document.getElementById('indicatorSelect').value;
-  const cities = siteData.cities_list;
-  const vals = cities.map(() => Math.random() * 100 + 50);
+  const cities = indexData.cities_list;
+
+  // Extract latest value for each city
+  const vals = cities.map(c => {
+    const fc = forecasts.find(f => f.city === c.code && f.indicator === indicator);
+    if (fc?.historical_values?.length) {
+      return fc.historical_values[fc.historical_values.length - 1];
+    }
+    return 0;
+  });
 
   compareChart.setOption({
     tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', data: cities.map(c => lang === 'en' ? c.name : c.name_cn), axisLabel: { rotate: 30 } },
+    grid: { left: 80, right: 20, top: 20, bottom: 60 },
+    xAxis: { type: 'category', data: cities.map(c => lang === 'en' ? c.name : c.name_cn), axisLabel: { rotate: 30, fontSize: 11 } },
     yAxis: { type: 'value' },
     series: [{
       type: 'bar',
       data: vals.map((v, i) => ({
-        value: Math.round(v),
-        itemStyle: { color: i === 0 ? '#2563eb' : '#94a3b8' }
+        value: typeof v === 'number' ? Math.round(v * 100) / 100 : v,
+        itemStyle: { color: i === 0 ? '#2563eb' : '#94a3b8', borderRadius: [4, 4, 0, 0] }
       })),
+      barMaxWidth: 40,
     }]
   });
   compareChart.resize();
@@ -240,31 +294,65 @@ function renderCompare() {
 // ── Radar Chart ──
 function renderRadar() {
   if (!radarChart) radarChart = echarts.init(document.getElementById('radarChart'));
-  const indicators = siteData.indicators_list.map(ind => ({
+  updateText('chart3Title', 'chart3');
+
+  const indicators = indexData.indicators_list.map(ind => ({
     name: lang === 'en' ? ind.label : ind.label_cn,
     max: 100
   }));
-  const cities = siteData.cities_list.slice(0, 3);
+  if (!indicators.length) return;
+
+  const cities = indexData.cities_list.slice(0, 5);
+  const radarData = cities.map(c => {
+    const vals = indicators.map((_, i) => {
+      const ind = indexData.indicators_list[i];
+      const fc = forecasts.find(f => f.city === c.code && f.indicator === ind.id);
+      if (fc?.historical_values?.length) {
+        return fc.historical_values[fc.historical_values.length - 1];
+      }
+      return 0;
+    });
+    return {
+      name: lang === 'en' ? c.name : c.name_cn,
+      value: vals.map(v => {
+        if (typeof v !== 'number') return 0;
+        // Normalize to 0-100 scale
+        return Math.min(100, Math.round(v / 500));
+      }),
+    };
+  });
+
   radarChart.setOption({
     tooltip: {},
-    radar: { indicator: indicators, radius: '60%' },
+    legend: { data: radarData.map(d => d.name), bottom: 0 },
+    radar: { indicator: indicators, radius: '55%', center: ['50%', '45%'] },
     series: [{
       type: 'radar',
-      data: cities.map(c => ({
-        name: lang === 'en' ? c.name : c.name_cn,
-        value: Array.from({length: indicators.length}, () => Math.round(Math.random() * 80 + 20)),
-      })),
+      data: radarData,
+      lineStyle: { width: 2 },
+      areaStyle: { opacity: 0.1 },
     }]
   });
   radarChart.resize();
 }
 
-// ── Responsive ──
+// ── Lang ──
+function toggleLang() {
+  lang = lang === 'en' ? 'zh' : 'en';
+  document.getElementById('langBtn').textContent = lang === 'en' ? '🇨🇳 中文' : '🇬🇧 English';
+  document.getElementById('splashText').textContent = t('loading');
+  renderAll();
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+}
+
 window.addEventListener('resize', () => {
   [trendChart, compareChart, radarChart].forEach(c => c?.resize());
 });
 
-// ── Init ──
 loadData();
 </script>
 </body>
