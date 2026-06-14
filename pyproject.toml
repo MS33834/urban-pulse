@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "urban-pulse"
+version = "1.0.0"
+description = "City economic intelligence platform — 10 Chinese cities, 16 years of real public data. FastAPI time-series forecasting, ECharts dashboards, data pipeline."
+readme = "README.md"
+license = {text = "GPL-3.0-or-later"}
+requires-python = ">=3.11"
+authors = [
+    {name = "badhope"}
+]
+keywords = [
+    "urban-economy",
+    "economic-analysis",
+    "city-comparison",
+    "time-series-forecasting",
+    "data-visualization",
+    "fastapi",
+    "echarts",
+    "data-science",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Office/Business :: Financial",
+]
+
+[project.urls]
+Homepage = "https://github.com/badhope/urban-pulse"
+Source = "https://github.com/badhope/urban-pulse"
+Documentation = "https://github.com/badhope/urban-pulse"
+Issues = "https://github.com/badhope/urban-pulse/issues"
+
+[tool.setuptools.packages.find]
+include = ["backend*", "config*"]
+
+[project.scripts]
+urban-pulse = "backend.api.main:run"
+
+[project.optional-dependencies]
+data = [
+    "akshare>=1.14",
+    "beautifulsoup4>=4.12",
+    "lxml>=5.0",
+]
+forecast = [
+    "statsforecast>=1.7",
+    "arch>=7.0",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "hypothesis>=6.100",
+    "httpx>=0.27",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+source = ["backend"]
+omit = ["*/tests/*"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
