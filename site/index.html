@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Urban Pulse — 城市脉搏</title>
+<title>Urban Pulse — City Economic Observatory</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -32,7 +32,6 @@
   h2 { font-size: 18px; font-weight: 400; margin: 48px 0 16px; color: #a78bfa; }
   h2::before { content: '## '; color: #525252; }
   h3 { font-size: 15px; font-weight: 400; margin: 24px 0 8px; color: #2dd4bf; }
-  h3::before { content: '  -> '; color: #525252; }
 
   p, li { font-size: 14px; color: #a3a3a3; margin: 8px 0; }
   a { color: #60a5fa; text-decoration: none; }
@@ -40,6 +39,14 @@
 
   .tagline { color: #525252; font-size: 13px; margin: 4px 0 24px; }
   .tagline::before { content: '# '; }
+
+  .lang-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 100;
+    background: #1a1a1a; border: 1px solid #262626; border-radius: 6px;
+    padding: 6px 12px; font-size: 12px; cursor: pointer; color: #a3a3a3;
+    font-family: inherit;
+  }
+  .lang-toggle:hover { color: #60a5fa; border-color: #60a5fa; }
 
   hr { border: none; border-top: 1px solid #262626; margin: 48px 0; }
 
@@ -70,137 +77,212 @@
   .badge { display: inline-block; border: 1px solid #262626; padding: 2px 8px; font-size: 11px; margin: 2px; border-radius: 3px; }
 
   .footer { text-align: center; margin-top: 80px; padding: 24px 0; color: #525252; font-size: 12px; }
+
+  .zh { display: none; }
 </style>
 </head>
 <body>
 <div class="page">
 
+<button class="lang-toggle" onclick="toggleLang()">🇨🇳 中文</button>
+
 <div class="path">~/projects/urban-pulse <span class="sep">$</span></div>
 <h1><span class="highlight">Urban Pulse</span> · 城市脉搏</h1>
-<div class="tagline">一个想做很久的城市经济观测站。10座中国城市，16年数据，5年预测。</div>
+<div class="tagline">An open-source urban economic observatory — 10 Chinese cities, 16yr data, 5yr forecasts.</div>
 
 <div class="stat-box">
-  <div><div class="num">10</div><div class="lbl">城市</div></div>
-  <div><div class="num">16</div><div class="lbl">年数据</div></div>
-  <div><div class="num">5</div><div class="lbl">预测年</div></div>
-  <div><div class="num">116</div><div class="lbl">测试通过</div></div>
+  <div><div class="num">10</div><div class="lbl">cities</div></div>
+  <div><div class="num">16</div><div class="lbl">years of data</div></div>
+  <div><div class="num">5</div><div class="lbl">forecast horizon</div></div>
+  <div><div class="num">116</div><div class="lbl">tests passing</div></div>
 </div>
 
 <hr>
 
-<h2>这是什么</h2>
+<!-- English content -->
+<div id="content-en">
+<h2>What is this</h2>
 
-<p>毕业设计。但毕业后不想扔在那吃灰。</p>
+<p>A long-running urban economic observatory. Auto-collects public data from 10 Chinese cities, runs forecasts, generates reports. Updates annually on January 15th — for as long as the internet exists.</p>
 
-<p>一直想看城市经济数据怎么变化——不只是单个城市自己的走势，而是十座城市放在一起，谁在加速、谁在减速、谁在换挡。GDP 增速放缓是暂时的还是趋势性的？哪些城市在抢人、哪些在留人？</p>
+<p>Started as a graduation project. Built to last forever.</p>
 
-<p>Urban Pulse 就是干这个的。自动采集数据、跑预测、生成报表。每年1月15号自动触发一次数据更新，然后重新跑一遍全量预测。长期跑着，年复一年。</p>
+<h2>What it can do</h2>
 
-<hr>
+<h3>🏙️ Competitiveness Index</h3>
+<p>Entropy-weighted scoring across 9 dimensions: capital, technology, institutions, industry chain, cost, scale, agglomeration, location, and healthcare. Rank cities, compare dimensions, generate per-city reports.</p>
 
-<h2>怎么用</h2>
+<h3>📈 Time-Series Forecasting</h3>
+<p>GDP, population, fiscal revenue projections with ARIMA/GARCH/Theta models. Confidence intervals included. Multi-city comparison supported.</p>
 
-<h3>🐳 Docker（推荐）</h3>
+<h3>🔍 Enterprise &amp; Policy Analysis</h3>
+<p>Cost environment, supply chain maturity, and policy support scoring per city. Built for location decisions and investment research.</p>
+
+<h2>Quick Start</h2>
+
 <pre>
-<span class="cm"># 两行命令跑起来</span>
+<span class="cm"># Docker (recommended)</span>
 git clone https://github.com/badhope/urban-pulse
 cd urban-pulse
 docker compose up
-<span class="cm"># 打开 http://localhost:8000</span>
+<span class="cm"># → http://localhost:8000/dashboard</span>
+<span class="cm"># → http://localhost:8000/docs</span>
 </pre>
 
-<h3>🐍 Python</h3>
 <pre>
+<span class="cm"># Native Python</span>
 pip install -r requirements.txt
 uvicorn backend.api.main:app --reload
 </pre>
 
-<p>浏览器打开 <code>http://localhost:8000/dashboard</code> 看仪表盘，<code>/docs</code> 看 API。</p>
-
-<hr>
-
-<h2>架构怎么回事</h2>
+<h2>Architecture</h2>
 
 <pre>
-<span class="cm"># 数据流向</span>
-
 <span class="gr">┌──────────────────┐</span>
-<span class="gr">│</span> 数据采集层        <span class="gr">│</span>  ← JSON / API / 手动导入
-<span class="gr">│</span> data_collection/  <span class="gr">│</span>
+<span class="gr">│</span> Data Collection  <span class="gr">│</span>  ← JSON / API / manual import
+<span class="gr">│</span> data_collection/ <span class="gr">│</span>
 <span class="gr">└────────┬─────────┘</span>
          <span class="yl">│</span>
 <span class="gr">┌────────▼─────────┐</span>
-<span class="gr">│</span> 预测引擎          <span class="gr">│</span>  ← SARIMA + Holt-Winters + Monte Carlo
-<span class="gr">│</span> forecast_engine/ <span class="gr">│</span>
+<span class="gr">│</span> Forecast Engine   <span class="gr">│</span>  ← ARIMA + GARCH + Theta
+<span class="gr">│</span> core/forecast    <span class="gr">│</span>
 <span class="gr">└────────┬─────────┘</span>
          <span class="yl">│</span>
 <span class="gr">┌────────▼─────────┐</span>
-<span class="gr">│</span> FastAPI 后端      <span class="gr">│</span>  ← 数据服务 + 预测 API
+<span class="gr">│</span> FastAPI Backend   <span class="gr">│</span>  ← REST API + data service
 <span class="gr">│</span> backend/api/     <span class="gr">│</span>
 <span class="gr">└────────┬─────────┘</span>
          <span class="yl">│</span>
 <span class="gr">┌────────▼─────────┐</span>
-<span class="gr">│</span> ECharts 仪表盘    <span class="gr">│</span>  ← 单页 HTML，接后端 API
+<span class="gr">│</span> ECharts Dashboard <span class="gr">│</span>  ← Vanilla JS SPA, zero build
 <span class="gr">│</span> frontend/        <span class="gr">│</span>
 <span class="gr">└──────────────────┘</span>
 </pre>
 
-<hr>
-
-<h2>技术栈</h2>
+<h2>Tech Stack</h2>
 
 <p>
-  <span class="badge">Python</span>
+  <span class="badge">Python 3.11+</span>
   <span class="badge">FastAPI</span>
-  <span class="badge">Pandas</span>
-  <span class="badge">NumPy</span>
-  <span class="badge">Statsmodels</span>
-  <span class="badge">SARIMA</span>
-  <span class="badge">GARCH</span>
-  <span class="badge">ECharts</span>
+  <span class="badge">Pandas / NumPy</span>
+  <span class="badge">statsmodels</span>
+  <span class="badge">scikit-learn</span>
+  <span class="badge">ECharts 5</span>
   <span class="badge">Docker</span>
   <span class="badge">GitHub Actions</span>
 </p>
 
-<hr>
+<h2>Data Sources</h2>
 
-<h2>数据从哪来</h2>
-
-<p>公开数据源，手动整理成 JSON 扔进 <code>data/cities/</code>。十个城市各一个文件，每个文件按年份存五个指标：</p>
+<p>Public data, manually curated into JSON under <code>data/cities/</code>. Each city file stores annual records with 19 economic indicators:</p>
 
 <ul>
-  <li>GDP（亿元）</li>
-  <li>GDP 增速（%）</li>
-  <li>常住人口（万人）</li>
-  <li>财政收入（亿元）</li>
-  <li>R&amp;D 投入强度（%）</li>
+  <li>GDP, GDP growth rate, fiscal revenue</li>
+  <li>Population, urbanization rate</li>
+  <li>R&amp;D intensity, high-tech industry ratio</li>
+  <li>Land prices, salary levels, energy costs</li>
+  <li>Supplier counts, delivery times, tax incentives</li>
+  <li>And more — see the <a href="https://github.com/badhope/urban-pulse/blob/main/docs/METHODOLOGY.md">methodology docs</a></li>
 </ul>
 
-<p>每年1月15号 GitHub Actions 自动触发，跑一遍采集脚本，重新训练预测模型，更新报表。长期跑着，年复一年。</p>
-
-<hr>
-
-<h2>还差什么（TODOs）</h2>
+<h2>Roadmap</h2>
 
 <ul>
-  <li>Jupyter Notebooks —— 答辩的时候直接甩给老师看</li>
-  <li>Dockerfile 验证 —— 写了但没测过完整流程</li>
-  <li>截图放进 README —— 让人一眼知道这东西长什么样</li>
-  <li>更多城市 —— 目前 10 城，想加到 15-20 城</li>
+  <li>Expand to 15-20 cities</li>
+  <li>Auto-scrapers for education, environment, infrastructure data</li>
+  <li>Multi-city VAR forecasting (economic ripple effects)</li>
+  <li>Forecast accuracy tracking vs actuals</li>
+  <li>Jupyter notebooks for reproducible research</li>
 </ul>
 
-<hr>
+<h2>License</h2>
 
-<h2>说人话</h2>
+<p>GPL-3.0-or-later. Free to use, fork, contribute.</p>
+</div>
 
-<p>这玩意是个毕业设计项目，但我打算一直维护下去。每年自动跑、自动更新，就像你种了一棵树然后看着它长。</p>
+<!-- Chinese content (hidden by default) -->
+<div id="content-zh" class="zh">
+<h2>这是什么</h2>
 
-<p>数据可能不完美，预测可能不准，但总比没有好。欢迎 PR。</p>
+<p>一个长期维护的城市经济观测站。自动采集 10 座中国城市的公开数据，跑预测，出报表。每年 1 月 15 号自动更新一次，重新跑一遍全量预测。长期跑着，年复一年。</p>
+
+<p>毕业设计。但毕业后不想扔在那吃灰。</p>
+
+<h2>能做什么</h2>
+
+<h3>🏙️ 竞争力指数</h3>
+<p>基于熵权法的城市竞争力评价，覆盖资本力、科技力、制度力、产业链力、成本力、规模力、聚集力、区位力、生命健康力 9 个维度。排名、雷达图、热力图、单城市分析报告一键生成。</p>
+
+<h3>📈 时间序列预测</h3>
+<p>GDP、人口、财政收入等多指标预测（ARIMA/GARCH/Theta），含置信区间，支持多城市对比。</p>
+
+<h3>🔍 企业与政策分析</h3>
+<p>城市成本环境、供应链成熟度、政策支持力度评分。帮助企业做选址决策和投资研究。</p>
+
+<h2>快速开始</h2>
+
+<pre>
+<span class="cm"># Docker（推荐）</span>
+git clone https://github.com/badhope/urban-pulse
+cd urban-pulse
+docker compose up
+<span class="cm"># → http://localhost:8000/dashboard</span>
+<span class="cm"># → http://localhost:8000/docs</span>
+</pre>
+
+<pre>
+<span class="cm"># Python 原生</span>
+pip install -r requirements.txt
+uvicorn backend.api.main:app --reload
+</pre>
+
+<h2>技术栈</h2>
+
+<p>
+  <span class="badge">Python 3.11+</span>
+  <span class="badge">FastAPI</span>
+  <span class="badge">Pandas / NumPy</span>
+  <span class="badge">statsmodels</span>
+  <span class="badge">scikit-learn</span>
+  <span class="badge">ECharts 5</span>
+  <span class="badge">Docker</span>
+  <span class="badge">GitHub Actions</span>
+</p>
+
+<h2>License</h2>
+
+<p>GPL-3.0-or-later。欢迎使用、Fork、贡献。</p>
+</div>
+
+<script>
+function toggleLang() {
+  var en = document.getElementById('content-en');
+  var zh = document.getElementById('content-zh');
+  var btn = document.querySelector('.lang-toggle');
+  if (zh.style.display === 'block') {
+    zh.style.display = 'none';
+    en.style.display = 'block';
+    btn.textContent = '🇨🇳 中文';
+  } else {
+    zh.style.display = 'block';
+    en.style.display = 'none';
+    btn.textContent = '🇺🇸 English';
+  }
+}
+
+// Respect browser language
+if (navigator.language && navigator.language.startsWith('zh')) {
+  document.getElementById('content-en').style.display = 'none';
+  document.getElementById('content-zh').style.display = 'block';
+  document.querySelector('.lang-toggle').textContent = '🇺🇸 English';
+}
+</script>
 
 <div class="footer">
   <a href="https://github.com/badhope/urban-pulse">github.com/badhope/urban-pulse</a>
-  · <span class="sep">MIT</span>
+  · <span class="sep">GPL-3.0</span>
   · <span class="sep">built by</span> <a href="https://github.com/badhope">@badhope</a>
+  · <span class="sep">⭐ 15</span>
 </div>
 
 </div>
