@@ -10,3 +10,7 @@ _site/
 .hermes/
 models/*.pkl
 models/SHA256SUMS
+
+data/*.db
+data/*.db-shm
+data/*.db-wal

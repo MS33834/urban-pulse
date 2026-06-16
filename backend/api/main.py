@@ -76,6 +76,13 @@ def _seed_city_manager() -> None:
 async def lifespan(app: FastAPI):
     logger.info("starting %s v%s", settings.PROJECT_NAME, settings.VERSION)
     logger.info("loaded %d cities", len(getattr(settings, "CITY_NAMES", [])))
+
+    # Init SQLite storage + seed 10-city dataset
+    from backend.core.storage import init_db
+    init_db()
+    from backend.seed_data import seed_if_missing
+    seed_if_missing()
+
     _seed_city_manager()
     yield
     logger.info("shutting down")
@@ -127,12 +134,14 @@ from backend.api.routes import (
     cities_router,
     cities_v2_router,
     data_router,
+    datasets_router,
     forecast_router,
     index_router,
     static_router,
 )
 
 app.include_router(data_router, prefix=settings.API_V1_STR)
+app.include_router(datasets_router, prefix=settings.API_V1_STR)
 app.include_router(analysis_router, prefix=settings.API_V1_STR)
 app.include_router(analysis_v3_router, prefix=settings.API_V1_STR)
 app.include_router(cities_router, prefix=settings.API_V1_STR)
