@@ -3,6 +3,7 @@
 """
 
 import logging
+from typing import Any
 
 import pandas as pd
 
@@ -31,7 +32,7 @@ class DataTransformer:
         """数据合并"""
         return pd.merge(left, right, on=on, how=how)
 
-    def filter_data(self, df: pd.DataFrame, conditions: dict[str, any]) -> pd.DataFrame:
+    def filter_data(self, df: pd.DataFrame, conditions: dict[str, Any]) -> pd.DataFrame:
         """数据筛选"""
         df_filtered = df.copy()
         for col, value in conditions.items():

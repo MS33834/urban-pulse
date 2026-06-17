@@ -3,6 +3,7 @@
 """
 
 import logging
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -23,7 +24,7 @@ class DataCleaner:
             return df.select_dtypes(include=[np.number]).columns.tolist()
         return [col for col in columns if col in df.columns]
 
-    def detect_missing(self, df: pd.DataFrame) -> dict[str, any]:
+    def detect_missing(self, df: pd.DataFrame) -> dict[str, Any]:
         """检测缺失值"""
         missing_info = {
             "total_cells": df.size,
@@ -72,9 +73,9 @@ class DataCleaner:
                 if len(mode_val) > 0:
                     df_clean[col] = df_clean[col].fillna(mode_val[0])
             elif method == "forward":
-                df_clean[col] = df_clean[col].fillna(method="ffill")
+                df_clean[col] = df_clean[col].ffill()
             elif method == "backward":
-                df_clean[col] = df_clean[col].fillna(method="bfill")
+                df_clean[col] = df_clean[col].bfill()
             elif method == "zero":
                 df_clean[col] = df_clean[col].fillna(0)
 
@@ -88,7 +89,7 @@ class DataCleaner:
 
     def detect_outliers_zscore(
         self, df: pd.DataFrame, threshold: float = 3.0, columns: list[str] | None = None
-    ) -> dict[str, any]:
+    ) -> dict[str, Any]:
         """使用 Z-score 检测异常值"""
         target_columns = self._get_numeric_columns(df, columns)
         outliers_info = {"method": "zscore", "threshold": threshold, "columns": {}}
@@ -110,7 +111,7 @@ class DataCleaner:
 
     def detect_outliers_iqr(
         self, df: pd.DataFrame, multiplier: float = 1.5, columns: list[str] | None = None
-    ) -> dict[str, any]:
+    ) -> dict[str, Any]:
         """使用 IQR 检测异常值"""
         target_columns = self._get_numeric_columns(df, columns)
         outliers_info = {"method": "iqr", "multiplier": multiplier, "columns": {}}
@@ -218,7 +219,7 @@ class DataCleaner:
 
         return df_std, params
 
-    def generate_quality_report(self, df: pd.DataFrame) -> dict[str, any]:
+    def generate_quality_report(self, df: pd.DataFrame) -> dict[str, Any]:
         """生成数据质量报告"""
         report = {
             "shape": df.shape,

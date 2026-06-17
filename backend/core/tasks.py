@@ -5,7 +5,7 @@ Celery 任务队列模块 - 异步任务处理系统
 import logging
 import os
 import sys
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from celery import Celery
 
@@ -19,8 +19,8 @@ logger = logging.getLogger(__name__)
 # 配置 Celery
 app = Celery(
     "regional_economic_analysis",
-    broker="redis://localhost:6379/1",  # Redis 作为 broker
-    backend="redis://localhost:6379/2",  # Redis 作为结果存储
+    broker=os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/1"),  # Redis 作为 broker
+    backend=os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/2"),  # Redis 作为结果存储
 )
 
 # 配置 Celery
@@ -137,7 +137,7 @@ def weekly_data_quality_check(self):
     """
     logger.info("开始每周数据质量检查任务")
 
-    quality_report = {"timestamp": __import__("datetime").datetime.now().isoformat(), "checks": [], "warnings": []}
+    quality_report = {"timestamp": datetime.now().isoformat(), "checks": [], "warnings": []}
 
     try:
         # 检查各数据源缓存状态
@@ -177,7 +177,7 @@ def custom_analysis_task(self, analysis_type: str, params: dict):
     try:
         # 根据分析类型导入相应的分析器
         if analysis_type == "enterprise":
-            from backend.analysis.enterprise_analyzer import EnterpriseAnalyzer
+            from backend.analysis.enterprise_analyzer_v3 import EnterpriseAnalyzer
 
             analyzer = EnterpriseAnalyzer()
         elif analysis_type == "government":

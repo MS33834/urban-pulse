@@ -8,7 +8,7 @@ import logging
 import math
 import operator as op
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
@@ -84,11 +84,7 @@ class CalculationResult:
     status: CalculationStatus
     message: str = ""
     confidence: float = 1.0
-    metadata: dict[str, Any] = None
-
-    def __post_init__(self):
-        if self.metadata is None:
-            self.metadata = {}
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {

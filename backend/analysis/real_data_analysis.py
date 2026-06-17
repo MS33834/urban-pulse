@@ -24,6 +24,10 @@ class RealDataAnalyzer:
 
     def fetch_macro_data(self) -> pd.DataFrame:
         """获取真实宏观经济数据"""
+        if ak is None:
+            raise ImportError(
+                "akshare is required for real data fetching. Install with: pip install akshare"
+            )
         try:
             # 获取中国GDP数据
             logger.info("正在获取GDP数据...")

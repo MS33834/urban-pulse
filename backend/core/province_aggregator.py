@@ -129,17 +129,22 @@ def get_province_timeseries(
         return pd.DataFrame(columns=["year", "value", "cities", "sources"])
 
     aggregation = aggregate_indicator(indicator)
-    rows: list[dict[str, Any]] = []
-    years = sorted(
-        {int(item["year"]) for city in cities for item in get_historical_data(city).to_dict(orient="records")}
-    )
 
+    # 预加载所有城市的 DataFrame,避免 N×M 重复调用 get_historical_data
+    city_dfs: dict[str, pd.DataFrame] = {}
+    for city in cities:
+        df = get_historical_data(city)
+        if not df.empty:
+            city_dfs[city] = df
+
+    years = sorted({int(item["year"]) for df in city_dfs.values() for item in df.to_dict(orient="records")})
+
+    rows: list[dict[str, Any]] = []
     for year in years:
         city_values: list[tuple[float, float]] = []  # (value, weight)
         city_names: list[str] = []
-        for city in cities:
-            df = get_historical_data(city)
-            if df.empty or indicator not in df.columns:
+        for city, df in city_dfs.items():
+            if indicator not in df.columns:
                 continue
             row = df[df["year"] == year]
             if row.empty:

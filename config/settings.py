@@ -104,14 +104,6 @@ def setup_logging(settings: Settings):
 settings = Settings()
 setup_logging(settings)
 
-if settings.SECRET_KEY == "dev-secret-key-change-in-production":
-    import warnings
-
-    warnings.warn(
-        "SECRET_KEY is using the default development value. Set the SECRET_KEY environment variable for production.",
-        RuntimeWarning,
-    )
-
 if settings.ALGORITHM == "RS256" and not settings.SECRET_KEY.startswith("-----BEGIN"):
     import warnings
 

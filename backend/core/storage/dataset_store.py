@@ -77,13 +77,16 @@ def save_column_info(dataset_id: str, cols: list[dict[str, Any]]) -> None:
     from backend.core.storage import _lock
     with _lock:
         conn.execute("DELETE FROM dataset_columns WHERE dataset_id = ?", (dataset_id,))
-        for c in cols:
-            conn.execute(
-                """INSERT INTO dataset_columns
-                   (dataset_id, col_name, col_index, detected_role, data_type, human_label)
-                   VALUES (?, ?, ?, ?, ?, ?)""",
+        # 批量插入,减少 SQLite 调用开销
+        conn.executemany(
+            """INSERT INTO dataset_columns
+               (dataset_id, col_name, col_index, detected_role, data_type, human_label)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            [
                 (dataset_id, c["col_name"], c["col_index"],
                  c.get("detected_role"), c.get("data_type"),
-                 c.get("human_label", c["col_name"])),
-            )
+                 c.get("human_label", c["col_name"]))
+                for c in cols
+            ],
+        )
         conn.commit()

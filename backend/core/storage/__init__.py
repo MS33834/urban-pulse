@@ -113,6 +113,15 @@ def init_db() -> None:
                 ON records(dataset_id, entity, year);
             CREATE INDEX IF NOT EXISTS idx_records_indicator
                 ON records(dataset_id, indicator);
+            -- 覆盖 ORDER BY entity, year, indicator 的查询
+            CREATE INDEX IF NOT EXISTS idx_records_order
+                ON records(dataset_id, entity, year, indicator);
+            -- dataset_columns 按 col_index 排序查询
+            CREATE INDEX IF NOT EXISTS idx_columns_dataset_idx
+                ON dataset_columns(dataset_id, col_index);
+            -- datasets 按创建时间倒序列表
+            CREATE INDEX IF NOT EXISTS idx_datasets_created
+                ON datasets(created_at DESC);
         """)
         conn.commit()
     logger.info("Database tables initialized")

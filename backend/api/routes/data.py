@@ -5,6 +5,7 @@
 import json
 import logging
 import threading
+from collections import deque
 from datetime import datetime
 from pathlib import Path
 
@@ -17,7 +18,9 @@ router = APIRouter(prefix="/data", tags=["数据"])
 
 
 # 内存示例数据 — 加锁保护,避免多 worker / 多线程并发写竞争。
-_sample_data: list["Indicator"] = []
+# 使用 deque 限制最大条目数,防止长期运行内存无限增长。
+_SAMPLE_DATA_MAX = 10000
+_sample_data: deque["Indicator"] = deque(maxlen=_SAMPLE_DATA_MAX)
 _sample_lock = threading.Lock()
 
 

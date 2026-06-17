@@ -5,7 +5,7 @@ Pydantic 数据模型
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class DataSourceEnum(StrEnum):
@@ -32,16 +32,16 @@ class IndicatorCategoryEnum(StrEnum):
 
 # Indicator models
 class IndicatorBase(BaseModel):
-    code: str = Field(..., description="指标代码")
-    name: str = Field(..., description="指标名称")
+    code: str = Field(..., min_length=1, max_length=128, description="指标代码")
+    name: str = Field(..., min_length=1, max_length=256, description="指标名称")
     value: float = Field(..., description="数值")
-    unit: str | None = Field(None, description="单位")
-    year: int = Field(..., description="年份")
-    month: int | None = Field(None, description="月份")
-    quarter: int | None = Field(None, description="季度")
-    region: str | None = Field(None, description="地区")
-    category: str = Field(..., description="类别")
-    source: str = Field(..., description="数据来源")
+    unit: str | None = Field(None, max_length=64, description="单位")
+    year: int = Field(..., ge=1990, le=2100, description="年份")
+    month: int | None = Field(None, ge=1, le=12, description="月份")
+    quarter: int | None = Field(None, ge=1, le=4, description="季度")
+    region: str | None = Field(None, max_length=128, description="地区")
+    category: str = Field(..., min_length=1, max_length=64, description="类别")
+    source: str = Field(..., min_length=1, max_length=128, description="数据来源")
 
 
 class IndicatorCreate(IndicatorBase):
@@ -110,8 +110,15 @@ class BatchInferenceRequest(BaseModel):
 class ScrapeRequest(BaseModel):
     source: DataSourceEnum = Field(..., description="数据源")
     indicator_codes: list[str] | None = Field(None, description="指标代码列表，为空则采集全部")
-    start_year: int | None = Field(None, description="起始年份")
-    end_year: int | None = Field(None, description="结束年份")
+    start_year: int | None = Field(None, ge=1990, le=2100, description="起始年份")
+    end_year: int | None = Field(None, ge=1990, le=2100, description="结束年份")
+
+    @model_validator(mode="after")
+    def _check_year_range(self):
+        """确保 start_year <= end_year（当两者都提供时）。"""
+        if self.start_year is not None and self.end_year is not None and self.start_year > self.end_year:
+            raise ValueError("start_year must be <= end_year")
+        return self
 
 
 class ScrapeResponse(BaseModel):
@@ -130,7 +137,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(..., min_length=8, max_length=128, description="密码（至少8位）")
 
 
 class User(UserBase):

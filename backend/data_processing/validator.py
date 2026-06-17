@@ -3,6 +3,7 @@
 """
 
 import logging
+from typing import Any
 
 import pandas as pd
 
@@ -15,7 +16,7 @@ class DataValidator:
     def __init__(self):
         pass
 
-    def validate_required_columns(self, df: pd.DataFrame, required_columns: list[str]) -> dict[str, any]:
+    def validate_required_columns(self, df: pd.DataFrame, required_columns: list[str]) -> dict[str, Any]:
         """验证必需列"""
         missing_columns = [col for col in required_columns if col not in df.columns]
         return {
@@ -24,7 +25,7 @@ class DataValidator:
             "existing_columns": list(df.columns),
         }
 
-    def validate_data_types(self, df: pd.DataFrame, expected_types: dict[str, type]) -> dict[str, any]:
+    def validate_data_types(self, df: pd.DataFrame, expected_types: dict[str, type]) -> dict[str, Any]:
         """验证数据类型"""
         mismatches = {}
         for col, expected_type in expected_types.items():
@@ -44,7 +45,7 @@ class DataValidator:
             return "object" in actual or "string" in actual
         return False
 
-    def validate_value_ranges(self, df: pd.DataFrame, value_ranges: dict[str, tuple]) -> dict[str, any]:
+    def validate_value_ranges(self, df: pd.DataFrame, value_ranges: dict[str, tuple]) -> dict[str, Any]:
         """验证值范围"""
         range_violations = {}
         for col, (min_val, max_val) in value_ranges.items():
@@ -58,7 +59,7 @@ class DataValidator:
                     }
         return {"valid": len(range_violations) == 0, "violations": range_violations}
 
-    def validate_unique_values(self, df: pd.DataFrame, unique_columns: list[str]) -> dict[str, any]:
+    def validate_unique_values(self, df: pd.DataFrame, unique_columns: list[str]) -> dict[str, Any]:
         """验证唯一性"""
         duplicates = {}
         for col in unique_columns:
@@ -68,7 +69,7 @@ class DataValidator:
                     duplicates[col] = {"duplicate_count": int(duplicate_count)}
         return {"valid": len(duplicates) == 0, "duplicates": duplicates}
 
-    def validate_not_null(self, df: pd.DataFrame, not_null_columns: list[str]) -> dict[str, any]:
+    def validate_not_null(self, df: pd.DataFrame, not_null_columns: list[str]) -> dict[str, Any]:
         """验证非空"""
         null_columns = {}
         for col in not_null_columns:
@@ -86,7 +87,7 @@ class DataValidator:
         value_ranges: dict[str, tuple] | None = None,
         unique_columns: list[str] | None = None,
         not_null_columns: list[str] | None = None,
-    ) -> dict[str, any]:
+    ) -> dict[str, Any]:
         """生成完整验证报告"""
         report = {}
 

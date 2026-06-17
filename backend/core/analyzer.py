@@ -3,7 +3,7 @@ Generic analyzer — ties config, data loading, and ML into one workflow.
 """
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -26,8 +26,8 @@ class AnalysisResult:
     dataset: Dataset
     benchmarks: dict[str, Any]
     ml_result: TrainingResult | None = None
-    insights: list[dict[str, Any]] = None
-    recommendations: list[str] = None
+    insights: list[dict[str, Any]] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
 
 
 class UniversalAnalyzer:

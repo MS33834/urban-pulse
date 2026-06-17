@@ -171,9 +171,8 @@ class DataManager:
             df.to_json(file_path, orient="records", force_ascii=False, indent=2)
         elif format == "database":
             file_path = output_dir / f"{dataset.name}.db"
-            conn = sqlite3.connect(file_path)
-            df.to_sql(dataset.name, conn, if_exists="replace", index=False)
-            conn.close()
+            with sqlite3.connect(file_path) as conn:
+                df.to_sql(dataset.name, conn, if_exists="replace", index=False)
 
         logger.info(f"Dataset saved to {file_path}")
         return file_path

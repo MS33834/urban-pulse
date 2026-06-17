@@ -1,14 +1,4 @@
-<
-
-    // -- 竞争力指数 --
-    app.on("index", async () => {
-      init = true;
-      if (!window.__indexTab) {
-        window.__indexTab = new IndexTab(api);
-      }
-      await window.__indexTab.load();
-    });
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN" data-theme="light">
 <head>
 <meta charset="UTF-8">
@@ -3238,7 +3228,8 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
 
       // Tab 路由
       router.bind();
-      const mounted = { dashboard: false, enterprise: false, government: false, cities: false };
+      const mounted = { dashboard: false, enterprise: false, government: false, cities: false, index: false };
+      let indexTab = null;
       const mountIfNeeded = (name) => {
         if (mounted[name]) return;
         mounted[name] = true;
@@ -3246,7 +3237,8 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
           dashboard:  () => Views.Dashboard.mount(api, store),
           enterprise: () => Views.Enterprise.mount(api),
           government: () => Views.Government.mount(api),
-          cities:     () => Views.Cities.mount(api, store)
+          cities:     () => Views.Cities.mount(api, store),
+          index:      () => { indexTab = new IndexTab(api); return indexTab.load(); }
         };
         Promise.resolve()
           .then(() => map[name]?.())
@@ -3257,6 +3249,7 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
       router.on("enterprise", () => mountIfNeeded("enterprise"));
       router.on("government", () => mountIfNeeded("government"));
       router.on("cities",     () => mountIfNeeded("cities"));
+      router.on("index",      () => mountIfNeeded("index"));
 
       // 全局错误兜底
       window.addEventListener("error", (e) => {
@@ -3275,16 +3268,6 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
       });
     }
   };
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => App.init().catch((e) => console.error("[citylens] boot failed", e)));
-  } else {
-    App.init().catch((e) => console.error("[citylens] boot failed", e));
-  }
-})();
-</script>
-</body>
-</html>
 
   // ============================================================
   // 13. Competitiveness Index Tab
@@ -3330,7 +3313,7 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
       if (!ol || rankings.length === 0) return;
       const medals = ["\u{1F947}", "\u{1F948}", "\u{1F949}"];
       ol.innerHTML = rankings.slice(0, 3).map(([city, score], i) =>
-        `<li style="padding:8px 0;border-bottom:${i < 2 ? '1px solid var(--sand-200)' : 'none'};font-weight:${i === 0 ? 700 : 500};color:${i === 0 ? 'var(--copper-600)' : 'var(--stone-800)'}">${medals[i] || ""} ${city} \u2014 <strong>${score.toFixed(1)}</strong></li>`
+        `<li style="padding:8px 0;border-bottom:${i < 2 ? '1px solid var(--sand-200)' : 'none'};font-weight:${i === 0 ? 700 : 500};color:${i === 0 ? 'var(--copper-600)' : 'var(--stone-800)'}">${medals[i] || ""} ${Utils.esc(city)} \u2014 <strong>${score.toFixed(1)}</strong></li>`
       ).join("");
     }
 
@@ -3407,7 +3390,7 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
       const sel = document.getElementById("indexCitySelector");
       if (!sel || !resp.overall) return;
       const cities = Object.keys(resp.overall);
-      sel.innerHTML = cities.map(c => `<option value="${c}">${c}</option>`).join("");
+      sel.innerHTML = cities.map(c => `<option value="${Utils.esc(c)}">${Utils.esc(c)}</option>`).join("");
       this.currentCity = cities[0] || null;
       this._renderRadar(resp, this.currentCity);
       sel.addEventListener("change", () => {
@@ -3499,7 +3482,7 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
           以下 <strong>${missing.length}</strong> 个维度暂无数据覆盖：
         </div>
         <ul style="padding-left:16px;margin:0 0 12px 0;">
-          ${missing.map(d => `<li style="margin-bottom:4px;">${d}</li>`).join('')}
+          ${missing.map(d => `<li style="margin-bottom:4px;">${Utils.esc(d)}</li>`).join('')}
         </ul>
         <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--sand-200);">
           <div style="font-weight:500;margin-bottom:8px;">💡 贡献数据</div>
@@ -3512,4 +3495,14 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
       `;
     }
   }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => App.init().catch((e) => console.error("[citylens] boot failed", e)));
+  } else {
+    App.init().catch((e) => console.error("[citylens] boot failed", e));
+  }
+})();
+</script>
+</body>
+</html>
 

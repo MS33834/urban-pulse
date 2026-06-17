@@ -58,9 +58,9 @@ async def upload_dataset(
         )
     except ValueError as e:
         raise HTTPException(400, str(e)) from e
-    except Exception as e:
+    except Exception:
         logger.exception("Upload failed for %s", file.filename)
-        raise HTTPException(500, f"Import error: {e}") from None
+        raise HTTPException(500, "数据导入失败，请检查文件格式") from None
 
     if ds is None:
         raise HTTPException(400, "No data could be extracted from the file") from None

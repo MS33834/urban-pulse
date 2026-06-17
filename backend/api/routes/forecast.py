@@ -155,7 +155,7 @@ async def forecast_city_indicator_endpoint(
 
 
 @router.post("/compare", summary="多城市 × 单指标 预测对比")
-async def compare_city_forecasts(request: CompareRequest) -> dict[str, Any]:
+def compare_city_forecasts(request: CompareRequest) -> dict[str, Any]:
     """
     对比多个城市 × 同一指标 的预测结果。
     """
@@ -263,7 +263,7 @@ async def forecast_province_endpoint(
 
 
 @router.get("/report/full", summary="完整预测报告(8 城 × 1 指标)")
-async def get_full_forecast_report(
+def get_full_forecast_report(
     indicator: str = Query("gdp", description="默认 gdp"),
     forecast_years: int = Query(5, ge=1, le=20),
 ) -> dict[str, Any]:

@@ -4,6 +4,7 @@
 """
 
 import logging
+import threading
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -351,11 +352,14 @@ class ConfigManager:
 
 # 单例
 _config_manager: ConfigManager | None = None
+_config_lock = threading.Lock()
 
 
 def get_config_manager(config_dir: str | None = None) -> ConfigManager:
-    """获取配置管理器单例"""
+    """获取配置管理器单例（线程安全）"""
     global _config_manager
     if _config_manager is None:
-        _config_manager = ConfigManager(config_dir)
+        with _config_lock:
+            if _config_manager is None:
+                _config_manager = ConfigManager(config_dir)
     return _config_manager

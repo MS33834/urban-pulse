@@ -205,10 +205,12 @@ class ConnectionManager:
                 del self.connection_subscriptions[connection_id]
 
             # 清理用户连接映射
-            for user_id, connections in self.user_connections.items():
+            # 先收集要删除的 key,避免迭代字典时修改字典
+            to_delete = [uid for uid, conns in self.user_connections.items() if not conns]
+            for uid in to_delete:
+                del self.user_connections[uid]
+            for connections in self.user_connections.values():
                 connections.discard(connection_id)
-                if not connections:
-                    del self.user_connections[user_id]
 
         logger.info(f"WebSocket 连接已断开: {connection_id}")
 

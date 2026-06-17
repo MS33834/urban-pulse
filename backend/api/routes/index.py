@@ -75,7 +75,7 @@ class ReportRequest(BaseModel):
 
 
 @router.post("/compute")
-async def compute_index(req: ComputeRequest):
+def compute_index(req: ComputeRequest):
     """计算综合竞争力指数
 
     - city_codes: 可选，指定城市名称列表，默认全部
@@ -87,9 +87,9 @@ async def compute_index(req: ComputeRequest):
     try:
         ranker = get_ranker()
         result = ranker.compute_index(city_names=city_names, method=method)
-    except Exception as e:
+    except Exception:
         logger.exception("计算竞争力指数失败")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail="计算竞争力指数失败，请稍后重试") from None
 
     return JSONResponse(
         content=result,
@@ -106,9 +106,9 @@ async def get_rankings(dimension: str | None = None):
     try:
         ranker = get_ranker()
         result = ranker.compute_index()
-    except Exception as e:
+    except Exception:
         logger.exception("获取排名失败")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail="获取排名失败，请稍后重试") from None
 
     if dimension:
         dim_rankings = result.get("rankings", {}).get(dimension)

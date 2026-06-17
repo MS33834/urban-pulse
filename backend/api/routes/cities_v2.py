@@ -23,13 +23,14 @@ router = APIRouter(prefix="/cities", tags=["城市"])
 
 
 @router.get("/list", summary="获取所有城市列表")
-async def list_cities() -> dict[str, Any]:
+def list_cities() -> dict[str, Any]:
     """获取系统支持的所有城市列表"""
-    return {"cities": get_all_cities(), "total": len(get_all_cities())}
+    cities = get_all_cities()
+    return {"cities": cities, "total": len(cities)}
 
 
 @router.get("/benchmarks/scores", summary="获取评分基准")
-async def get_scoring_benchmarks() -> dict[str, Any]:
+def get_scoring_benchmarks() -> dict[str, Any]:
     """
     获取评分系统的基准值
 
@@ -72,7 +73,7 @@ async def get_city_detail(city_name: str) -> dict[str, Any]:
 
 
 @router.get("/{city_name}/historical", summary="获取城市历史数据")
-async def get_city_historical(city_name: str) -> dict[str, Any]:
+def get_city_historical(city_name: str) -> dict[str, Any]:
     """
     获取指定城市的历史时间序列数据
 

@@ -70,13 +70,13 @@ class TestEnterpriseAnalyzer:
 
     def test_enterprise_analyzer_init(self):
         """测试 EnterpriseAnalyzer 初始化"""
-        from backend.analysis.enterprise_analyzer import EnterpriseAnalyzer
+        from backend.analysis.enterprise_analyzer_v3 import EnterpriseAnalyzer
 
         analyzer = EnterpriseAnalyzer()
         assert analyzer is not None
 
     def test_enterprise_analyzer_with_sample_data(self):
-        from backend.analysis.enterprise_analyzer import EnterpriseAnalyzer
+        from backend.analysis.enterprise_analyzer_v3 import EnterpriseAnalyzer
 
         analyzer = EnterpriseAnalyzer()
         sample_data = {

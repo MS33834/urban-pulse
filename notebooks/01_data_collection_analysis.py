@@ -60,7 +60,7 @@ except ImportError:
     print("⚠️  Prophet未安装，预测功能将跳过")
 
 # 项目内部模块
-from backend.analysis.enterprise_analyzer_v2 import enterprise_analyzer_v2
+from backend.analysis.enterprise_analyzer_v3 import enterprise_analyzer as enterprise_analyzer_v2
 from backend.analysis.real_data_analysis import real_data_analyzer
 
 print("✅ 库导入完成！")

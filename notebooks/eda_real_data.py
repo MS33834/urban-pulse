@@ -22,7 +22,7 @@ from pathlib import Path
 plt.rcParams["font.sans-serif"] = ["SimHei", "WenQuanYi Micro Hei", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
 
-from backend.analysis.enterprise_analyzer_v2 import enterprise_analyzer_v2
+from backend.analysis.enterprise_analyzer_v3 import enterprise_analyzer as enterprise_analyzer_v2
 from backend.analysis.real_data_analysis import real_data_analyzer
 
 

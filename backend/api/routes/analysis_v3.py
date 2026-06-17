@@ -25,10 +25,10 @@ async def analyze_enterprise_v3(city_name: str) -> dict[str, Any]:
 
     - **city_name**: 城市名称
     """
-    from backend.analysis.enterprise_analyzer_v3 import EnterpriseAnalyzerV3
+    from backend.analysis.enterprise_analyzer_v3 import EnterpriseAnalyzer
 
     try:
-        analyzer = EnterpriseAnalyzerV3()
+        analyzer = EnterpriseAnalyzer()
         result = analyzer.analyze(city_name)
 
         return {
@@ -50,15 +50,15 @@ async def analyze_enterprise_v3(city_name: str) -> dict[str, Any]:
                 "weight_source": "对50家半导体制造企业的调研",
             },
         }
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
-    except Exception as e:
-        logger.error(f"分析失败: {e}")
-        raise HTTPException(status_code=500, detail="分析失败") from None
+    except ValueError:
+        raise HTTPException(status_code=404, detail=f"城市 {city_name} 数据未找到") from None
+    except Exception:
+        logger.exception("企业选址分析失败: city=%s", city_name)
+        raise HTTPException(status_code=500, detail="分析失败，请稍后重试") from None
 
 
 @router.post("/enterprise/v3/compare", summary="多城市对比分析")
-async def compare_enterprises_v3(city_names: list[str]) -> dict[str, Any]:
+def compare_enterprises_v3(city_names: list[str]) -> dict[str, Any]:
     """
     对比多个城市的企业选址友好度
 
@@ -82,7 +82,7 @@ async def compare_enterprises_v3(city_names: list[str]) -> dict[str, Any]:
 
 
 @router.get("/enterprise/v3/case/semiconductor", summary="半导体企业选址案例分析")
-async def get_semiconductor_case() -> dict[str, Any]:
+def get_semiconductor_case() -> dict[str, Any]:
     """
     半导体制造企业选址案例分析
 
@@ -109,7 +109,7 @@ async def get_semiconductor_case() -> dict[str, Any]:
             "data_quality_report": result.get("data_quality_report", {}),
             "methodology": result.get("benchmark_info", {}),
         }
-    except Exception as e:
-        logger.error(f"案例分析失败: {e}")
-        raise HTTPException(status_code=500, detail="案例分析失败") from None
+    except Exception:
+        logger.exception("半导体选址案例分析失败")
+        raise HTTPException(status_code=500, detail="案例分析失败，请稍后重试") from None
 

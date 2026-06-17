@@ -8,7 +8,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from backend.analysis.enterprise_analyzer_v2 import enterprise_analyzer_v2
+from backend.analysis.enterprise_analyzer_v3 import enterprise_analyzer as enterprise_analyzer_v2
 from backend.analysis.real_data_analysis import real_data_analyzer
 from config.analysis_config import AnalysisConfig
 
