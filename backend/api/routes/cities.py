@@ -155,7 +155,7 @@ async def aggregate_data(request: AggregationRequest):
         raise
     except Exception as e:
         logger.error("聚合分析失败: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from None
 
 
 @router.post("/compare", summary="城市对比分析")
@@ -177,7 +177,7 @@ async def compare_cities(request: CitiesCompareRequest):
             city_config = city_manager.get_city(city_code)
             # 上面 unknown 检查已 raise,这里 city_config 必不为 None
             if city_config is None:  # pragma: no cover - 防御性兜底
-                raise HTTPException(status_code=500, detail="Internal: city vanished from registry")
+                raise HTTPException(status_code=500, detail="Internal: city vanished from registry") from None
             city_data = city_manager.get_city_data(city_code)
             for item in city_data:
                 if request.year_start <= item.year <= request.year_end:
@@ -218,7 +218,7 @@ async def compare_cities(request: CitiesCompareRequest):
         raise
     except Exception as e:
         logger.error("城市对比分析失败: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from None
 
 
 @router.post("/time-series", summary="时间序列分析")
@@ -236,7 +236,7 @@ async def time_series_analysis(request: TimeSeriesRequest):
             city_code = _resolve_city_code(orig_code)
             city_config = city_manager.get_city(city_code)
             if city_config is None:  # pragma: no cover - 防御性兜底
-                raise HTTPException(status_code=500, detail="Internal: city vanished from registry")
+                raise HTTPException(status_code=500, detail="Internal: city vanished from registry") from None
             city_data = city_manager.get_city_data(city_code)
             for item in city_data:
                 if not (request.year_start <= item.year <= request.year_end):
@@ -295,7 +295,7 @@ async def time_series_analysis(request: TimeSeriesRequest):
         raise
     except Exception as e:
         logger.error("时间序列分析失败: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from None
 
 
 @router.post("/regional", summary="区域分析")
@@ -323,7 +323,7 @@ async def regional_analysis(request: RegionalRequest):
         raise
     except Exception as e:
         logger.error("区域分析失败: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from None
 
 
 @router.post("/correlation", summary="相关性分析")
@@ -372,7 +372,7 @@ async def correlation_analysis(request: CorrelationRequest):
         raise
     except Exception as e:
         logger.error("相关性分析失败: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from None
 
 
 @router.get("/rankings", summary="城市排名")
@@ -423,7 +423,7 @@ async def get_city_rankings(
         raise
     except Exception as e:
         logger.error("获取城市排名失败: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from None
 
 
 @router.get("/dashboard", summary="城市仪表盘")
@@ -434,7 +434,7 @@ async def get_city_dashboard(city_code: str = Query(..., min_length=1, descripti
     try:
         city_config = city_manager.get_city(city_code)
         if city_config is None:
-            raise HTTPException(status_code=404, detail=f"City not found: {city_code}")
+            raise HTTPException(status_code=404, detail=f"City not found: {city_code}") from None
 
         city_data = city_manager.get_city_data(city_code)
         years = sorted({item.year for item in city_data})
@@ -508,7 +508,7 @@ async def get_city_dashboard(city_code: str = Query(..., min_length=1, descripti
         raise
     except Exception as e:
         logger.error("获取城市仪表盘失败: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from None
 
 
 # --------------------------------------------------------------------------- #

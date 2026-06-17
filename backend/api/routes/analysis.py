@@ -8,11 +8,11 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-logger = logging.getLogger(__name__)
-
 from backend.analysis.enterprise_analyzer_v2 import enterprise_analyzer_v2
 from backend.analysis.real_data_analysis import real_data_analyzer
 from config.analysis_config import AnalysisConfig
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/analysis", tags=["产业端"])
 
@@ -68,7 +68,7 @@ def enterprise_analysis_v2(request: AnalysisRequest):
 
     except Exception as e:
         logger.exception(f"分析失败: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from None
 
 
 @router.get("/enterprise/sample", summary="获取企业端示例数据")
@@ -152,5 +152,5 @@ def government_analysis(request: AnalysisRequest):
     except Exception as e:
         error_detail = f"{str(e)}"
         logger.error(f"政府端分析失败: {error_detail}", exc_info=True)
-        raise HTTPException(status_code=500, detail="政府端分析失败，请稍后重试")
+        raise HTTPException(status_code=500, detail="政府端分析失败，请稍后重试") from None
 

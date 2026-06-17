@@ -154,7 +154,7 @@ class TestDataProcessingWorkflow:
 
         # 1. 清洗（检测缺失，填充）
         cleaner = DataCleaner()
-        missing_info = cleaner.detect_missing(raw_data)
+        cleaner.detect_missing(raw_data)
 
         # 2. 验证
         validator = DataValidator()

@@ -24,8 +24,8 @@ def _call_with_timeout(func, timeout=30, *args, **kwargs):
         future = executor.submit(func, *args, **kwargs)
         try:
             return future.result(timeout=timeout)
-        except concurrent.futures.TimeoutError:
-            raise TimeoutError(f"调用超时 ({timeout}s): {func.__name__}")
+        except concurrent.futures.TimeoutError as exc:
+            raise TimeoutError(f"调用超时 ({timeout}s): {func.__name__}") from exc
 
 
 class FinanceCollector(BaseCollector):

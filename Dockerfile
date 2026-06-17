@@ -1,9 +1,9 @@
-FROM python:3.14-slim
+FROM python:3.12-slim
 
-WORKDIR /workspace
+WORKDIR /app
 
 # System deps
-# - curl:    healthcheck
+# - curl: healthcheck
 # - build-essential, gfortran: pmdarima / arch 编译依赖
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
@@ -18,6 +18,12 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
 
 # App
 COPY . .
+
+# 创建非 root 用户运行,降低容器逃逸风险
+RUN useradd -r -u 1000 -g users appuser \
+    && mkdir -p /app/data \
+    && chown -R appuser:users /app
+USER appuser
 
 # Expose API port (default 8000)
 EXPOSE 8000

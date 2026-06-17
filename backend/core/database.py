@@ -5,8 +5,7 @@
 from datetime import UTC, datetime
 
 from sqlalchemy import Column, DateTime, Float, Integer, String, Text, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from config.settings import settings
 
@@ -19,7 +18,10 @@ engine = create_engine(
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+
+
+class Base(DeclarativeBase):
+    """SQLAlchemy 2.0 声明式基类。"""
 
 
 class EconomicIndicator(Base):

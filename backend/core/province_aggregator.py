@@ -269,14 +269,6 @@ def _linear_regression_forecast(values: list[float], years: int, confidence: flo
     future_x = np.arange(n, n + years).reshape(-1, 1).astype(float)
     preds = model.predict(future_x)
 
-    lowers, uppers = [], []
-    for fx in future_x.flatten():
-        leverage = 1.0 + 1.0 / n + (fx - x_mean) ** 2 / sxx if sxx > 0 else 1.0
-        half_width = t_crit * sigma * math.sqrt(leverage)
-        lowers.append(float(preds[0]))  # 占位,下面覆盖
-        uppers.append(float(preds[0]))
-
-    # 重新写,免得上面占位
     lowers = []
     uppers = []
     for fx, p in zip(future_x.flatten(), preds):

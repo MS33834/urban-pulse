@@ -6,24 +6,12 @@ import sys
 sys.path.insert(0, ".")
 
 from backend.data.historical_extended import (
-    EXTENDED_HISTORICAL,
-    NBSC_URL,
-    SOURCE_URLS,
     get_city_indicator,
     get_data_coverage,
-    list_extended_cities,
-    list_extended_indicators,
-)
-from backend.data.historical_extended import (
-    INDICATOR_META as CITY_META,
-)
-from backend.data.macro_data import (
-    INDICATOR_META as MACRO_META,
 )
 from backend.data.macro_data import (
     MACRO_HISTORICAL,
     get_macro_value,
-    list_macro_indicators,
 )
 
 

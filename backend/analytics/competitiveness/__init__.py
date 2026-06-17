@@ -6,8 +6,8 @@
 
 from backend.analytics.competitiveness.framework import IndicatorFramework
 from backend.analytics.competitiveness.normalizer import minmax_normalize
-from backend.analytics.competitiveness.weighting import entropy_weight, get_weights
 from backend.analytics.competitiveness.ranker import CompetitivenessRanker
+from backend.analytics.competitiveness.weighting import entropy_weight, get_weights
 
 __all__ = [
     "IndicatorFramework",

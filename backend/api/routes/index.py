@@ -13,6 +13,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 from backend.analytics.competitiveness.framework import IndicatorFramework
 from backend.analytics.competitiveness.ranker import CompetitivenessRanker
@@ -31,9 +32,6 @@ def _data_provider() -> dict[str, dict[str, float]]:
         {城市名: {指标键: 原始值}}
     """
     covered_keys = set(IndicatorFramework.COVERED_INDICATOR_KEYS)
-    exclude_keys = {"name", "region", "year", "industry", "industry_code",
-                    "data_quality", "data_source", "location_quotient",
-                    "avg_delivery_time", "financing_cost"}
 
     result: dict[str, dict[str, float]] = {}
     for city_name, fields in CITY_DATA.items():
@@ -62,7 +60,6 @@ def get_ranker() -> CompetitivenessRanker:
 
 
 # ── Pydantic 模型 ────────────────────────────────────────────────────
-from pydantic import BaseModel
 
 
 class ComputeRequest(BaseModel):
@@ -92,7 +89,7 @@ async def compute_index(req: ComputeRequest):
         result = ranker.compute_index(city_names=city_names, method=method)
     except Exception as e:
         logger.exception("计算竞争力指数失败")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
     return JSONResponse(
         content=result,
@@ -111,7 +108,7 @@ async def get_rankings(dimension: str | None = None):
         result = ranker.compute_index()
     except Exception as e:
         logger.exception("获取排名失败")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
     if dimension:
         dim_rankings = result.get("rankings", {}).get(dimension)
@@ -149,7 +146,7 @@ async def city_report(city: str):
     report = ranker.generate_report(city)
 
     if "error" in report:
-        raise HTTPException(status_code=404, detail=report["error"])
+        raise HTTPException(status_code=404, detail=report["error"]) from None
 
     return JSONResponse(
         content=report,

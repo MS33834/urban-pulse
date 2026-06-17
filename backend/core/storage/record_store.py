@@ -5,7 +5,7 @@ Record CRUD — the wide-table storage (entity × year × indicator × value).
 import logging
 from typing import Any
 
-from backend.core.storage import get_connection
+from backend.core.storage import _lock, get_connection
 
 logger = logging.getLogger(__name__)
 
@@ -20,11 +20,12 @@ def bulk_insert_records(dataset_id: str, records: list[dict[str, Any]]) -> int:
         (dataset_id, r["entity"], r.get("year"), r["indicator"], r["value"])
         for r in records
     ]
-    conn.executemany(
-        "INSERT INTO records (dataset_id, entity, year, indicator, value) VALUES (?, ?, ?, ?, ?)",
-        data,
-    )
-    conn.commit()
+    with _lock:
+        conn.executemany(
+            "INSERT INTO records (dataset_id, entity, year, indicator, value) VALUES (?, ?, ?, ?, ?)",
+            data,
+        )
+        conn.commit()
     return len(data)
 
 
@@ -95,9 +96,8 @@ def get_record_count(dataset_id: str) -> int:
 
 
 def delete_records(dataset_id: str) -> None:
-    conn = get_connection()
-    conn.execute("DELETE FROM records WHERE dataset_id = ?", (dataset_id,))
-    conn.commit()
+    from backend.core.storage import execute_write
+    execute_write("DELETE FROM records WHERE dataset_id = ?", (dataset_id,))
 
 
 def get_pivot(

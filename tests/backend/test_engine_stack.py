@@ -154,7 +154,7 @@ def test_full_pipeline_still_works_without_extras():
     from backend.core.forecast_engine import forecast_full_pipeline
 
     # 先确认 sandbox 状态
-    stack = engine_stack()
+    engine_stack()
     shenzhen_gdp = [9772, 11506, 12971, 14573, 16002, 17503, 19493, 22438, 25267, 26927, 27700, 30700, 32400, 34600, 36500, 38500]
     out = forecast_full_pipeline(shenzhen_gdp, start_year=2010, years=5)
     assert "ensemble" in out

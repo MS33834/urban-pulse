@@ -184,7 +184,7 @@ class HTMLReportGenerator(BaseReportGenerator):
         super().__init__(config)
         self._css = """
         <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                    max-width: 1200px; margin: 0 auto; padding: 20px; line-height: 1.6; }
             h1 { color: #333; border-bottom: 3px solid #667eea; padding-bottom: 10px; }
             h2 { color: #555; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 30px; }
@@ -194,7 +194,7 @@ class HTMLReportGenerator(BaseReportGenerator):
             th { background: #667eea; color: white; }
             tr:nth-child(even) { background: #f8f9fa; }
             .kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-            .kpi-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; 
+            .kpi-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
                        padding: 20px; border-radius: 10px; text-align: center; }
             .kpi-value { font-size: 2em; font-weight: bold; }
             .kpi-label { font-size: 0.9em; opacity: 0.9; }

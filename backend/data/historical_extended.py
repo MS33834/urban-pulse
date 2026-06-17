@@ -345,7 +345,7 @@ def get_data_coverage(city: str | None = None) -> dict[str, Any]:
         year_coverage = {}
         for year, indicators in years_data.items():
             year_coverage[year] = {
-                ind: indicators.get(ind) is not None for ind in INDICATOR_META.keys()
+                ind: indicators.get(ind) is not None for ind in INDICATOR_META
             }
         coverage[c] = {
             "years": sorted(years_data.keys()),

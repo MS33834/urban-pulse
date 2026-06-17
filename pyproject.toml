@@ -67,10 +67,45 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 filterwarnings = ["ignore::DeprecationWarning"]
+markers = [
+    "unit: fast unit tests with no external dependencies",
+    "integration: tests that exercise multiple components",
+    "slow: tests that take > 1s",
+]
 
 [tool.coverage.run]
 source = ["backend"]
 omit = ["*/tests/*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+# E (pycodestyle errors), F (pyflakes), I (isort), W (warnings), UP (pyupgrade), B (bugbear)
+select = ["E", "F", "I", "W", "UP", "B"]
+ignore = [
+    "E501",   # line-too-long: 由 line-length 控制,不强制单行
+    "E402",   # module-import-not-at-top: 项目有 lazy import 模式,逐个修成本高
+    "B008",   # Do not perform function call in argument defaults (FastAPI Depends 用法)
+    "B007",   # unused-loop-control-variable: 风格偏好,不影响正确性
+    "B028",   # no-explicit-stacklevel: 风格偏好
+    "B905",   # zip-without-explicit-strict: Python 3.10+ 才有 strict 参数
+    "UP007",  # Optional[X] 与 X | None 都可,保持现状
+    "SIM102", # collapsible-if: 可读性见仁见智
+    "SIM108", # if-else-block-instead-of-if-exp: 三元表达式不总是更可读
+    "SIM118", # in-dict-keys: 风格偏好
+]
+
+[tool.ruff.lint.per-file-ignores]
+# 测试与 conftest 需要在 import 前操作 sys.path
+"tests/**/*.py" = ["E402"]
+"**/__init__.py" = ["F401"]
+# notebook 风格脚本允许 import 不在顶部
+"notebooks/**/*.py" = ["E402"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["backend", "config"]
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}

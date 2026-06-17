@@ -54,9 +54,9 @@ async def get_chart(filename: str):
     try:
         file_path = safe_chart_path(filename)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid filename")
+        raise HTTPException(status_code=400, detail="Invalid filename") from None
     if not file_path.is_file():
-        raise HTTPException(status_code=404, detail="图表未找到")
+        raise HTTPException(status_code=404, detail="图表未找到") from None
     return FileResponse(file_path, media_type="image/png")
 
 
@@ -70,5 +70,5 @@ async def list_charts():
                 charts.append({"filename": file.name, "url": f"/api/v1/static/charts/{file.name}"})
         return {"status": "success", "charts": charts}
     except Exception:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from None
 

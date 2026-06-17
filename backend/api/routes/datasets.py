@@ -43,10 +43,10 @@ async def upload_dataset(
 ):
     """Upload a CSV or JSON file. Auto-detects entity/time/indicator columns."""
     if file.filename is None:
-        raise HTTPException(400, "filename required")
+        raise HTTPException(400, "filename required") from None
     ext = file.filename.lower()
     if not (ext.endswith(".csv") or ext.endswith(".json")):
-        raise HTTPException(400, "Only .csv and .json files are supported")
+        raise HTTPException(400, "Only .csv and .json files are supported") from None
 
     content = await file.read()
     try:
@@ -57,13 +57,13 @@ async def upload_dataset(
             description=description,
         )
     except ValueError as e:
-        raise HTTPException(400, str(e))
+        raise HTTPException(400, str(e)) from e
     except Exception as e:
         logger.exception("Upload failed for %s", file.filename)
-        raise HTTPException(500, f"Import error: {e}")
+        raise HTTPException(500, f"Import error: {e}") from None
 
     if ds is None:
-        raise HTTPException(400, "No data could be extracted from the file")
+        raise HTTPException(400, "No data could be extracted from the file") from None
 
     return {"message": "imported", "dataset": ds}
 
@@ -82,7 +82,7 @@ def get_dataset_detail(dataset_id: str):
     """Return dataset metadata + column info."""
     ds = get_dataset(dataset_id)
     if ds is None:
-        raise HTTPException(404, "Dataset not found")
+        raise HTTPException(404, "Dataset not found") from None
     cols = get_dataset_columns(dataset_id)
     entities = get_entities(dataset_id)
     indicators = get_indicators(dataset_id)
@@ -101,7 +101,7 @@ def update_dataset_meta(dataset_id: str, body: UpdateMetaRequest):
     """Update dataset name and/or description."""
     ds = update_dataset(dataset_id, **body.model_dump(exclude_none=True))
     if ds is None:
-        raise HTTPException(404, "Dataset not found")
+        raise HTTPException(404, "Dataset not found") from None
     return {"dataset": ds}
 
 
@@ -110,7 +110,7 @@ def delete_dataset_endpoint(dataset_id: str):
     """Delete a dataset and all its records."""
     ok = delete_dataset(dataset_id)
     if not ok:
-        raise HTTPException(404, "Dataset not found")
+        raise HTTPException(404, "Dataset not found") from None
     return {"message": "deleted"}
 
 

@@ -51,10 +51,10 @@ async def analyze_enterprise_v3(city_name: str) -> dict[str, Any]:
             },
         }
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
         logger.error(f"分析失败: {e}")
-        raise HTTPException(status_code=500, detail="分析失败")
+        raise HTTPException(status_code=500, detail="分析失败") from None
 
 
 @router.post("/enterprise/v3/compare", summary="多城市对比分析")
@@ -69,7 +69,7 @@ async def compare_enterprises_v3(city_names: list[str]) -> dict[str, Any]:
 
     valid_cities = [city for city in city_names if city in get_all_cities()]
     if not valid_cities:
-        raise HTTPException(status_code=400, detail="未提供有效的城市名称")
+        raise HTTPException(status_code=400, detail="未提供有效的城市名称") from None
 
     analyzer = EnterpriseAnalyzerV3()
     comparison_df = analyzer.compare_multiple_cities(valid_cities)
@@ -111,5 +111,5 @@ async def get_semiconductor_case() -> dict[str, Any]:
         }
     except Exception as e:
         logger.error(f"案例分析失败: {e}")
-        raise HTTPException(status_code=500, detail="案例分析失败")
+        raise HTTPException(status_code=500, detail="案例分析失败") from None
 

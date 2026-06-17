@@ -5,11 +5,10 @@ import sys
 
 sys.path.insert(0, ".")
 
-import math
 
 
 def test_auto_arima_finds_best_order():
-    from backend.core.forecast_engine import arima_forecast, auto_arima
+    from backend.core.forecast_engine import auto_arima
 
     # 已知带趋势的序列
     y = [10, 12, 14, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39]

@@ -11,7 +11,17 @@ import logging
 import re
 from typing import Any
 
+from backend.core.storage.dataset_store import get_dataset  # re-exported below
+
 logger = logging.getLogger(__name__)
+
+__all__ = [
+    "detect_column_roles",
+    "import_data",
+    "parse_csv",
+    "parse_json",
+    "get_dataset",
+]
 
 # ── pattern lists for role detection ───────────────────────────────────────
 _ENTITY_PATTERNS = re.compile(
@@ -237,7 +247,3 @@ def import_data(
 
     logger.info("Imported %d records from %s (dataset=%s)", count, filename, ds["id"])
     return get_dataset(ds["id"])
-
-
-# Re-export for convenience
-from backend.core.storage.dataset_store import get_dataset  # noqa: E402, F401
