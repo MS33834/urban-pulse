@@ -14,3 +14,11 @@ models/SHA256SUMS
 data/*.db
 data/*.db-shm
 data/*.db-wal
+
+# Secrets / tokens — never commit
+.env
+.env.*
+*.token
+*_token*
+*secret*
+credentials*
