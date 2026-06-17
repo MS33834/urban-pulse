@@ -26,7 +26,10 @@ def create_dataset(
            VALUES (?, ?, ?, ?, ?, ?, ?)""",
         (dataset_id, name, description, source, row_count, col_count, int(has_time_dim)),
     )
-    return get_dataset(dataset_id)
+    ds = get_dataset(dataset_id)
+    if ds is None:
+        raise RuntimeError("Failed to retrieve newly created dataset")
+    return ds
 
 
 def get_dataset(dataset_id: str) -> dict[str, Any] | None:
@@ -51,9 +54,10 @@ def update_dataset(dataset_id: str, **kwargs) -> dict[str, Any] | None:
     if not fields:
         return get_dataset(dataset_id)
     fields["updated_at"] = datetime.now().isoformat()
+    # 列名已用 allowed 白名单过滤，此处仅拼接占位符子句；nosec B608
     set_clause = ", ".join(f"{k} = ?" for k in fields)
     values = list(fields.values()) + [dataset_id]
-    execute_write(f"UPDATE datasets SET {set_clause} WHERE id = ?", values)
+    execute_write(f"UPDATE datasets SET {set_clause} WHERE id = ?", values)  # nosec B608
     return get_dataset(dataset_id)
 
 

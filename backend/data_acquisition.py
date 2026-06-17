@@ -23,7 +23,7 @@ class DataSourceAdapter:
 
     def __init__(self, config: dict | None = None):
         self.config = config or {}
-        self.last_checkpoint = None
+        self.last_checkpoint: dict | None = None
 
     def load(self) -> pd.DataFrame:
         """加载数据 - 需要子类实现"""
@@ -78,15 +78,15 @@ class APISourceAdapter(DataSourceAdapter):
         # 这里模拟返回数据
         import random
 
-        num_records = random.randint(50, 150)
+        num_records = random.randint(50, 150)  # nosec B311 - mock data only
 
         data = []
         for i in range(num_records):
             data.append(
                 {
                     "id": f"REC_{page}_{i:04d}",
-                    "value": random.random() * 100,
-                    "category": random.choice(["A", "B", "C"]),
+                    "value": random.random() * 100,  # nosec B311 - mock data only
+                    "category": random.choice(["A", "B", "C"]),  # nosec B311 - mock data only
                     "timestamp": datetime.now().isoformat(),
                 }
             )

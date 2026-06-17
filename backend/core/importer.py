@@ -161,7 +161,7 @@ def parse_csv(content: str | bytes) -> tuple[list[str], list[dict[str, Any]]]:
         text = content
 
     reader = csv.DictReader(io.StringIO(text))
-    headers = reader.fieldnames or []
+    headers = list(reader.fieldnames or [])
     rows = list(reader)
     return headers, rows
 

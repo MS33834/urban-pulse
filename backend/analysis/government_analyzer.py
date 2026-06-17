@@ -73,7 +73,7 @@ class GovernmentAnalyzer(BaseAnalyzer):
                 return max(10.0, 30.0 - ((value - bench["high"]) / bench["high"]) * 30)
 
     def analyze_fiscal_leverage(self, data: dict[str, Any]) -> dict[str, Any]:
-        results = {
+        results: dict[str, Any] = {
             "fiscal_leverage_score": 0.0,
             "deficit_rate": 0.0,
             "fiscal_self_sufficiency": 0.0,
@@ -133,7 +133,7 @@ class GovernmentAnalyzer(BaseAnalyzer):
         return results
 
     def analyze_industry_driving(self, data: dict[str, Any]) -> dict[str, Any]:
-        results = {
+        results: dict[str, Any] = {
             "driving_score": 0.0,
             "direct_effects": {},
             "indirect_effects": {},
@@ -194,7 +194,7 @@ class GovernmentAnalyzer(BaseAnalyzer):
         return results
 
     def analyze_industry_chain(self, data: dict[str, Any]) -> dict[str, Any]:
-        results = {
+        results: dict[str, Any] = {
             "chain_completeness_score": 0.0,
             "upstream_coverage": 0.0,
             "midstream_coverage": 0.0,

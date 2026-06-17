@@ -1,0 +1,20 @@
+services:
+  urban-pulse:
+    build: .
+    container_name: urban-pulse
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8000
+      - APP_RELOAD=false
+      # - SECRET_KEY=change-this-in-production
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3

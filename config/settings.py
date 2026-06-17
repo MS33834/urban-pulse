@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     APP_ENV: Literal["dev", "staging", "production", "test"] = "dev"
 
     # API service
-    API_HOST: str = "0.0.0.0"
+    API_HOST: str = "0.0.0.0"  # nosec B104 - intentional bind for containerized service
     API_PORT: int = 8000
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
 
@@ -64,7 +64,7 @@ class Settings(BaseSettings):
     LOG_FILE: str | None = None
 
     # Security
-    SECRET_KEY: str = "dev-secret-key-change-in-production"
+    SECRET_KEY: str = "dev-secret-key-change-in-production"  # nosec B105 - dev default blocked in production by validator
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     ALGORITHM: str = "HS256"
 
@@ -82,7 +82,7 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def _enforce_secret_key_in_production(self):
         """在 production 环境下强制要求显式 SECRET_KEY,避免使用开发默认值。"""
-        if self.APP_ENV == "production" and self.SECRET_KEY == "dev-secret-key-change-in-production":
+        if self.APP_ENV == "production" and self.SECRET_KEY == "dev-secret-key-change-in-production":  # nosec B105
             raise ValueError(
                 "SECRET_KEY must be explicitly set in production. "
                 "Export the SECRET_KEY environment variable to a strong random value."
@@ -94,7 +94,7 @@ def setup_logging(settings: Settings):
     """Configure the application-wide logging system."""
     log_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)
 
-    handlers = [logging.StreamHandler()]
+    handlers: list[logging.Handler] = [logging.StreamHandler()]
     if settings.LOG_FILE:
         handlers.append(logging.FileHandler(settings.LOG_FILE, encoding="utf-8"))
 

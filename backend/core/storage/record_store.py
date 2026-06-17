@@ -54,7 +54,8 @@ def get_records(
         conditions.append("year <= ?")
         params.append(year_end)
 
-    sql = f"SELECT * FROM records WHERE {' AND '.join(conditions)} ORDER BY entity, year, indicator LIMIT ? OFFSET ?"
+    # conditions 为代码内硬编码的占位符子句，所有值均已参数化；nosec B608
+    sql = f"SELECT * FROM records WHERE {' AND '.join(conditions)} ORDER BY entity, year, indicator LIMIT ? OFFSET ?"  # nosec B608
     params.extend([limit, offset])
     rows = conn.execute(sql, params).fetchall()
     return [dict(r) for r in rows]
@@ -125,8 +126,9 @@ def get_pivot(
         conditions.append("year = ?")
         params.append(year)
 
+    # conditions 为代码内硬编码的占位符子句，所有值均已参数化；nosec B608
     rows = conn.execute(
-        f"SELECT entity, indicator, value FROM records WHERE {' AND '.join(conditions)}",
+        f"SELECT entity, indicator, value FROM records WHERE {' AND '.join(conditions)}",  # nosec B608
         params,
     ).fetchall()
 
@@ -136,8 +138,8 @@ def get_pivot(
         pivot.setdefault(r["entity"], {})[r["indicator"]] = r["value"]
 
     result = []
-    for entity, indicators in pivot.items():
+    for entity, indicator_values in pivot.items():
         row: dict[str, Any] = {"entity": entity}
-        row.update(indicators)
+        row.update(indicator_values)
         result.append(row)
     return result

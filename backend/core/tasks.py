@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 from datetime import datetime, timedelta
+from typing import Any
 
 from celery import Celery
 
@@ -72,6 +73,7 @@ def fetch_and_cache_data(self, collector_name: str, **kwargs):
     """
     logger.info(f"开始数据采集任务: {collector_name}")
 
+    collector: Any
     try:
         # 根据采集器名称实例化
         if collector_name == "nbs":
@@ -84,6 +86,7 @@ def fetch_and_cache_data(self, collector_name: str, **kwargs):
             raise ValueError(f"未知采集器: {collector_name}")
 
         # 执行采集
+        results: Any
         if hasattr(collector, "fetch_all"):
             results = collector.fetch_all()
         else:
@@ -174,6 +177,7 @@ def custom_analysis_task(self, analysis_type: str, params: dict):
     """
     logger.info(f"开始自定义分析任务: {analysis_type}")
 
+    analyzer: Any
     try:
         # 根据分析类型导入相应的分析器
         if analysis_type == "enterprise":
@@ -208,11 +212,11 @@ def custom_analysis_task(self, analysis_type: str, params: dict):
 # 用于启动 Celery Worker 的函数
 def start_worker():
     """启动 Celery Worker"""
-    import subprocess
+    import subprocess  # nosec B404
     import sys
 
     # 使用 subprocess 启动 Worker(列表参数 + shell=False 默认,无注入风险)
-    subprocess.Popen(  # nosec B404 B603 - trusted internal command
+    subprocess.Popen(  # nosec B603 - trusted internal command
         [
             sys.executable,
             "-m",
@@ -231,10 +235,12 @@ def start_worker():
 
 def start_beat():
     """启动 Celery Beat（定时任务调度器）"""
-    import subprocess
+    import subprocess  # nosec B404
     import sys
 
-    subprocess.Popen([sys.executable, "-m", "celery", "-A", "backend.core.tasks", "beat", "--loglevel=info"])
+    subprocess.Popen(  # nosec B603 - trusted internal command
+        [sys.executable, "-m", "celery", "-A", "backend.core.tasks", "beat", "--loglevel=info"]
+    )
     logger.info("Celery Beat 已启动")
 
 

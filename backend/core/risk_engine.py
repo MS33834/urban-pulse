@@ -204,7 +204,7 @@ def var_cvar(values: list[float], confidence: float = 0.95, lookback: int = 5) -
 # --------------------------------------------------------------------------- #
 
 
-SCENARIOS = {
+SCENARIOS: dict[str, dict[str, str | float]] = {
     "baseline": {
         "name": "基线",
         "description": "按历史趋势 + 集成模型预测",
@@ -242,7 +242,7 @@ def scenario_analysis(
     """
     out: dict[str, Any] = {"scenarios": {}}
     for sid, meta in SCENARIOS.items():
-        shock = meta["shock_per_year"]
+        shock = float(meta["shock_per_year"])
         shocked = []
         for t, p in enumerate(baseline_predictions):
             factor = (1 + shock) ** (t + 1)
@@ -375,7 +375,7 @@ def risk_full_pipeline(
 
 
 if __name__ == "__main__":
-    shenzhen_gdp = [9772, 11506, 12971, 14573, 16002, 17503, 19493, 22438, 25267, 26927, 27700, 30700, 32400, 34600, 36500, 38500]
+    shenzhen_gdp: list[float] = [9772, 11506, 12971, 14573, 16002, 17503, 19493, 22438, 25267, 26927, 27700, 30700, 32400, 34600, 36500, 38500]
     from backend.core.forecast_engine import forecast_full_pipeline
 
     pipe = forecast_full_pipeline(shenzhen_gdp, 2010, 5)

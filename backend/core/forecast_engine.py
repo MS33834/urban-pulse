@@ -790,7 +790,7 @@ def forecast_full_pipeline(
 
 if __name__ == "__main__":
     # 自检:深圳 GDP 16 年
-    shenzhen_gdp = [9772, 11506, 12971, 14573, 16002, 17503, 19493, 22438, 25267, 26927, 27700, 30700, 32400, 34600, 36500, 38500]
+    shenzhen_gdp: list[float] = [9772, 11506, 12971, 14573, 16002, 17503, 19493, 22438, 25267, 26927, 27700, 30700, 32400, 34600, 36500, 38500]
     out = forecast_full_pipeline(shenzhen_gdp, start_year=2010, years=5)
     print("=== 深圳 GDP 5 年预测 ===")
     print("Ensemble:", [round(x) for x in out["ensemble"]["predictions"]])

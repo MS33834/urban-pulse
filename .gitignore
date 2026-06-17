@@ -22,3 +22,8 @@ data/*.db-wal
 *_token*
 *secret*
 credentials*
+
+# Test / coverage artifacts
+.coverage
+htmlcov/
+.pytest_cache/

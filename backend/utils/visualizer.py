@@ -3,6 +3,7 @@
 """
 
 import logging
+from typing import cast
 
 import numpy as np
 import pandas as pd
@@ -24,8 +25,8 @@ class Visualizer:
         self.analysis_config = config_loader.get_analysis_config()
         self.visualization_config = self.analysis_config.VISUALIZATION
 
-        self.theme = theme or self.visualization_config["theme"]
-        self.color_palette = color_palette or self.visualization_config["color_palette"]
+        self.theme = theme or cast(str, self.visualization_config["theme"])
+        self.color_palette: list[str] = color_palette or cast(list[str], self.visualization_config["color_palette"])
 
     def time_series_plot(
         self,

@@ -62,7 +62,10 @@ def seed_if_missing() -> bool:
     # Override ID so we can reference it consistently
     conn.execute("UPDATE datasets SET id = ? WHERE id = ?", (_SEED_DATASET_ID, ds["id"]))
     conn.commit()
-    ds = get_dataset(_SEED_DATASET_ID)
+    seeded = get_dataset(_SEED_DATASET_ID)
+    if seeded is None:
+        raise RuntimeError("Failed to retrieve seeded dataset")
+    ds = seeded
 
     # ── 2) Column metadata ──
     columns = [
