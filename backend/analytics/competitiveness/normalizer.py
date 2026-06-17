@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import logging
+import math
 
 import numpy as np
 
@@ -41,13 +42,13 @@ def minmax_normalize(
     for city_data in data.values():
         all_indicator_keys.update(city_data.keys())
 
-    # 收集每个指标在所有城市的取值
+    # 收集每个指标在所有城市的取值（过滤 NaN/Inf）
     indicator_values: dict[str, list[float]] = {}
     for key in all_indicator_keys:
         values: list[float] = []
         for city_data in data.values():
             v = city_data.get(key)
-            if v is not None and isinstance(v, (int, float)):
+            if v is not None and isinstance(v, (int, float)) and math.isfinite(v):
                 values.append(float(v))
         if values:
             indicator_values[key] = values
@@ -70,8 +71,9 @@ def minmax_normalize(
         city_data = data[city_name]
         for key in all_indicator_keys:
             raw_value = city_data.get(key)
-            if raw_value is None or not isinstance(raw_value, (int, float)):
-                result[city_name][key] = 0.0
+            if raw_value is None or not isinstance(raw_value, (int, float)) or not math.isfinite(raw_value):
+                # 缺失数据赋中间分，避免被当作"最差"而偏置排名
+                result[city_name][key] = 50.0
                 continue
 
             bounds_info = bounds.get(key)

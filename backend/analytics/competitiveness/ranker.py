@@ -109,19 +109,14 @@ class CompetitivenessRanker:
         missing_dims = [d["name"] for d in dim_mapping if d.get("data_missing", False)]
 
         # 4. 计算权重
-        # 构建数据矩阵用于熵权法
+        # 构建数据矩阵用于熵权法（向量化构建，缺失值用 NaN 填充，由熵权法内部处理）
         all_cities = sorted(normalized.keys())
         all_indicators = sorted(
             set(k for c in normalized.values() for k in c.keys())
         )
-        matrix_data: list[list[float]] = []
-        for city in all_cities:
-            row: list[float] = []
-            for ind in all_indicators:
-                row.append(normalized[city].get(ind, 0.0))
-            matrix_data.append(row)
-
-        data_matrix = pd.DataFrame(matrix_data, index=all_cities, columns=all_indicators)
+        data_matrix = pd.DataFrame.from_dict(normalized, orient="index").reindex(
+            columns=all_indicators
+        )
         # data_matrix 已经是 [0,100] 分，需要转为 [0,1] 用于熵权法
         data_matrix_01 = data_matrix / 100.0
 
@@ -203,6 +198,7 @@ class CompetitivenessRanker:
             "missing_dimensions": missing_dims,
             "methodology": f"{'熵权法' if method == 'entropy' else '默认权重'} + MinMax标准化",
             "weights": weights,
+            "normalized": normalized,
         }
 
     def generate_report(self, city_name: str) -> dict[str, Any]:
@@ -249,17 +245,16 @@ class CompetitivenessRanker:
                 "score": dim_scores.get(city_name, 0),
                 "rank": dim_rank,
                 "total": len(sorted_dim),
-                "is_advantage": dim_rank is not None and dim_rank <= 3,
-                "is_disadvantage": dim_rank is not None and dim_rank >= total_cities - 2,
+                "is_advantage": dim_rank > 0 and dim_rank <= 3,
+                "is_disadvantage": dim_rank > 0 and dim_rank >= total_cities - 2,
             }
 
         # 优势/劣势指标
         advantages: list[dict[str, Any]] = []
         disadvantages: list[dict[str, Any]] = []
 
-        # 按标准化分数对比同城
-        all_normalized_data = self._load_data()
-        all_normalized = minmax_normalize(all_normalized_data, self._framework)
+        # 优势/劣势指标 — 复用 compute_index 已计算的标准化数据，避免重复加载
+        all_normalized = index_result.get("normalized", {})
         weights = index_result.get("weights", {})
 
         city_data = all_normalized.get(city_name, {})

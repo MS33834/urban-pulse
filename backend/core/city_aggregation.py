@@ -9,6 +9,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
+import numpy as np
+
 logger = logging.getLogger(__name__)
 
 
@@ -356,7 +358,8 @@ class CityDataAggregator:
                     corr = self._pearson_correlation(values1, values2)
                     correlation_matrix[ind1][ind2] = corr
                 else:
-                    correlation_matrix[ind1][ind2] = 0.0
+                    # 数据不足无法计算，用 NaN 区别于"无相关"
+                    correlation_matrix[ind1][ind2] = float("nan")
 
         return {
             "correlation_matrix": correlation_matrix,
@@ -426,24 +429,23 @@ class CityDataAggregator:
         return insights
 
     def _calculate_trend(self, values: list[float]) -> str:
-        """计算趋势"""
+        """计算趋势。使用相对斜率（斜率/均值）保证尺度不变性。"""
         if len(values) < 2:
             return "insufficient_data"
 
-        # 简单线性回归
         n = len(values)
-        x_mean = (n - 1) / 2
         y_mean = statistics.mean(values)
-
-        numerator = sum((i - x_mean) * (v - y_mean) for i, v in enumerate(values))
-        denominator = sum((i - x_mean) ** 2 for i in range(n))
-
-        if denominator == 0:
+        if y_mean == 0:
             return "stable"
 
-        slope = numerator / denominator
+        # 用 numpy polyfit 计算斜率
+        x = np.arange(n, dtype=float)
+        y = np.array(values, dtype=float)
+        slope = float(np.polyfit(x, y, 1)[0])
 
-        if abs(slope) < 0.01:
+        # 相对斜率：斜率 / |均值|，尺度无关
+        rel_slope = abs(slope) / abs(y_mean)
+        if rel_slope < 0.01:
             return "stable"
         elif slope > 0:
             return "increasing"
@@ -451,23 +453,15 @@ class CityDataAggregator:
             return "decreasing"
 
     def _pearson_correlation(self, x: list[float], y: list[float]) -> float:
-        """计算皮尔逊相关系数"""
+        """计算皮尔逊相关系数（用 numpy 向量化实现）。"""
         if len(x) != len(y) or len(x) < 2:
+            return float("nan")
+        x_arr = np.array(x, dtype=float)
+        y_arr = np.array(y, dtype=float)
+        # 检查常数列
+        if np.std(x_arr) == 0 or np.std(y_arr) == 0:
             return 0.0
-
-        x_mean = statistics.mean(x)
-        y_mean = statistics.mean(y)
-
-        numerator = sum((xi - x_mean) * (yi - y_mean) for xi, yi in zip(x, y))
-        denominator_x = sum((xi - x_mean) ** 2 for xi in x)
-        denominator_y = sum((yi - y_mean) ** 2 for yi in y)
-
-        denominator = (denominator_x * denominator_y) ** 0.5
-
-        if denominator == 0:
-            return 0.0
-
-        return numerator / denominator
+        return float(np.corrcoef(x_arr, y_arr)[0, 1])
 
 
 # 全局实例

@@ -40,21 +40,18 @@ def entropy_weight(data_matrix: pd.DataFrame) -> pd.Series:
     if mat.empty:
         raise ValueError("数据矩阵中没有数值列")
 
-    # 移除包含 NaN 的列
-    mat = mat.dropna(axis=1, how="any")
-
+    # 用列均值填充 NaN（缺失数据不应扭曲权重）
+    mat = mat.apply(lambda col: col.fillna(col.mean()) if col.notna().any() else col)
+    # 移除全 NaN 列
+    mat = mat.dropna(axis=1, how="all")
     if mat.empty:
-        raise ValueError("移除 NaN 后数据矩阵为空")
+        raise ValueError("移除全 NaN 列后数据矩阵为空")
 
-    # 检查是否有非正值（熵权法要求正值）
-    if (mat <= 0).any().any():
-        # 如果有零或负值，先做最小正值平移
-        min_positive = mat[mat > 0].min().min() if (mat > 0).any().any() else 0.001
-        if pd.isna(min_positive) or min_positive <= 0:
-            min_positive = 0.001
-        shift = abs(mat[mat <= 0].min().min()) + min_positive * 0.5 if (mat <= 0).any().any() else 0
-        if shift > 0:
-            mat = mat + shift + min_positive * 0.1
+    # 熵权法要求正值：若有非正值，做最小正值平移（标准做法）
+    min_val = mat.min().min()
+    if min_val <= 0:
+        # 平移使最小值变为一个小的正数 ε
+        mat = mat + abs(min_val) + 1e-6
 
     n_samples, n_features = mat.shape
     if n_samples < 2:

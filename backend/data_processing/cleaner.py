@@ -26,10 +26,12 @@ class DataCleaner:
 
     def detect_missing(self, df: pd.DataFrame) -> dict[str, Any]:
         """检测缺失值"""
+        total_cells = df.size
+        total_missing = int(df.isna().sum().sum())
         missing_info = {
-            "total_cells": df.size,
-            "total_missing": df.isna().sum().sum(),
-            "missing_ratio": df.isna().sum().sum() / df.size,
+            "total_cells": total_cells,
+            "total_missing": total_missing,
+            "missing_ratio": total_missing / total_cells if total_cells > 0 else 0.0,
             "columns": {},
         }
 
@@ -198,6 +200,10 @@ class DataCleaner:
             if max_val != min_val:
                 df_norm[col] = (df_norm[col] - min_val) / (max_val - min_val)
                 params[col] = (min_val, max_val)
+            else:
+                # 常数列归一化为 0，记录为常数列
+                df_norm[col] = 0.0
+                params[col] = (min_val, max_val)
 
         return df_norm, params
 
@@ -215,6 +221,10 @@ class DataCleaner:
 
             if std_val != 0:
                 df_std[col] = (df_std[col] - mean_val) / std_val
+                params[col] = (mean_val, std_val)
+            else:
+                # 常数列标准化为 0
+                df_std[col] = 0.0
                 params[col] = (mean_val, std_val)
 
         return df_std, params

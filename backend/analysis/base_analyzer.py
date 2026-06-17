@@ -7,6 +7,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
@@ -49,7 +50,8 @@ class BaseAnalyzer(ABC):
 
     def calculate_growth_rates(self, df: pd.DataFrame, value_col: str, time_col: str, periods: int = 1) -> pd.DataFrame:
         df_sorted = df.sort_values(time_col).copy()
-        df_sorted[f"{value_col}_growth"] = df_sorted[value_col].pct_change(periods=periods) * 100
+        # 用 NaN 替换 0 避免 pct_change 产生 inf
+        df_sorted[f"{value_col}_growth"] = df_sorted[value_col].replace(0, np.nan).pct_change(periods=periods) * 100
         return df_sorted
 
     def calculate_moving_average(self, df: pd.DataFrame, value_col: str, window: int = 4) -> pd.DataFrame:
@@ -96,15 +98,18 @@ class BaseAnalyzer(ABC):
             q1 = df[col].quantile(0.25)
             q3 = df[col].quantile(0.75)
             iqr = q3 - q1
-            outlier_count += ((df[col] < (q1 - 1.5 * iqr)) | (df[col] > (q3 + 1.5 * iqr))).sum()
+            outlier_count += int(((df[col] < (q1 - 1.5 * iqr)) | (df[col] > (q3 + 1.5 * iqr))).sum())
 
         duplicate_rows = df.duplicated().sum()
 
+        # 异常值比率分母应为总单元格数（行数×数值列数），而非行数
+        total_numeric_cells = len(df) * len(numeric_cols) if len(numeric_cols) > 0 else 1
+        outlier_ratio = min(outlier_count / total_numeric_cells * 100, 100) if total_numeric_cells > 0 else 0
         quality_score = min(
             100,
             (
                 completeness * 0.5
-                + (100 - min(outlier_count / max(len(df), 1) * 100, 100)) * 0.3
+                + (100 - outlier_ratio) * 0.3
                 + (100 - min(duplicate_rows / max(len(df), 1) * 100, 100)) * 0.2
             ),
         )

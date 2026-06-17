@@ -155,7 +155,14 @@ class EconomicForecaster:
         # 计算拟合指标（用历史数据）
         historical_pred = model.predict(df[["ds"]])
         mae = np.mean(np.abs(historical_pred["yhat"] - df["y"]))
-        mape = np.mean(np.abs((historical_pred["yhat"] - df["y"]) / df["y"])) * 100
+        # MAPE — 排除 y=0 的点
+        y_vals = df["y"]
+        nonzero = y_vals != 0
+        mape = float(np.mean(np.abs((historical_pred["yhat"][nonzero] - y_vals[nonzero]) / y_vals[nonzero])) * 100) if nonzero.any() else float("nan")
+        # R² — 除零保护
+        ss_res = np.sum((y_vals - historical_pred["yhat"]) ** 2)
+        ss_tot = np.sum((y_vals - y_vals.mean()) ** 2)
+        r_squared = 1 - ss_res / ss_tot if ss_tot > 0 else 0.0
 
         return {
             "forecast_data": forecast_data,
@@ -163,8 +170,7 @@ class EconomicForecaster:
                 "model": "Prophet",
                 "mae": mae,
                 "mape": mape,
-                "r_squared": 1
-                - (np.sum((df["y"] - historical_pred["yhat"]) ** 2) / np.sum((df["y"] - df["y"].mean()) ** 2)),
+                "r_squared": r_squared,
             },
         }
 
@@ -231,12 +237,12 @@ class EconomicForecaster:
                 cagr = ((last_val / first_val) ** (1 / years) - 1) * 100
                 growth_rates["historical_cagr"] = cagr
 
-        # 预测年均增长率
+        # 预测年均增长率（复利期数 = 年份差，不含 +1）
         if len(forecast_data) >= 2:
             first_val = forecast_data[0]["gdp"]
             last_val = forecast_data[-1]["gdp"]
-            years = forecast_data[-1]["year"] - forecast_data[0]["year"] + 1
-            if first_val > 0 and years > 0:
+            years = forecast_data[-1]["year"] - forecast_data[0]["year"]
+            if first_val > 0 and last_val > 0 and years > 0:
                 forecast_cagr = ((last_val / first_val) ** (1 / years) - 1) * 100
                 growth_rates["forecast_cagr"] = forecast_cagr
 

@@ -756,10 +756,18 @@ def forecast_full_pipeline(
     n_test = min(3, max(1, len(values) - 6))
     cv = backtest_forecast(values, n_test=n_test, model_func=lambda v, h: arima_forecast(v, h))
 
-    # 6. CAGR
+    # 6. CAGR — 仅当首尾值同号且为正时才有意义，否则返回 NaN
     n = len(values)
-    hist_cagr = ((values[-1] / values[0]) ** (1 / (n - 1)) - 1) * 100 if values[0] > 0 else 0.0
-    fc_cagr = ((ens["predictions"][-1] / values[-1]) ** (1 / years) - 1) * 100 if values[-1] > 0 else 0.0
+    start_v, end_v = values[0], values[-1]
+    if start_v > 0 and end_v > 0:
+        hist_cagr = ((end_v / start_v) ** (1 / (n - 1)) - 1) * 100
+    else:
+        hist_cagr = float("nan")
+    fc_last = ens["predictions"][-1] if ens["predictions"] else 0.0
+    if end_v > 0 and fc_last > 0:
+        fc_cagr = ((fc_last / end_v) ** (1 / years) - 1) * 100
+    else:
+        fc_cagr = float("nan")
 
     return {
         "models": {

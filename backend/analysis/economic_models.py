@@ -220,15 +220,14 @@ class InferenceEngine:
     def _linear_uncertainty(
         self, value: float, inputs: dict[str, float], confidence_level: float
     ) -> tuple[tuple[float, float], float]:
-        """线性不确定性传播"""
-        # 假设每个输入有5%的相对不确定性
-        uncertainties = {k: abs(v) * 0.05 for k, v in inputs.items()}
+        """线性不确定性传播。
 
-        # 总不确定性（简化：取最大相对误差）
-        if value != 0:
-            relative_error = max(uncertainties.values()) / abs(value) if uncertainties else 0.05
-        else:
-            relative_error = 0.05
+        对乘除运算的公式，相对误差按方差求和（quadrature）传播：
+        σ_y/|y| = sqrt(Σ (σ_i/|x_i|)²)
+        """
+        # 每个输入 5% 相对不确定性
+        rel_variances = [(0.05) ** 2 for _ in inputs] if inputs else [0.05**2]
+        relative_error = float(np.sqrt(np.sum(rel_variances)))
 
         # 置信区间
         z = stats.norm.ppf((1 + confidence_level) / 2)
@@ -237,19 +236,23 @@ class InferenceEngine:
         return (value - margin, value + margin), 1.0  # 公式计算 R²=1
 
     def _monte_carlo_simulation(
-        self, formula, inputs: dict[str, float], confidence_level: float, n_simulations: int = 10000
+        self, formula, inputs: dict[str, float], confidence_level: float, n_simulations: int = 10000,
+        seed: int | None = 42,
     ) -> tuple[tuple[float, float], float]:
-        """蒙特卡洛模拟 - 向量化优化版"""
-        # 向量化生成所有扰动输入
+        """蒙特卡洛模拟。
+
+        使用固定随机种子保证可复现性。返回置信区间和变异系数（CV），
+        CV 越小表示模拟结果越稳定。
+        """
+        rng = np.random.default_rng(seed)
         input_keys = list(inputs.keys())
         input_values = np.array([inputs[k] for k in input_keys])
 
         # 生成随机扰动矩阵 (n_simulations x n_inputs)
-        perturbations = 1 + np.random.normal(0, 0.05, size=(n_simulations, len(input_keys)))
+        perturbations = 1 + rng.normal(0, 0.05, size=(n_simulations, len(input_keys)))
         perturbed_values = input_values * perturbations
 
-        # 批量计算结果（需要formula支持向量化，但当前实现使用dict，保持原逻辑）
-        # 为了保持兼容性，我们仍然使用循环，但优化性能
+        # 批量计算结果
         results = []
         for i in range(n_simulations):
             perturbed = {k: perturbed_values[i, j] for j, k in enumerate(input_keys)}
@@ -267,11 +270,13 @@ class InferenceEngine:
         lower = np.percentile(results, (1 - confidence_level) / 2 * 100)
         upper = np.percentile(results, (1 + confidence_level) / 2 * 100)
 
-        # R² 基于模拟结果的方差
+        # 变异系数 CV = σ/|μ|，衡量模拟结果的相对离散程度
         mean_result = np.mean(results)
-        variance_explained = 1 - np.var(results) / (mean_result**2) if mean_result != 0 else 0
+        cv = float(np.std(results) / abs(mean_result)) if mean_result != 0 else float("inf")
+        # 返回 1 - CV（clipped 到 [0,1]）作为稳定性指标，CV 越小越稳定
+        stability = max(0.0, min(1.0, 1.0 - cv))
 
-        return (lower, upper), max(0, min(1, variance_explained))
+        return (lower, upper), stability
 
     def infer_all(self, inputs: dict[str, float], method: str = "linear") -> dict[str, Any]:
         """推演所有可计算的指标"""
@@ -411,14 +416,22 @@ class EconomicModels:
             alpha: 资本份额
             technology: 技术水平
         """
-        # 稳态人均资本
-        k_star = (savings_rate / (population_growth + depreciation)) ** (1 / (1 - alpha))
+        # 稳态人均资本（除零与负底数保护）
+        denom = population_growth + depreciation
+        if denom <= 0:
+            return {
+                "model": "Solow Growth Model",
+                "error": "population_growth + depreciation 必须为正",
+                "inputs": {"savings_rate": savings_rate, "population_growth": population_growth,
+                           "depreciation": depreciation, "alpha": alpha, "technology": technology},
+            }
+        k_star = (savings_rate / denom) ** (1 / (1 - alpha))
 
         # 稳态人均产出
         y_star = technology * (k_star**alpha)
 
-        # 黄金律储蓄率
-        s_golden = alpha * (population_growth + depreciation) / (population_growth + depreciation)
+        # 黄金律储蓄率：Cobb-Douglas 下 s_golden = α
+        s_golden = alpha
 
         return {
             "model": "Solow Growth Model",

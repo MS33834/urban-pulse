@@ -137,7 +137,8 @@ def get_province_timeseries(
         if not df.empty:
             city_dfs[city] = df
 
-    years = sorted({int(item["year"]) for df in city_dfs.values() for item in df.to_dict(orient="records")})
+    # 向量化提取所有年份（避免 to_dict 转换）
+    years = sorted(set().union(*[set(df["year"].astype(int)) for df in city_dfs.values()])) if city_dfs else []
 
     rows: list[dict[str, Any]] = []
     for year in years:
@@ -337,7 +338,7 @@ def forecast_series(
             arima["metrics"] = {
                 "r_squared": round(1.0 - ss_res / ss_tot, 4) if ss_tot > 0 else 0.0,
                 "mae": round(float(np.mean(np.abs(resid))), 4),
-                "mape_pct": round(float(np.mean(np.abs(resid / np.where(y == 0, 1.0, y))) * 100), 4),
+                "mape_pct": round(float(np.mean(np.abs(resid[y != 0] / y[y != 0])) * 100), 4) if (y != 0).any() else float("nan"),
                 "n_points": n,
             }
         except Exception:
@@ -498,13 +499,15 @@ def forecast_all_provinces(
 
 
 def _cagr(start: float, end: float, years: int) -> float:
-    if start is None or end is None or start <= 0 or years <= 0:
-        return 0.0
-    try:
-        result: float = ((end / start) ** (1 / years) - 1) * 100
-        return result
-    except (ValueError, ZeroDivisionError):
-        return 0.0
+    """复合年均增长率。仅当首尾值均为正时才有定义，否则返回 NaN。"""
+    if start is None or end is None or years <= 0:
+        return float("nan")
+    if start > 0 and end > 0:
+        try:
+            return ((end / start) ** (1 / years) - 1) * 100
+        except (ValueError, ZeroDivisionError):
+            return float("nan")
+    return float("nan")
 
 
 SUPPORTED_INDICATORS = sorted(_ABSOLUTE_INDICATORS | _RATE_INDICATORS)
