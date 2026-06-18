@@ -1844,7 +1844,7 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
     <div class="app-footer__brand">
       <span>Urban Pulse · 城市脉搏</span>
       <span class="app-footer__sep" aria-hidden="true">·</span>
-      <span>数据分析师作品集</span>
+      <span>中国城市经济智能分析平台</span>
     </div>
     <div class="app-footer__links">
       <a href="/docs" target="_blank" rel="noopener">API 文档</a>
@@ -2774,7 +2774,7 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
       if (card) card.hidden = true;
       if (detail) detail.hidden = true;
       try {
-        const data = await api.get(`/analysis/enterprise/v3/${encodeURIComponent(city)}`, { signal });
+        const data = await api.get(`/analysis/enterprise/location/${encodeURIComponent(city)}`, { signal });
         if (card) card.hidden = false;
         this._setScoreRing(data.total_score);
 
@@ -3488,7 +3488,7 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
           <div style="font-weight:500;margin-bottom:8px;">💡 贡献数据</div>
           <div style="font-size:12px;line-height:1.6;">
             如果你有教育(高校数量/在校生)、环境(AQI/绿化率)、医疗(床位数/医师数)、交通(地铁里程/机场吞吐量)等数据，欢迎通过
-            <a href="https://github.com/badhope/urban-pulse/issues" target="_blank" style="color:var(--copper-600);">GitHub Issues</a>
+            <a href="https://gitcode.com/badhope/urban-pulse/issues" target="_blank" style="color:var(--copper-600);">GitCode Issues</a>
             或 PR 提交。
           </div>
         </div>

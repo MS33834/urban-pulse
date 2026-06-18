@@ -98,8 +98,8 @@ urban-pulse/
 │   ├── api/                # FastAPI application
 │   │   ├── main.py         # App factory, middleware, route registration
 │   │   └── routes/         # Endpoint handlers by domain
-│   │       ├── cities.py / cities_v2.py
-│   │       ├── analysis.py / analysis_v3.py
+│   │       ├── cities.py
+│   │       ├── analysis.py
 │   │       ├── forecast.py
 │   │       ├── data.py
 │   │       └── static.py   # Static file serving

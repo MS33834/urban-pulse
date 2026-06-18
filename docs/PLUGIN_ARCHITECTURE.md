@@ -225,5 +225,5 @@ Urban Pulse evolves from a **single project** into a **platform**:
 **Key differentiators from existing projects:**
 1. **Versioned data** — every dataset is committed to git (Git LFS for large files)
 2. **Aged forecasts** — last year's predictions compared to this year's reality
-3. **Zero operational cost** — GitHub Pages + Actions = free forever
+3. **Zero operational cost** — GitCode Pages 静态托管，无额外运维成本
 4. **Open science** — all data sources documented, all methods reproducible

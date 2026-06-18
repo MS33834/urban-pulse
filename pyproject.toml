@@ -36,10 +36,10 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/badhope/urban-pulse"
-Source = "https://github.com/badhope/urban-pulse"
-Documentation = "https://github.com/badhope/urban-pulse"
-Issues = "https://github.com/badhope/urban-pulse/issues"
+Homepage = "https://gitcode.com/badhope/urban-pulse"
+Source = "https://gitcode.com/badhope/urban-pulse"
+Documentation = "https://gitcode.com/badhope/urban-pulse"
+Issues = "https://gitcode.com/badhope/urban-pulse/issues"
 
 [tool.setuptools.packages.find]
 include = ["backend*", "config*"]
@@ -101,8 +101,6 @@ ignore = [
 # 测试与 conftest 需要在 import 前操作 sys.path
 "tests/**/*.py" = ["E402"]
 "**/__init__.py" = ["F401"]
-# notebook 风格脚本允许 import 不在顶部
-"notebooks/**/*.py" = ["E402"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["backend", "config"]

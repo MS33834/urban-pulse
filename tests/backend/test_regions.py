@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from backend.regions import Region, RegionLevel, RegionRegistry, get_registry
 from backend.regions.loader import RegionLoader, load_default_regions
 from backend.regions.survey_integration import attach_survey_records

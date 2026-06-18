@@ -1,7 +1,7 @@
-"""Build static site for GitHub Pages.
+"""Build static site for GitCode Pages.
 
 Simply copies the site/ directory to _site/.
-No backend dependency — this is a project showcase, not a live app.
+No backend dependency.
 """
 
 import shutil
@@ -29,7 +29,7 @@ def main():
     print(f"  ✓ Copied {SITE_DIR} → {OUTPUT_DIR}")
     print(f"  ✓ Files: {len(list(OUTPUT_DIR.rglob('*')))}")
     print()
-    print("  Deployment: _site/ → GitHub Pages")
+    print("  Deployment: _site/ → GitCode Pages")
     print()
 
 

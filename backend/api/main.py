@@ -20,50 +20,65 @@ from config import settings
 
 logger = logging.getLogger(__name__)
 
-# ── helper: seed city_manager from backend.data.city_data ──────────────────
+# ── helper: seed city_manager from region registry ─────────────────────────
 def _seed_city_manager() -> None:
-    """Load CITY_DATA + HISTORICAL_DATA into city_manager for time-series & compare endpoints."""
-    from backend.core.multi_city import CityData, city_manager
+    """Load all registered cities into city_manager for time-series & compare endpoints."""
+    from backend.core.multi_city import CityConfig, CityData, city_manager
+    from backend.regions import RegionLevel, get_registry
 
-    name_to_code = {
-        "深圳": "sz", "上海": "sh", "北京": "bj", "广州": "gz",
-        "杭州": "hz", "武汉": "wh", "成都": "cd", "南京": "nj",
-    }
-    try:
-        from backend.data.city_data import CITY_DATA, HISTORICAL_DATA
-    except ImportError:
-        logger.warning("backend.data.city_data not available -- city_manager remains unseeded")
+    registry = get_registry()
+    if registry is None:
+        logger.warning("Region registry not available -- city_manager remains unseeded")
         return
 
     loaded = 0
-    # 1) Current-year snapshot from CITY_DATA
-    for city_name, fields in CITY_DATA.items():
-        code = name_to_code.get(city_name)
-        if code is None or city_manager.get_city(code) is None:
-            continue
-        year = fields.get("year", 2025)
-        indicators = {k: v for k, v in fields.items()
-                       if k not in ("name", "year", "region", "industry",
-                                    "industry_code", "data_source", "data_quality")}
-        cd = CityData(city_code=code, city_name=city_name,
-                      year=year, indicators=indicators,
-                      source=fields.get("data_source", "nbs"))
-        city_manager.add_city_data(cd)
-        loaded += 1
+    for region in registry.list_all(RegionLevel.CITY):
+        # Register city config (use full registry code as city_code)
+        config = CityConfig(
+            code=region.code,
+            name=region.name,
+            province=region.region or "",
+            latitude=region.metadata.get("latitude", 0.0),
+            longitude=region.metadata.get("longitude", 0.0),
+            population=int(region.indicators.get("population", 0) or 0),
+            gdp_rank=int(region.indicators.get("gdp_rank", 0) or 0),
+            description=region.metadata.get("description", ""),
+            tags=region.metadata.get("tags", []),
+            metadata={"parent_code": region.parent_code, "region": region.region},
+        )
+        city_manager.register_city(config)
 
-    # 2) Historical time-series from HISTORICAL_DATA
-    for city_name, rows in HISTORICAL_DATA.items():
-        code = name_to_code.get(city_name)
-        if code is None or city_manager.get_city(code) is None:
-            continue
-        for row in rows:
+        # Add current-year snapshot
+        if region.indicators:
+            year = region.indicators.get("year", 2024)
+            indicators = {
+                k: v
+                for k, v in region.indicators.items()
+                if k not in ("name", "year", "region", "industry", "industry_code", "data_source", "data_quality")
+            }
+            cd = CityData(
+                city_code=region.code,
+                city_name=region.name,
+                year=year,
+                indicators=indicators,
+                source=region.metadata.get("data_source", "nbs"),
+            )
+            city_manager.add_city_data(cd)
+            loaded += 1
+
+        # Add historical time-series
+        for row in region.historical_data:
             year = row.get("year")
             if year is None:
                 continue
             indicators = {k: v for k, v in row.items() if k != "year"}
-            cd = CityData(city_code=code, city_name=city_name,
-                          year=year, indicators=indicators,
-                          source="nbs/historical")
+            cd = CityData(
+                city_code=region.code,
+                city_name=region.name,
+                year=year,
+                indicators=indicators,
+                source="nbs/historical",
+            )
             city_manager.add_city_data(cd)
             loaded += 1
 
@@ -90,19 +105,23 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="REST API — 10 Chinese cities, 16 years of data, ensemble forecasting. Built because I wanted to watch how cities grow.",
+    description="中国城市经济数据 REST API：35 城、16 年指标、集成预测与企业/政府/产业分析。",
     license_info={
         "name": "GPL-3.0-or-later",
         "url": "https://www.gnu.org/licenses/gpl-3.0.html",
     },
     openapi_tags=[
         {"name": "区域", "description": "国家/省/市/区县多层级区域发现、时序与预测。"},
-    {"name": "城市数据", "description": "Multi-city economic data endpoints."},
-    {"name": "分析预测", "description": "Forecasting, risk, and scenario analysis."},
-    {"name": "对比分析", "description": "Side-by-side city comparison."},
-    {"name": "数据管理", "description": "Data import / export."},
-    {"name": "系统", "description": "Health, metadata, and static assets."},
-],
+        {"name": "城市", "description": "城市列表、详情、历史数据、排名与对比。"},
+        {"name": "企业端", "description": "企业选址、成本、供应链与政策环境分析。"},
+        {"name": "政府端", "description": "财政杠杆、产业带动与产业链完整性分析。"},
+        {"name": "产业端", "description": "产业注册、预测与因素调整。"},
+        {"name": "预测", "description": "时序预测与风险诊断。"},
+        {"name": "指数", "description": "竞争力指数计算与排名。"},
+        {"name": "数据管理", "description": "数据集上传、查询、导入与导出。"},
+        {"name": "系统", "description": "健康检查、元数据与静态资源。"},
+        {"name": "页面", "description": "仪表盘与静态页面入口。"},
+    ],
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
@@ -130,9 +149,7 @@ app.add_middleware(TrustedHostMiddleware, allowed_hosts=_allowed_hosts)
 # ----- Routes -----
 from backend.api.routes import (
     analysis_router,
-    analysis_v3_router,
     cities_router,
-    cities_v2_router,
     data_router,
     datasets_router,
     forecast_router,
@@ -145,9 +162,7 @@ from backend.api.routes import (
 app.include_router(data_router, prefix=settings.API_V1_STR)
 app.include_router(datasets_router, prefix=settings.API_V1_STR)
 app.include_router(analysis_router, prefix=settings.API_V1_STR)
-app.include_router(analysis_v3_router, prefix=settings.API_V1_STR)
 app.include_router(cities_router, prefix=settings.API_V1_STR)
-app.include_router(cities_v2_router, prefix=settings.API_V1_STR)
 app.include_router(regions_router, prefix=settings.API_V1_STR)
 app.include_router(forecast_router, prefix=settings.API_V1_STR)
 app.include_router(index_router, prefix=settings.API_V1_STR)

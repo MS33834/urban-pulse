@@ -7,7 +7,7 @@ venv/
 *.egg-info/
 dist/
 build/
-_site/
+# _site/ 保留用于 GitCode Pages 部署
 .hermes/
 models/*.pkl
 models/SHA256SUMS

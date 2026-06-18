@@ -1,6 +1,5 @@
 # Urban Pulse · 城市脉搏
 
-[![CI](https://github.com/badhope/urban-pulse/actions/workflows/ci.yml/badge.svg)](https://github.com/badhope/urban-pulse/actions)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688.svg)](https://fastapi.tiangolo.com)
 [![License](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)

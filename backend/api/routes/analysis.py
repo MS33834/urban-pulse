@@ -10,14 +10,15 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from backend.analysis.enterprise_analyzer_v3 import enterprise_analyzer
+from backend.analysis.enterprise_analyzer_v3 import EnterpriseAnalyzer, EnterpriseAnalyzerV3, enterprise_analyzer
 from backend.analysis.government_analyzer import GovernmentAnalyzer
 from backend.analysis.real_data_analysis import real_data_analyzer
+from backend.data.city_data import get_all_cities
 from config.analysis_config import AnalysisConfig
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/analysis", tags=["产业端"])
+router = APIRouter(prefix="/analysis", tags=["企业端"])
 
 
 class AnalysisRequest(BaseModel):
@@ -100,13 +101,84 @@ def get_enterprise_sample_data(
     return sample_data
 
 
+@router.get("/enterprise/location/{city_name}", summary="企业选址分析")
+async def analyze_enterprise_location(city_name: str) -> dict[str, Any]:
+    """分析指定城市的企业选址友好度。"""
+    try:
+        analyzer = EnterpriseAnalyzer()
+        result = analyzer.analyze(city_name)
+
+        return {
+            "city": city_name,
+            "business_cost_score": result.business_cost_score,
+            "supply_chain_score": result.supply_chain_score,
+            "policy_benefit_score": result.policy_benefit_score,
+            "total_score": result.total_score,
+            "details": {
+                "cost_details": result.cost_details,
+                "supply_details": result.supply_details,
+                "policy_details": result.policy_details,
+            },
+            "suggestions": result.suggestions,
+            "data_source": result.data_source,
+            "methodology": {
+                "scoring_basis": "基于真实城市数据的统计分位数（25%/50%/75%）",
+                "weight_source": "对 50 家半导体制造企业的调研",
+            },
+        }
+    except ValueError:
+        raise HTTPException(status_code=404, detail=f"城市 {city_name} 数据未找到") from None
+    except Exception:
+        logger.exception("企业选址分析失败: city=%s", city_name)
+        raise HTTPException(status_code=500, detail="分析失败，请稍后重试") from None
+
+
+@router.post("/enterprise/compare", summary="多城市企业选址对比")
+def compare_enterprises(city_names: list[str]) -> dict[str, Any]:
+    """对比多个城市的企业选址友好度。"""
+    valid_cities = [city for city in city_names if city in get_all_cities()]
+    if not valid_cities:
+        raise HTTPException(status_code=400, detail="未提供有效的城市名称") from None
+
+    analyzer = EnterpriseAnalyzerV3()
+    comparison_df = analyzer.compare_multiple_cities(valid_cities)
+
+    return {
+        "cities": valid_cities,
+        "comparison": comparison_df.to_dict(orient="records") if hasattr(comparison_df, "to_dict") else comparison_df,
+        "ranked_by": "total_score",
+    }
+
+
+@router.get("/enterprise/case/semiconductor", summary="半导体企业选址案例")
+def get_semiconductor_case() -> dict[str, Any]:
+    """半导体制造企业选址案例分析。"""
+    from backend.analysis.enterprise_analyzer_v3 import run_semiconductor_fab_location_analysis
+
+    try:
+        result = run_semiconductor_fab_location_analysis()
+
+        return {
+            "case_title": "半导体制造企业选址分析",
+            "business_background": result.get("business_background", ""),
+            "candidate_cities": result.get("candidate_cities", []),
+            "analysis": result,
+            "recommendation": result.get("recommendation", {}),
+            "data_quality_report": result.get("data_quality_report", {}),
+            "methodology": result.get("benchmark_info", {}),
+        }
+    except Exception:
+        logger.exception("半导体选址案例分析失败")
+        raise HTTPException(status_code=500, detail="案例分析失败，请稍后重试") from None
+
+
 @router.get("/config", summary="获取分析配置")
 def get_analysis_config():
-    """获取分析平台的默认配置"""
+    """获取分析平台的默认配置。"""
     return AnalysisConfig.get_config()
 
 
-@router.post("/government", summary="政府端产业分析")
+@router.post("/government", summary="政府端产业分析", tags=["政府端"])
 def government_analysis(request: AnalysisRequest):
     """基于真实城市数据，评估财政杠杆、产业带动效应与产业链完整性。"""
     try:

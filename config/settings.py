@@ -73,8 +73,8 @@ class Settings(BaseSettings):
     DEFAULT_REGION: str = "深圳"
     DEFAULT_INDUSTRY: str = "半导体"
 
-    # GitHub / repository metadata
-    REPO_URL: str = "https://github.com/badhope/urban-pulse"
+    # Repository metadata
+    REPO_URL: str = "https://gitcode.com/badhope/urban-pulse"
     LICENSE: str = "GPL-3.0-or-later"
 
     model_config = {"case_sensitive": True, "env_file": ".env", "extra": "ignore"}

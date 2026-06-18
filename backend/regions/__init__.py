@@ -1,8 +1,7 @@
 """
 区域管理模块
 
-提供多层级、可扩展的区域（国家/省/市/区县）注册与数据访问能力，
-是 Urban Pulse 从"10 城观测站"升级为开放数据平台的基础。
+提供多层级、可扩展的区域（国家/省/市/区县）注册与数据访问能力。
 """
 
 from backend.regions.loader import RegionLoader, load_default_regions

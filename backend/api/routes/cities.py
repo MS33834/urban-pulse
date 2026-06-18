@@ -14,6 +14,15 @@ from pydantic import BaseModel, Field, model_validator
 
 from backend.core.city_aggregation import AggregationConfig, city_aggregator
 from backend.core.multi_city import city_manager
+from backend.data.city_data import (
+    generate_data_quality_report,
+    get_all_cities,
+    get_city_data,
+    get_data_source_info,
+    get_historical_data,
+    get_score_benchmarks,
+    get_score_weights,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -511,25 +520,73 @@ async def get_city_dashboard(city_code: str = Query(..., min_length=1, descripti
         raise HTTPException(status_code=500, detail="Internal server error") from None
 
 
+@router.get("/list", summary="获取所有城市列表")
+def list_cities() -> dict[str, Any]:
+    """获取系统支持的所有城市列表。"""
+    cities = get_all_cities()
+    return {"cities": cities, "total": len(cities)}
+
+
+@router.get("/benchmarks/scores", summary="获取评分基准")
+def get_scoring_benchmarks() -> dict[str, Any]:
+    """获取评分系统的基准值与权重。"""
+    return {
+        "benchmarks": get_score_benchmarks(),
+        "weights": get_score_weights(),
+        "note": "评分基准基于真实城市数据的 25%/50%/75% 分位数，权重基于对 50 家半导体制造企业的调研。",
+    }
+
+
+@router.get("/quality/report", summary="获取数据质量报告")
+async def get_data_quality_report() -> dict[str, Any]:
+    """获取完整的数据质量评估报告。"""
+    return generate_data_quality_report()
+
+
+@router.get("/{city_name}", summary="获取指定城市详情")
+async def get_city_detail(city_name: str) -> dict[str, Any]:
+    """获取指定城市的详细数据。"""
+    data = get_city_data(city_name)
+    if not data:
+        raise HTTPException(status_code=404, detail=f"城市 {city_name} 数据未找到")
+
+    data_source = get_data_source_info().get(city_name, {})
+
+    return {"city": city_name, "data": data, "data_source": data_source}
+
+
+@router.get("/{city_name}/historical", summary="获取城市历史数据")
+def get_city_historical(city_name: str) -> dict[str, Any]:
+    """获取指定城市的历史时间序列数据。"""
+    data = get_historical_data(city_name)
+    if data is None or (hasattr(data, "empty") and data.empty) or len(data) == 0:
+        raise HTTPException(status_code=404, detail=f"城市 {city_name} 历史数据未找到")
+
+    if hasattr(data, "to_dict"):
+        records = data.to_dict(orient="records")
+    else:
+        records = data
+
+    return {"city": city_name, "years": [2020, 2021, 2022, 2023, 2024, 2025], "historical_data": records}
+
+
 # --------------------------------------------------------------------------- #
 # 工具函数
 # --------------------------------------------------------------------------- #
 
 
 def _resolve_city_code(city_name_or_code: str) -> str:
-    """将中文城市名或简称转换为代码;若已是代码则原样返回。"""
-    name_to_code = {
-        "深圳": "sz",
-        "上海": "sh",
-        "北京": "bj",
-        "广州": "gz",
-        "杭州": "hz",
-        "武汉": "wh",
-        "成都": "cd",
-        "南京": "nj",
-    }
-    if city_name_or_code in name_to_code:
-        return name_to_code[city_name_or_code]
+    """将中文城市名转换为注册表编码;若已是编码则原样返回。"""
+    # 已在 city_manager 中的编码直接返回
+    if city_manager.get_city(city_name_or_code) is not None:
+        return city_name_or_code
+
+    # 尝试按中文名称查找
+    for code, config in city_manager.cities.items():
+        if config.name == city_name_or_code:
+            return code
+
+    # 兜底：原样返回，由调用方处理 404
     return city_name_or_code
 
 

@@ -46,107 +46,11 @@ class CityData:
 class CityDataManager:
     """城市数据管理器"""
 
-    # 预设城市配置
-    PRESET_CITIES = {
-        "sz": CityConfig(
-            code="sz",
-            name="深圳",
-            province="广东",
-            latitude=22.5431,
-            longitude=114.0579,
-            population=1756,
-            gdp_rank=3,
-            description="中国特色社会主义先行示范区",
-            tags=["一线城市", "经济特区", "科技创新中心"],
-        ),
-        "sh": CityConfig(
-            code="sh",
-            name="上海",
-            province="上海",
-            latitude=31.2304,
-            longitude=121.4737,
-            population=2487,
-            gdp_rank=1,
-            description="国际经济、金融、贸易、航运、科技创新中心",
-            tags=["一线城市", "直辖市", "国际金融中心"],
-        ),
-        "bj": CityConfig(
-            code="bj",
-            name="北京",
-            province="北京",
-            latitude=39.9042,
-            longitude=116.4074,
-            population=2189,
-            gdp_rank=2,
-            description="国家首都，政治文化中心",
-            tags=["一线城市", "直辖市", "政治文化中心"],
-        ),
-        "gz": CityConfig(
-            code="gz",
-            name="广州",
-            province="广东",
-            latitude=23.1291,
-            longitude=113.2644,
-            population=1868,
-            gdp_rank=4,
-            description="国家中心城市，粤港澳大湾区核心城市",
-            tags=["一线城市", "国家中心城市", "商贸中心"],
-        ),
-        "wh": CityConfig(
-            code="wh",
-            name="武汉",
-            province="湖北",
-            latitude=30.5928,
-            longitude=114.3055,
-            population=1365,
-            gdp_rank=9,
-            description="中部地区中心城市，长江经济带核心城市",
-            tags=["新一线城市", "国家中心城市", "科教基地"],
-        ),
-        "cd": CityConfig(
-            code="cd",
-            name="成都",
-            province="四川",
-            latitude=30.5728,
-            longitude=104.0668,
-            population=2140,
-            gdp_rank=7,
-            description="西部地区重要的中心城市",
-            tags=["新一线城市", "国家中心城市", "天府之国"],
-        ),
-        "hz": CityConfig(
-            code="hz",
-            name="杭州",
-            province="浙江",
-            latitude=30.2741,
-            longitude=120.1551,
-            population=1390,
-            gdp_rank=5,
-            description="数字经济第一城，电子商务中心",
-            tags=["新一线城市", "互联网经济", "数字经济"],
-        ),
-        "nj": CityConfig(
-            code="nj",
-            name="南京",
-            province="江苏",
-            latitude=32.0603,
-            longitude=118.7969,
-            population=953,
-            gdp_rank=10,
-            description="东部地区重要的中心城市",
-            tags=["新一线城市", "国家中心城市", "科教名城"],
-        ),
-    }
-
     def __init__(self):
         """初始化管理器"""
         self.cities: dict[str, CityConfig] = {}
         self.city_data: dict[str, dict[int, CityData]] = {}  # {city_code: {year: CityData}}
         self.custom_city_loader: Callable | None = None
-
-        # 加载预设城市
-        for code, config in self.PRESET_CITIES.items():
-            self.register_city(config)
 
     def register_city(self, config: CityConfig) -> bool:
         """

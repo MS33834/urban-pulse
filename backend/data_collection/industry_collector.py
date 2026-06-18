@@ -65,7 +65,7 @@ class IndustryCollector(BaseCollector):
         ]
 
     def fetch_all(self, indicators: list[str] | None = None) -> dict[str, list[dict]]:
-        logger.info("产业数据采集器未启用 indicators 分组")
+        logger.info("产业数据采集器暂不支持按 indicators 分组返回")
         return {}
 
 
