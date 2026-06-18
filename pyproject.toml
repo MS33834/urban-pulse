@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "urban-pulse"
 version = "1.0.0"
-description = "City economic intelligence platform — 10 Chinese cities, 16 years of real public data. FastAPI time-series forecasting, ECharts dashboards, data pipeline."
+description = "中国城市经济智能分析平台：35 城经济数据、时序预测、产业分析、竞争力指数与开放数据接入。"
 readme = "README.md"
 license = {text = "GPL-3.0-or-later"}
 requires-python = ">=3.11"

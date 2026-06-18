@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 .venv/
+venv/
 .idea/
 .vscode/
 *.egg-info/
@@ -27,3 +28,5 @@ credentials*
 .coverage
 htmlcov/
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/

@@ -96,12 +96,13 @@ app = FastAPI(
         "url": "https://www.gnu.org/licenses/gpl-3.0.html",
     },
     openapi_tags=[
-        {"name": "城市数据", "description": "Multi-city economic data endpoints."},
-        {"name": "分析预测", "description": "Forecasting, risk, and scenario analysis."},
-        {"name": "对比分析", "description": "Side-by-side city comparison."},
-        {"name": "数据管理", "description": "Data import / export."},
-        {"name": "系统", "description": "Health, metadata, and static assets."},
-    ],
+        {"name": "区域", "description": "国家/省/市/区县多层级区域发现、时序与预测。"},
+    {"name": "城市数据", "description": "Multi-city economic data endpoints."},
+    {"name": "分析预测", "description": "Forecasting, risk, and scenario analysis."},
+    {"name": "对比分析", "description": "Side-by-side city comparison."},
+    {"name": "数据管理", "description": "Data import / export."},
+    {"name": "系统", "description": "Health, metadata, and static assets."},
+],
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
@@ -136,6 +137,8 @@ from backend.api.routes import (
     datasets_router,
     forecast_router,
     index_router,
+    industries_router,
+    regions_router,
     static_router,
 )
 
@@ -145,8 +148,10 @@ app.include_router(analysis_router, prefix=settings.API_V1_STR)
 app.include_router(analysis_v3_router, prefix=settings.API_V1_STR)
 app.include_router(cities_router, prefix=settings.API_V1_STR)
 app.include_router(cities_v2_router, prefix=settings.API_V1_STR)
+app.include_router(regions_router, prefix=settings.API_V1_STR)
 app.include_router(forecast_router, prefix=settings.API_V1_STR)
 app.include_router(index_router, prefix=settings.API_V1_STR)
+app.include_router(industries_router, prefix=settings.API_V1_STR)
 app.include_router(static_router)
 
 frontend_index = Path(__file__).parent.parent.parent / "frontend" / "index.html"

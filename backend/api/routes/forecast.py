@@ -1,18 +1,11 @@
 """
-时间序列预测 API - 数据分析师作品集
+时间序列预测 API
 
-支持的"用过去的发展找规律"场景:
-- 单城市 × 单指标预测:`GET /forecast/indicator/{city_name}?indicator=fiscal_revenue`
-- 单城市 GDP 预测(兼容旧端点):`GET /forecast/gdp/{city_name}`
-- 多城市 × 单指标预测对比:`POST /forecast/compare`
-- 单省份 × 单指标聚合 + 预测:`POST /forecast/province/{province_name}`
-- 全 7 省份 × 单指标批量报告:`POST /forecast/province/all`
-- 完整预测报告:`GET /forecast/report/full`
-
-模型双轨:
-1. statsforecast.AutoARIMA(首选;依赖缺失时透明 fallback)
-2. sklearn LinearRegression + t 分布预测区间(基于残差标准误 + 杠杆修正)
-   真实给出 lower_95 / upper_95,而不是把带宽压成 0 的占位。
+- 单城市 × 单指标预测
+- 单城市 GDP 预测
+- 多城市 × 单指标预测对比
+- 单省份 × 单指标聚合 + 预测
+- 全省份批量预测报告
 """
 
 import logging

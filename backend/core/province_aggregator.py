@@ -72,28 +72,35 @@ def aggregate_indicator(aggregation: str) -> str:
 
 
 def _build_province_index() -> dict[str, list[str]]:
-    """从 HISTORICAL_DATA + CityConfig 反推 city -> province 映射。
-    注:CITY_DATA 顶层 dict 没省信息,但 CityConfig / CityDataManager 有。
-    这里直接从 cities.yaml 取真实映射。
+    """从 RegionRegistry 构建 province -> city 映射。
+
+    优先使用区域注册表中的层级关系;失败时回退到 HISTORICAL_DATA 中的城市名
+    作为单城省份兜底。
     """
     try:
-        import yaml
+        from backend.regions import RegionLevel, get_registry
 
-        with open("data/cities/cities.yaml", encoding="utf-8") as f:
-            doc = yaml.safe_load(f)
+        registry = get_registry()
+        provinces: dict[str, list[str]] = defaultdict(list)
+        for city in registry.list_all(RegionLevel.CITY):
+            # 通过 parent_code 找到省份名称
+            if city.parent_code:
+                prov = registry.get(city.parent_code)
+                if prov is not None:
+                    provinces[prov.name].append(city.name)
+                    continue
+            # fallback: 尝试用 province_code 元数据
+            prov_name = city.metadata.get("province")
+            if prov_name:
+                provinces[prov_name].append(city.name)
+        return dict(provinces)
     except Exception as e:
-        logger.warning("cities.yaml 读取失败,降级为单城省份: %s", e)
-        return {}
+        logger.warning("RegionRegistry 构建省份索引失败,降级: %s", e)
 
-    province_of: dict[str, str] = {}
-    for name, info in doc.get("cities", {}).items():
-        province_of[name] = info.get("province", "")
+    # 兜底: 每个有历史数据的城市作为独立"省份"
+    from backend.data.city_data import HISTORICAL_DATA
 
-    out: dict[str, list[str]] = defaultdict(list)
-    for city, prov in province_of.items():
-        if prov:
-            out[prov].append(city)
-    return dict(out)
+    return {city: [city] for city in HISTORICAL_DATA}
 
 
 _PROVINCE_INDEX: dict[str, list[str]] | None = None

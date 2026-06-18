@@ -1,5 +1,5 @@
 """
-真实城市数据 API - 数据分析师作品集
+城市数据 API
 """
 
 import logging
