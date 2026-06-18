@@ -1,0 +1,11 @@
+pages:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - echo "Deploying static site to GitCode Pages..."
+    - test -f public/index.html
+  artifacts:
+    paths:
+      - public
+  only:
+    - main

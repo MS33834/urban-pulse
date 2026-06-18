@@ -81,7 +81,7 @@
   <div><div class="num">35</div><div class="lbl">cities</div></div>
   <div><div class="num">16</div><div class="lbl">years of data</div></div>
   <div><div class="num">5</div><div class="lbl">forecast horizon</div></div>
-  <div><div class="num">116</div><div class="lbl">tests passing</div></div>
+  <div><div class="num">148</div><div class="lbl">tests passing</div></div>
 </div>
 
 <hr>
@@ -141,9 +141,10 @@ uvicorn backend.api.main:app --reload
 <h2>主要 API</h2>
 
 <ul>
-  <li><code>GET /api/v1/cities</code> — 城市列表</li>
-  <li><code>GET /api/v1/cities/{city}</code> — 城市详情</li>
-  <li><code>GET /api/v1/forecast/gdp/{city}</code> — GDP 预测</li>
+  <li><code>GET /api/v1/cities/list</code> — 城市列表</li>
+  <li><code>GET /api/v1/cities/{city_name}</code> — 城市详情</li>
+  <li><code>GET /api/v1/cities/{city_name}/historical</code> — 历史时序数据</li>
+  <li><code>GET /api/v1/forecast/gdp/{city_name}</code> — GDP 预测</li>
   <li><code>POST /api/v1/analysis/enterprise</code> — 企业选址分析</li>
   <li><code>POST /api/v1/analysis/government</code> — 政府端产业分析</li>
   <li><code>POST /api/v1/index/compute</code> — 竞争力指数计算</li>
