@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pandas as pd
 
@@ -117,8 +117,8 @@ class JSONFileDataSource(BaseDataSource):
             self._load_json()
 
         if query:
-            return self._cache.get(query, [])
-        return self._cache
+            return cast(list[dict], self._cache.get(query, []))
+        return cast(pd.DataFrame | list[dict], self._cache)
 
     def _load_json(self):
         """加载JSON文件"""
@@ -157,8 +157,8 @@ class CSVFileDataSource(BaseDataSource):
         try:
             df = pd.read_csv(self.file_path, **kwargs)
             if query and query in df.columns:
-                return df[df[query].astype(str) == str(kwargs.get("value", ""))]
-            return df
+                return cast(pd.DataFrame, df[df[query].astype(str) == str(kwargs.get("value", ""))])
+            return cast(pd.DataFrame, df)
         except Exception as e:
             logger.error(f"读取CSV文件失败: {e}")
             return pd.DataFrame()
@@ -183,8 +183,8 @@ class MockDataSource(BaseDataSource):
 
     def fetch_data(self, query: str = "", **kwargs) -> pd.DataFrame | list[dict]:
         if query:
-            return self.mock_data.get(query, [])
-        return self.mock_data
+            return cast(list[dict], self.mock_data.get(query, []))
+        return cast(pd.DataFrame | list[dict], self.mock_data)
 
     def test_connection(self) -> bool:
         return True
@@ -228,6 +228,7 @@ class DataSourceManager:
         config = DataSourceConfig(name=name, source_type=source_type, connection_info=connection_info, **kwargs)
 
         # 根据类型创建数据源实例
+        source: BaseDataSource | None = None
         if source_type == DataSourceType.JSON_FILE:
             source = JSONFileDataSource(config)
         elif source_type == DataSourceType.CSV_FILE:
@@ -392,7 +393,7 @@ class DataSourceManager:
 
     def save_sources_config(self, config_path: str):
         """保存数据源配置"""
-        config = {"sources": []}
+        config: dict[str, Any] = {"sources": []}
 
         for name, source_config in self._configs.items():
             config["sources"].append(
@@ -424,7 +425,7 @@ def register_data_source(name: str, source_type: str, **kwargs) -> bool:
     )
 
 
-def fetch_from_source(query: str, source_name: str = None, **kwargs) -> Any:
+def fetch_from_source(query: str, source_name: str | None = None, **kwargs) -> Any:
     """从指定数据源获取数据"""
     return data_source_manager.fetch_data(query, source_name, **kwargs)
 

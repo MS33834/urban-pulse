@@ -101,7 +101,8 @@ class CityDataAggregator:
         # 排序
         if config.sort_by:
             reverse = config.sort_order == "desc"
-            groups = sorted(groups, key=lambda x: x.get(config.sort_by, 0), reverse=reverse)
+            sort_by: str = config.sort_by
+            groups = sorted(groups, key=lambda x: x.get(sort_by, 0), reverse=reverse)
 
         # 限制数量
         if config.limit:
@@ -141,7 +142,7 @@ class CityDataAggregator:
             对比结果
         """
         # 按城市分组
-        cities_data = defaultdict(lambda: defaultdict(list))
+        cities_data: defaultdict[Any, defaultdict[Any, list[float]]] = defaultdict(lambda: defaultdict(list))
 
         for item in data:
             city = item.get(city_field, "Unknown")
@@ -169,7 +170,7 @@ class CityDataAggregator:
             cities.append(city_stats)
 
         # 计算指标排名
-        rankings = defaultdict(list)
+        rankings: defaultdict[Any, list[dict[str, Any]]] = defaultdict(list)
         for city in cities:
             for indicator, stats in city["indicators"].items():
                 rankings[indicator].append({"city": city["city"], "value": stats["avg"]})
@@ -204,14 +205,14 @@ class CityDataAggregator:
         """
         if not group_by:
             # 简单时间序列
-            time_series = defaultdict(list)
+            time_series: defaultdict[Any, list[float]] = defaultdict(list)
 
             for item in data:
                 time_point = item.get(time_field)
                 value = float(item.get(value_field, 0))
                 time_series[time_point].append(value)
 
-            result = {"time_points": [], "values": [], "trend": []}
+            result: dict[str, Any] = {"time_points": [], "values": [], "trend": []}
 
             for time_point in sorted(time_series.keys()):
                 result["time_points"].append(time_point)
@@ -224,7 +225,7 @@ class CityDataAggregator:
             return result
         else:
             # 分组时间序列
-            grouped_series = defaultdict(lambda: defaultdict(list))
+            grouped_series: defaultdict[tuple[Any, ...], defaultdict[Any, list[float]]] = defaultdict(lambda: defaultdict(list))
 
             for item in data:
                 key = tuple(item.get(field) for field in group_by)
@@ -236,7 +237,7 @@ class CityDataAggregator:
             result = {}
             for key, time_series in grouped_series.items():
                 key_str = "_".join(str(k) for k in key)
-                series_data = {"groups": list(key), "time_points": [], "values": [], "trend": []}
+                series_data: dict[str, Any] = {"groups": list(key), "time_points": [], "values": [], "trend": []}
 
                 for time_point in sorted(time_series.keys()):
                     series_data["time_points"].append(time_point)
@@ -268,7 +269,7 @@ class CityDataAggregator:
             区域分析结果
         """
         # 按区域分组
-        region_data = defaultdict(lambda: {"cities": set(), "values": []})
+        region_data: defaultdict[Any, dict[str, Any]] = defaultdict(lambda: {"cities": set(), "values": []})
         city_region_map = {}
 
         for item in data:
@@ -322,7 +323,7 @@ class CityDataAggregator:
             相关性分析结果
         """
         # 构建城市-年份-指标矩阵
-        matrix = defaultdict(lambda: defaultdict(dict))
+        matrix: defaultdict[tuple[Any, Any], defaultdict[str, float]] = defaultdict(lambda: defaultdict(float))
 
         for item in data:
             city = item.get(city_field)
@@ -334,7 +335,7 @@ class CityDataAggregator:
                 matrix[(city, year)][indicator] = value
 
         # 计算相关系数矩阵
-        correlation_matrix = {}
+        correlation_matrix: dict[str, dict[str, float]] = {}
 
         for i, ind1 in enumerate(indicators):
             correlation_matrix[ind1] = {}
@@ -386,9 +387,9 @@ class CityDataAggregator:
 
         return filtered
 
-    def _group_data(self, data: list[dict[str, Any]], group_by: list[str]) -> dict[str, list[dict[str, Any]]]:
+    def _group_data(self, data: list[dict[str, Any]], group_by: list[str]) -> dict[tuple[Any, ...], list[dict[str, Any]]]:
         """分组数据"""
-        groups = defaultdict(list)
+        groups: defaultdict[tuple[Any, ...], list[dict[str, Any]]] = defaultdict(list)
 
         for item in data:
             key = tuple(item.get(field) for field in group_by)
@@ -396,7 +397,7 @@ class CityDataAggregator:
 
         return groups
 
-    def _parse_group_key(self, group_key: tuple) -> list[Any]:
+    def _parse_group_key(self, group_key: tuple[Any, ...]) -> list[Any]:
         """解析分组键"""
         return list(group_key)
 

@@ -16,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, Response
 
+from backend.api.security_headers import SecurityHeadersMiddleware
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -145,6 +146,7 @@ if _trusted_hosts_env:
 else:
     _allowed_hosts = ["localhost", "127.0.0.1", "*.local", "testserver", "testclient"]
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=_allowed_hosts)
+app.add_middleware(SecurityHeadersMiddleware, hsts=ENABLE_HSTS)
 
 # ----- Routes -----
 from backend.api.routes import (

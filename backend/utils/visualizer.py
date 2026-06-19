@@ -3,7 +3,7 @@
 """
 
 import logging
-from typing import cast
+from typing import Literal, cast
 
 import numpy as np
 import pandas as pd
@@ -90,7 +90,7 @@ class Visualizer:
         return fig
 
     def correlation_heatmap(
-        self, df: pd.DataFrame, columns: list[str] | None = None, method: str = "pearson", title: str = "相关性热力图"
+        self, df: pd.DataFrame, columns: list[str] | None = None, method: Literal["pearson", "kendall", "spearman"] = "pearson", title: str = "相关性热力图"
     ) -> go.Figure:
         """相关性热力图"""
         if columns is None:

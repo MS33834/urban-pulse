@@ -562,6 +562,7 @@ def get_city_historical(city_name: str) -> dict[str, Any]:
     if data is None or (hasattr(data, "empty") and data.empty) or len(data) == 0:
         raise HTTPException(status_code=404, detail=f"城市 {city_name} 历史数据未找到")
 
+    records: Any
     if hasattr(data, "to_dict"):
         records = data.to_dict(orient="records")
     else:

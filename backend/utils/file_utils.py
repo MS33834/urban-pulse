@@ -5,7 +5,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pandas as pd
 
@@ -46,7 +46,7 @@ class FileUtils:
     @staticmethod
     def load_csv(path: str | Path, **kwargs) -> pd.DataFrame:
         """加载CSV文件"""
-        return pd.read_csv(path, **kwargs)
+        return cast(pd.DataFrame, pd.read_csv(path, **kwargs))
 
     @staticmethod
     def save_excel(df: pd.DataFrame, path: str | Path, sheet_name: str = "Sheet1", **kwargs) -> None:
@@ -56,7 +56,7 @@ class FileUtils:
         logger.info(f"Excel文件已保存: {path}")
 
     @staticmethod
-    def load_excel(path: str | Path, sheet_name: str = 0, **kwargs) -> pd.DataFrame:
+    def load_excel(path: str | Path, sheet_name: str | int = 0, **kwargs) -> pd.DataFrame:
         """加载Excel文件"""
         return pd.read_excel(path, sheet_name=sheet_name, **kwargs)
 

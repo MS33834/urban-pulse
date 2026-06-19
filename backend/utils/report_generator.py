@@ -6,10 +6,11 @@
 import json
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +74,7 @@ class JSONReportGenerator(BaseReportGenerator):
     """JSON报告生成器"""
 
     def generate(self, sections: list[ReportSection]) -> str:
-        report_data = {
+        report_data: dict[str, Any] = {
             "title": self.config.title,
             "subtitle": self.config.subtitle,
             "author": self.config.author,
@@ -280,21 +281,24 @@ class HTMLReportGenerator(BaseReportGenerator):
 class ReportGeneratorFactory:
     """报告生成器工厂"""
 
-    _generators = {
+    _generators: dict[OutputFormat, type[BaseReportGenerator]] = {
         OutputFormat.JSON: JSONReportGenerator,
         OutputFormat.MARKDOWN: MarkdownReportGenerator,
         OutputFormat.HTML: HTMLReportGenerator,
     }
 
     @classmethod
-    def register(cls, output_format: OutputFormat, generator_class: type):
+    def register(cls, output_format: OutputFormat, generator_class: type[BaseReportGenerator]) -> None:
         """注册自定义生成器"""
         cls._generators[output_format] = generator_class
 
     @classmethod
     def create(cls, config: ReportConfig) -> BaseReportGenerator:
         """创建生成器"""
-        generator_class = cls._generators.get(config.format, JSONReportGenerator)
+        generator_class = cast(
+            Callable[[ReportConfig], BaseReportGenerator],
+            cls._generators.get(config.format, JSONReportGenerator),
+        )
         return generator_class(config)
 
 

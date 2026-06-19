@@ -81,7 +81,7 @@ class Industry:
         """最新数据年份"""
         if not self.historical_data:
             return None
-        return max(row.get("year", 0) for row in self.historical_data)
+        return int(max(row.get("year", 0) for row in self.historical_data))
 
     def to_dict(self) -> dict[str, Any]:
         """完整导出"""

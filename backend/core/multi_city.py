@@ -49,7 +49,7 @@ class CityDataManager:
     def __init__(self):
         """初始化管理器"""
         self.cities: dict[str, CityConfig] = {}
-        self.city_data: dict[str, dict[int, CityData]] = {}  # {city_code: {year: CityData}}
+        self.city_data: dict[str, dict[int, list[CityData]]] = {}  # {city_code: {year: [CityData]}}
         self.custom_city_loader: Callable | None = None
 
     def register_city(self, config: CityConfig) -> bool:
@@ -202,7 +202,7 @@ class CityDataManager:
             if not city_config or not city_data:
                 continue
 
-            result = {"city_name": city_config.name, "year": year, "indicators": {}}
+            result: dict[str, Any] = {"city_name": city_config.name, "year": year, "indicators": {}}
 
             for data in city_data:
                 for indicator in indicators:
@@ -226,7 +226,7 @@ class CityDataManager:
         try:
             import json
 
-            summary = {"export_time": datetime.now().isoformat(), "total_cities": len(self.cities), "cities": []}
+            summary: dict[str, Any] = {"export_time": datetime.now().isoformat(), "total_cities": len(self.cities), "cities": []}
 
             for city_code, config in self.cities.items():
                 city_info = {

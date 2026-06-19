@@ -1,6 +1,6 @@
 # Urban Pulse · 城市脉搏
 
-[![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.11--3.13-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688.svg)](https://fastapi.tiangolo.com)
 [![License](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 
@@ -26,6 +26,8 @@ docker compose up
 pip install -r requirements.txt
 uvicorn backend.api.main:app --reload
 ```
+
+> **环境要求**：推荐使用 Python 3.11–3.13。Python 3.14 目前尚未完全支持，因为 `statsforecast`、`pmdarima` 等可选依赖在 3.14 上缺少预编译 wheel，会导致预测引擎回退到 `statsmodels`。
 
 ## 功能
 
@@ -78,7 +80,7 @@ urban-pulse/
 
 | 端点 | 说明 |
 |------|------|
-| `GET /api/v1/cities` | 城市列表 |
+| `GET /api/v1/cities/list` | 城市列表 |
 | `GET /api/v1/cities/{city}` | 城市详情 |
 | `GET /api/v1/forecast/gdp/{city}` | GDP 预测 |
 | `GET /api/v1/forecast/indicator/{city}` | 任意指标预测 |

@@ -82,7 +82,10 @@ def forecast_industry(
         }
     """
     series = industry.get_time_series(indicator)
-    years = sorted(row.get("year") for row in industry.historical_data if indicator in row and row.get("year"))
+    years = sorted(
+        int(year) for row in industry.historical_data
+        if indicator in row and (year := row.get("year")) is not None
+    )
 
     if len(series) < 3:
         return {

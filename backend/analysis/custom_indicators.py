@@ -48,7 +48,7 @@ def _safe_eval_math(expr: str) -> float:
     except ImportError:
         pass
     tree = ast.parse(expr, mode="eval")
-    return _eval_node_math(tree.body)
+    return float(_eval_node_math(tree.body))
 
 
 def _eval_node_math(node):
@@ -120,7 +120,7 @@ class DictDataProvider(DataProvider):
         """获取数据，支持嵌套key如 'gdp.value'"""
         if "." in key:
             keys = key.split(".")
-            value = self.data
+            value: Any = self.data
             for k in keys:
                 if isinstance(value, dict):
                     value = value.get(k)

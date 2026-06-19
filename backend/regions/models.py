@@ -68,7 +68,7 @@ class Region:
         """最新数据年份"""
         if not self.historical_data:
             return self.indicators.get("year")
-        return max(row.get("year", 0) for row in self.historical_data)
+        return int(max(row.get("year", 0) for row in self.historical_data))
 
     def to_summary(self) -> dict[str, Any]:
         """导出摘要信息，用于 API 列表"""

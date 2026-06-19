@@ -565,7 +565,8 @@ def register_indicator(
     """
     cat = IndicatorCategory(category) if isinstance(category, str) else category
     indicator = IndicatorDefinition(code=code, name=name, category=cat, unit=unit, description=description, **kwargs)
-    return indicator_registry.register(indicator)
+    indicator_registry.register(indicator)
+    return indicator
 
 
 def get_indicator(code: str) -> IndicatorDefinition | None:

@@ -292,7 +292,7 @@ class ScenarioManager:
 
     def get_status(self) -> dict[str, Any]:
         """获取状态"""
-        type_counts = {}
+        type_counts: dict[str, int] = {}
         for scenario in self._scenarios.values():
             t = scenario.scenario_type.value
             type_counts[t] = type_counts.get(t, 0) + 1
@@ -319,7 +319,7 @@ def get_scenario(scenario_id: str) -> ScenarioConfig | None:
     return scenario_manager.get_scenario(scenario_id)
 
 
-def list_scenarios(scenario_type: str = None) -> list[ScenarioConfig]:
+def list_scenarios(scenario_type: str | None = None) -> list[ScenarioConfig]:
     """列出场景"""
     st = ScenarioType(scenario_type) if scenario_type else None
     return scenario_manager.list_scenarios(st)

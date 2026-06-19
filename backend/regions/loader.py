@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import yaml
 
@@ -61,7 +61,7 @@ class RegionLoader:
             if suffix == ".json":
                 import json
 
-                return json.load(f)
+                return cast(dict[str, Any], json.load(f))
             raise ValueError(f"不支持的区域配置文件格式: {suffix}")
 
     def _parse_region(self, item: dict[str, Any], level: RegionLevel) -> Region:

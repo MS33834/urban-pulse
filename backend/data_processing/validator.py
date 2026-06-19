@@ -89,7 +89,7 @@ class DataValidator:
         not_null_columns: list[str] | None = None,
     ) -> dict[str, Any]:
         """生成完整验证报告"""
-        report = {}
+        report: dict[str, Any] = {}
 
         if required_columns:
             report["required_columns"] = self.validate_required_columns(df, required_columns)

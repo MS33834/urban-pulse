@@ -57,20 +57,20 @@ class GovernmentAnalyzer(BaseAnalyzer):
             if value >= bench["high"]:
                 return 95.0
             elif value >= bench["medium"]:
-                return 75.0 + (value - bench["medium"]) / (bench["high"] - bench["medium"]) * 20
+                return float(75.0 + (value - bench["medium"]) / (bench["high"] - bench["medium"]) * 20)
             elif value >= bench["low"]:
-                return 50.0 + (value - bench["low"]) / (bench["medium"] - bench["low"]) * 25
+                return float(50.0 + (value - bench["low"]) / (bench["medium"] - bench["low"]) * 25)
             else:
-                return 30.0 + (value / bench["low"]) * 20
+                return float(30.0 + (value / bench["low"]) * 20)
         else:
             if value <= bench["low"]:
                 return 95.0
             elif value <= bench["medium"]:
-                return 75.0 - (value - bench["low"]) / (bench["medium"] - bench["low"]) * 20
+                return float(75.0 - (value - bench["low"]) / (bench["medium"] - bench["low"]) * 20)
             elif value <= bench["high"]:
-                return 50.0 - (value - bench["medium"]) / (bench["high"] - bench["medium"]) * 25
+                return float(50.0 - (value - bench["medium"]) / (bench["high"] - bench["medium"]) * 25)
             else:
-                return max(10.0, 30.0 - ((value - bench["high"]) / bench["high"]) * 30)
+                return float(max(10.0, 30.0 - ((value - bench["high"]) / bench["high"]) * 30))
 
     def analyze_fiscal_leverage(self, data: dict[str, Any]) -> dict[str, Any]:
         results: dict[str, Any] = {

@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
 
     # Database
-    DATABASE_URL: str = "sqlite:///./data/regional_economic.db"
+    DATABASE_URL: str = "sqlite:///./data/urban_pulse.db"
 
     # CORS
     # 0.0.0.0 不应出现在白名单 — 它是绑定地址,不是 Origin 头合法值

@@ -2,7 +2,7 @@
 真实数据分析模块 - 使用真实经济数据进行探索性分析
 """
 
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -174,7 +174,7 @@ class RealDataAnalyzer:
         numeric_cols = df.select_dtypes(include=[np.number]).columns.drop("year", errors="ignore")
         corr_matrix = df[numeric_cols].corr()
 
-        return corr_matrix.to_dict()
+        return cast(dict[str, dict[str, float]], corr_matrix.to_dict())
 
     def _analyze_trends(self, df: pd.DataFrame) -> dict[str, Any]:
         """分析趋势"""
@@ -199,7 +199,7 @@ class RealDataAnalyzer:
                     # 计算总体趋势方向
                     if len(valid_data) >= 2:
                         x = np.arange(len(valid_data))
-                        y = valid_data[col].values
+                        y = cast(np.ndarray, np.asarray(valid_data[col], dtype=float))
                         slope = np.polyfit(x, y, 1)[0]
                         trend_direction = "up" if slope > 0 else "down" if slope < 0 else "flat"
                     else:

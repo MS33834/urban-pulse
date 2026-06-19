@@ -511,7 +511,7 @@ def _cagr(start: float, end: float, years: int) -> float:
         return float("nan")
     if start > 0 and end > 0:
         try:
-            return ((end / start) ** (1 / years) - 1) * 100
+            return float(((end / start) ** (1 / years) - 1) * 100)
         except (ValueError, ZeroDivisionError):
             return float("nan")
     return float("nan")

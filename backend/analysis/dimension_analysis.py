@@ -6,7 +6,7 @@
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -183,7 +183,7 @@ class TrendAnalyzer(BaseAnalyzer):
         summary = {}
         for field_name in self.dimension.data_fields:
             if field_name in df.columns:
-                values = df[field_name].dropna().values
+                values = cast(np.ndarray, np.asarray(df[field_name].dropna(), dtype=float))
                 if len(values) >= 2:
                     # 计算趋势
                     x = np.arange(len(values))
@@ -228,17 +228,17 @@ class CorrelationAnalyzer(BaseAnalyzer):
         correlation_matrix = df[numeric_cols].corr() if len(numeric_cols) > 0 else pd.DataFrame()
 
         # 找出强相关
-        strong_correlations = []
+        strong_correlations: list[dict[str, Any]] = []
         if not correlation_matrix.empty:
             for i in range(len(numeric_cols)):
                 for j in range(i + 1, len(numeric_cols)):
-                    corr = correlation_matrix.iloc[i, j]
+                    corr = cast(float, correlation_matrix.iloc[i, j])
                     if abs(corr) > 0.7:
                         strong_correlations.append(
                             {
                                 "var1": numeric_cols[i],
                                 "var2": numeric_cols[j],
-                                "correlation": float(corr),
+                                "correlation": corr,
                                 "strength": "强正相关" if corr > 0 else "强负相关",
                             }
                         )
@@ -250,8 +250,8 @@ class CorrelationAnalyzer(BaseAnalyzer):
         }
 
         insights = []
-        for corr in strong_correlations:
-            insights.append(f"{corr['var1']} 与 {corr['var2']} 存在{corr['strength']}（r={corr['correlation']:.2f}）")
+        for corr_info in strong_correlations:
+            insights.append(f"{corr_info['var1']} 与 {corr_info['var2']} 存在{corr_info['strength']}（r={corr_info['correlation']:.2f}）")
 
         if not strong_correlations:
             insights.append("未发现显著相关关系")
@@ -269,7 +269,7 @@ class CorrelationAnalyzer(BaseAnalyzer):
 class DimensionAnalyzerFactory:
     """维度分析器工厂"""
 
-    _analyzers = {
+    _analyzers: dict[AnalysisType, type[BaseAnalyzer]] = {
         AnalysisType.DESCRIPTIVE: DescriptiveAnalyzer,
         AnalysisType.COMPARATIVE: ComparativeAnalyzer,
         AnalysisType.TREND: TrendAnalyzer,

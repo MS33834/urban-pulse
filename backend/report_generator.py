@@ -6,6 +6,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -125,7 +126,7 @@ class ReportGenerator:
         return str(json_path)
 
     def generate_pdf_report(
-        self, data_quality: dict, insights: dict, visualizations: dict = None, filename: str = "analysis_report.pdf"
+        self, data_quality: dict, insights: dict, visualizations: dict[str, Any] | None = None, filename: str = "analysis_report.pdf"
     ):
         """
         生成PDF报告
@@ -145,7 +146,7 @@ class ReportGenerator:
             doc = SimpleDocTemplate(str(pdf_path), pagesize=A4)
             styles = getSampleStyleSheet()
 
-            story = []
+            story: list[Any] = []
 
             # 标题
             title_style = styles["Title"]
@@ -207,7 +208,7 @@ class ReportGenerator:
             return None
 
     def generate_all_reports(
-        self, data_quality: dict, insights: dict, processed_data: pd.DataFrame = None, visualizations: dict = None
+        self, data_quality: dict, insights: dict, processed_data: pd.DataFrame | None = None, visualizations: dict[str, Any] | None = None
     ) -> dict:
         """生成所有报告"""
         reports = {}

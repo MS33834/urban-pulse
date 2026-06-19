@@ -28,7 +28,7 @@ class DataCleaner:
         """检测缺失值"""
         total_cells = df.size
         total_missing = int(df.isna().sum().sum())
-        missing_info = {
+        missing_info: dict[str, Any] = {
             "total_cells": total_cells,
             "total_missing": total_missing,
             "missing_ratio": total_missing / total_cells if total_cells > 0 else 0.0,
@@ -94,7 +94,7 @@ class DataCleaner:
     ) -> dict[str, Any]:
         """使用 Z-score 检测异常值"""
         target_columns = self._get_numeric_columns(df, columns)
-        outliers_info = {"method": "zscore", "threshold": threshold, "columns": {}}
+        outliers_info: dict[str, Any] = {"method": "zscore", "threshold": threshold, "columns": {}}
 
         for col in target_columns:
             z_scores = np.abs(stats.zscore(df[col].dropna()))
@@ -116,7 +116,7 @@ class DataCleaner:
     ) -> dict[str, Any]:
         """使用 IQR 检测异常值"""
         target_columns = self._get_numeric_columns(df, columns)
-        outliers_info = {"method": "iqr", "multiplier": multiplier, "columns": {}}
+        outliers_info: dict[str, Any] = {"method": "iqr", "multiplier": multiplier, "columns": {}}
 
         for col in target_columns:
             Q1 = df[col].quantile(0.25)
@@ -231,7 +231,7 @@ class DataCleaner:
 
     def generate_quality_report(self, df: pd.DataFrame) -> dict[str, Any]:
         """生成数据质量报告"""
-        report = {
+        report: dict[str, Any] = {
             "shape": df.shape,
             "columns": list(df.columns),
             "dtypes": {col: str(dtype) for col, dtype in df.dtypes.items()},

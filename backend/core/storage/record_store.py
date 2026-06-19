@@ -93,7 +93,7 @@ def get_record_count(dataset_id: str) -> int:
     row = conn.execute(
         "SELECT COUNT(*) AS cnt FROM records WHERE dataset_id = ?", (dataset_id,)
     ).fetchone()
-    return row["cnt"]
+    return int(row["cnt"])
 
 
 def delete_records(dataset_id: str) -> None:

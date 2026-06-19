@@ -253,7 +253,7 @@ class InferenceEngine:
         perturbed_values = input_values * perturbations
 
         # 批量计算结果
-        results = []
+        results: Any = []
         for i in range(n_simulations):
             perturbed = {k: perturbed_values[i, j] for j, k in enumerate(input_keys)}
             try:

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pandas as pd
 
@@ -78,7 +78,8 @@ class SurveyCollector(BaseCollector):
             if record is not None:
                 records.append(record)
             else:
-                logger.warning(f"跳过第 {idx + 1} 行无效调查数据")
+                row_index = cast(int, idx)
+                logger.warning(f"跳过第 {row_index + 1} 行无效调查数据")
 
         self._records.extend(records)
         logger.info(f"成功加载 {len(records)} 条调查数据记录")
@@ -121,7 +122,7 @@ class SurveyCollector(BaseCollector):
 
         year = row.get("year")
         try:
-            year = int(year)
+            year = int(cast(Any, year))
         except (TypeError, ValueError):
             return None
 
@@ -131,7 +132,7 @@ class SurveyCollector(BaseCollector):
 
         value = row.get("value")
         try:
-            value = float(value)
+            value = float(cast(Any, value))
         except (TypeError, ValueError):
             return None
 

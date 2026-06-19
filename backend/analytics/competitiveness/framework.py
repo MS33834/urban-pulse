@@ -320,7 +320,7 @@ class IndicatorFramework:
         indicator = cls.ALL_INDICATORS.get(key)
         if indicator is None:
             return "positive"
-        return indicator["direction"]
+        return str(indicator["direction"])
 
     @classmethod
     def get_missing_dimensions(cls) -> list[DimensionDef]:

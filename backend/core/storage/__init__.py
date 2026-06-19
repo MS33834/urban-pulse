@@ -10,13 +10,29 @@ import sqlite3
 import threading
 from pathlib import Path
 
+from config.settings import settings
+
 logger = logging.getLogger(__name__)
 
+
+def _resolve_db_path(database_url: str) -> str:
+    """Derive a filesystem path from the configured DATABASE_URL.
+
+    SQLite URLs are expected in SQLAlchemy form (``sqlite:///...``).
+    Relative URLs frequently include a leading ``./`` which is stripped
+    so the resulting path works with ``sqlite3.connect``.
+    Falls back to ``<project_root>/data/urban_pulse.db`` for non-SQLite URLs.
+    """
+    if database_url.startswith("sqlite:///"):
+        path = database_url[len("sqlite:///") :]
+        if path.startswith("./"):
+            path = path[2:]
+        return path
+    return str(Path(__file__).parent.parent.parent.parent / "data" / "urban_pulse.db")
+
+
 # Default: <project_root>/data/urban_pulse.db
-_DEFAULT_DB_PATH = os.getenv(
-    "URBAN_PULSE_DB",
-    str(Path(__file__).parent.parent.parent.parent / "data" / "urban_pulse.db"),
-)
+_DEFAULT_DB_PATH = _resolve_db_path(settings.DATABASE_URL)
 
 _connection: sqlite3.Connection | None = None
 _lock = threading.Lock()
