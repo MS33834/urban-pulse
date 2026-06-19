@@ -5,6 +5,7 @@ WORKDIR /app
 # System deps
 # - curl: healthcheck
 # - build-essential, gfortran: pmdarima / arch 编译依赖
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     build-essential \
@@ -13,6 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Python deps — 先升 pip + setuptools + wheel,再装齐
 COPY requirements.txt .
+# hadolint ignore=DL3013
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
     && pip install --no-cache-dir -r requirements.txt
 
@@ -22,7 +24,8 @@ COPY . .
 # 创建非 root 用户运行,降低容器逃逸风险
 RUN useradd -r -u 1000 -g users appuser \
     && mkdir -p /app/data \
-    && chown -R appuser:users /app
+    && chown -R appuser:users /app \
+    && chmod 777 /app/data
 USER appuser
 
 # Expose API port (default 8000)
