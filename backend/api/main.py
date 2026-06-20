@@ -21,6 +21,7 @@ from config import settings
 
 logger = logging.getLogger(__name__)
 
+
 # ── helper: seed city_manager from region registry ─────────────────────────
 def _seed_city_manager() -> None:
     """Load all registered cities into city_manager for time-series & compare endpoints."""
@@ -83,8 +84,7 @@ def _seed_city_manager() -> None:
             city_manager.add_city_data(cd)
             loaded += 1
 
-    logger.info("seeded city_manager: %d CityData records across %d cities",
-                loaded, len(city_manager.city_data))
+    logger.info("seeded city_manager: %d CityData records across %d cities", loaded, len(city_manager.city_data))
 
 
 @asynccontextmanager
@@ -94,8 +94,10 @@ async def lifespan(app: FastAPI):
 
     # Init SQLite storage + seed 10-city dataset
     from backend.core.storage import init_db
+
     init_db()
     from backend.seed_data import seed_if_missing
+
     seed_if_missing()
 
     _seed_city_manager()
@@ -236,4 +238,3 @@ def run() -> None:
 
 if __name__ == "__main__":
     run()
-

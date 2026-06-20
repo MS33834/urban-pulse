@@ -113,4 +113,3 @@ if settings.ALGORITHM == "RS256" and not settings.SECRET_KEY.startswith("-----BE
     )
 
 Path("data").mkdir(parents=True, exist_ok=True)
-

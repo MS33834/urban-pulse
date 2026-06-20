@@ -225,7 +225,9 @@ class CityDataAggregator:
             return result
         else:
             # 分组时间序列
-            grouped_series: defaultdict[tuple[Any, ...], defaultdict[Any, list[float]]] = defaultdict(lambda: defaultdict(list))
+            grouped_series: defaultdict[tuple[Any, ...], defaultdict[Any, list[float]]] = defaultdict(
+                lambda: defaultdict(list)
+            )
 
             for item in data:
                 key = tuple(item.get(field) for field in group_by)
@@ -387,7 +389,9 @@ class CityDataAggregator:
 
         return filtered
 
-    def _group_data(self, data: list[dict[str, Any]], group_by: list[str]) -> dict[tuple[Any, ...], list[dict[str, Any]]]:
+    def _group_data(
+        self, data: list[dict[str, Any]], group_by: list[str]
+    ) -> dict[tuple[Any, ...], list[dict[str, Any]]]:
         """分组数据"""
         groups: defaultdict[tuple[Any, ...], list[dict[str, Any]]] = defaultdict(list)
 

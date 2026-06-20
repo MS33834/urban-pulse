@@ -19,6 +19,7 @@ Engine stack 探测 — runtime 检查可选库是否可用。
         # 走快路径
         ...
 """
+
 from __future__ import annotations
 
 import logging

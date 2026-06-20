@@ -7,6 +7,7 @@
 3. scenario_analysis: 3 档情景(基线/乐观/悲观/衰退)
 4. monte_carlo: 1000 次残差 bootstrap
 """
+
 from __future__ import annotations
 
 import logging
@@ -58,10 +59,7 @@ def rolling_volatility(values: list[float], window: int = 3, annualize: bool = T
         "window": window,
         "n_returns": len(log_rets),
         "backend": "rolling-std",
-        "interpretation": (
-            f"年化波动率 {annualized*100:.2f}%。"
-            f"< 5% 为低波动, 5-15% 中等, > 15% 高波动"
-        ),
+        "interpretation": (f"年化波动率 {annualized * 100:.2f}%。< 5% 为低波动, 5-15% 中等, > 15% 高波动"),
     }
 
 
@@ -113,11 +111,11 @@ def garch_volatility(values: list[float], horizon: int = 1, p: int = 1, q: int =
             res = am.fit(disp="off", show_warning=False)
 
         cv = res.conditional_volatility
-        cond_vol = float(cv.iloc[-1] if hasattr(cv, 'iloc') else cv[-1])
+        cond_vol = float(cv.iloc[-1] if hasattr(cv, "iloc") else cv[-1])
         # horizon 步预测
         fc = res.forecast(horizon=horizon)
         fv = fc.variance
-        forecast_vol = float(np.sqrt(np.asarray(fv.iloc[-1] if hasattr(fv, 'iloc') else fv[-1]).mean()))
+        forecast_vol = float(np.sqrt(np.asarray(fv.iloc[-1] if hasattr(fv, "iloc") else fv[-1]).mean()))
 
         params = res.params
         alpha = float(params.get("alpha[1]", 0.0))
@@ -192,9 +190,9 @@ def var_cvar(values: list[float], confidence: float = 0.95, lookback: int = 5) -
         "cvar_amount": round(cvar_pct * last_value, 4),
         "last_value": last_value,
         "interpretation": (
-            f"在最坏的 {int((1-confidence)*100)}% 历史情景下,"
-            f"未来 1 年最多损失 {var_pct*100:.2f}% (≈{var_pct*last_value:.0f} 亿元);"
-            f"平均尾部损失 {cvar_pct*100:.2f}% (≈{cvar_pct*last_value:.0f} 亿元)"
+            f"在最坏的 {int((1 - confidence) * 100)}% 历史情景下,"
+            f"未来 1 年最多损失 {var_pct * 100:.2f}% (≈{var_pct * last_value:.0f} 亿元);"
+            f"平均尾部损失 {cvar_pct * 100:.2f}% (≈{cvar_pct * last_value:.0f} 亿元)"
         ),
     }
 
@@ -255,12 +253,8 @@ def scenario_analysis(
             "color": meta["color"],
             "predictions": [round(x, 2) for x in shocked],
             "final_value": round(shocked[-1], 2) if shocked else 0.0,
-            "max_drawdown_pct": round((min(shocked) - starting_value) / starting_value * 100, 2)
-            if shocked
-            else 0.0,
-            "final_change_pct": round((shocked[-1] - starting_value) / starting_value * 100, 2)
-            if shocked
-            else 0.0,
+            "max_drawdown_pct": round((min(shocked) - starting_value) / starting_value * 100, 2) if shocked else 0.0,
+            "final_change_pct": round((shocked[-1] - starting_value) / starting_value * 100, 2) if shocked else 0.0,
         }
     return out
 
@@ -317,7 +311,7 @@ def monte_carlo_simulation(
     # 分位
     quantiles: dict[str, list[float]] = {}
     for q in confidence_levels:
-        quantiles[f"p{int(q*100):02d}"] = np.quantile(sims, q, axis=0).round(2).tolist()
+        quantiles[f"p{int(q * 100):02d}"] = np.quantile(sims, q, axis=0).round(2).tolist()
 
     # 统计
     final_values = sims[:, -1]
@@ -337,8 +331,8 @@ def monte_carlo_simulation(
         "interpretation": (
             f"基于 {n_sims} 次 bootstrap 残差模拟,"
             f"末年值 {quantiles['p05'][0]:.0f} ~ {quantiles['p95'][0]:.0f} 亿元 (P5-P95);"
-            f"高于 baseline 概率 {float(np.mean(final_values > baseline_fc[-1]))*100:.1f}%;"
-            f"低于衰退情景 (baseline×0.75) 概率 {float(np.mean(final_values < baseline_fc[-1] * 0.75))*100:.1f}%"
+            f"高于 baseline 概率 {float(np.mean(final_values > baseline_fc[-1])) * 100:.1f}%;"
+            f"低于衰退情景 (baseline×0.75) 概率 {float(np.mean(final_values < baseline_fc[-1] * 0.75)) * 100:.1f}%"
         ),
     }
 
@@ -375,7 +369,24 @@ def risk_full_pipeline(
 
 
 if __name__ == "__main__":
-    shenzhen_gdp: list[float] = [9772, 11506, 12971, 14573, 16002, 17503, 19493, 22438, 25267, 26927, 27700, 30700, 32400, 34600, 36500, 38500]
+    shenzhen_gdp: list[float] = [
+        9772,
+        11506,
+        12971,
+        14573,
+        16002,
+        17503,
+        19493,
+        22438,
+        25267,
+        26927,
+        27700,
+        30700,
+        32400,
+        34600,
+        36500,
+        38500,
+    ]
     from backend.core.forecast_engine import forecast_full_pipeline
 
     pipe = forecast_full_pipeline(shenzhen_gdp, 2010, 5)
@@ -383,12 +394,14 @@ if __name__ == "__main__":
     risk = risk_full_pipeline(shenzhen_gdp, baseline, 38500, n_sims=1000)
 
     print("=== 深圳 GDP 风险 + 情景 + MC ===")
-    print(f"波动率: 年化 {risk['volatility']['annualized_volatility']*100:.2f}%")
-    print(f"VaR 95%: 损失 {risk['var_95']['var_pct']*100:.2f}% (≈{risk['var_95']['var_amount']:.0f} 亿元)")
-    print(f"CVaR 95%: 平均尾部 {risk['var_95']['cvar_pct']*100:.2f}% (≈{risk['var_95']['cvar_amount']:.0f} 亿元)")
+    print(f"波动率: 年化 {risk['volatility']['annualized_volatility'] * 100:.2f}%")
+    print(f"VaR 95%: 损失 {risk['var_95']['var_pct'] * 100:.2f}% (≈{risk['var_95']['var_amount']:.0f} 亿元)")
+    print(f"CVaR 95%: 平均尾部 {risk['var_95']['cvar_pct'] * 100:.2f}% (≈{risk['var_95']['cvar_amount']:.0f} 亿元)")
     print("\n情景(5 年后):")
     for sid, s in risk["scenarios"]["scenarios"].items():
         print(f"  {s['name']}: {s['final_value']:.0f} 亿元 ({s['final_change_pct']:+.2f}%)")
     print("\nMC 1000 次:")
-    print(f"  末年 P5/P50/P95: {risk['monte_carlo']['quantiles']['p05'][-1]:.0f} / {risk['monte_carlo']['quantiles']['p50'][-1]:.0f} / {risk['monte_carlo']['quantiles']['p95'][-1]:.0f}")
-    print(f"  低于衰退情景概率: {risk['monte_carlo']['final_value_stats']['prob_below_recession']*100:.1f}%")
+    print(
+        f"  末年 P5/P50/P95: {risk['monte_carlo']['quantiles']['p05'][-1]:.0f} / {risk['monte_carlo']['quantiles']['p50'][-1]:.0f} / {risk['monte_carlo']['quantiles']['p95'][-1]:.0f}"
+    )
+    print(f"  低于衰退情景概率: {risk['monte_carlo']['final_value_stats']['prob_below_recession'] * 100:.1f}%")

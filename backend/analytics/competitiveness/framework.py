@@ -278,14 +278,22 @@ class IndicatorFramework:
 
     # ── 已有数据的指标键列表 ──
     COVERED_INDICATOR_KEYS: list[str] = [
-        "gdp", "fiscal_revenue", "gdp_growth",
-        "rd_intensity", "industry_high_tech_ratio", "rd_subsidy",
-        "population", "supplier_count",
+        "gdp",
+        "fiscal_revenue",
+        "gdp_growth",
+        "rd_intensity",
+        "industry_high_tech_ratio",
+        "rd_subsidy",
+        "population",
+        "supplier_count",
         "land_price",
         "salary_level",
         "energy_cost",
-        "local_support_rate", "policy_coverage", "tax_coverage",
-        "avg_approval_time", "tax_reduction",
+        "local_support_rate",
+        "policy_coverage",
+        "tax_coverage",
+        "avg_approval_time",
+        "tax_reduction",
     ]
 
     @classmethod

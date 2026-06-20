@@ -226,7 +226,11 @@ class CityDataManager:
         try:
             import json
 
-            summary: dict[str, Any] = {"export_time": datetime.now().isoformat(), "total_cities": len(self.cities), "cities": []}
+            summary: dict[str, Any] = {
+                "export_time": datetime.now().isoformat(),
+                "total_cities": len(self.cities),
+                "cities": [],
+            }
 
             for city_code, config in self.cities.items():
                 city_info = {

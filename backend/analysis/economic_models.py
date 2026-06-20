@@ -236,7 +236,11 @@ class InferenceEngine:
         return (value - margin, value + margin), 1.0  # 公式计算 R²=1
 
     def _monte_carlo_simulation(
-        self, formula, inputs: dict[str, float], confidence_level: float, n_simulations: int = 10000,
+        self,
+        formula,
+        inputs: dict[str, float],
+        confidence_level: float,
+        n_simulations: int = 10000,
         seed: int | None = 42,
     ) -> tuple[tuple[float, float], float]:
         """蒙特卡洛模拟。
@@ -422,8 +426,13 @@ class EconomicModels:
             return {
                 "model": "Solow Growth Model",
                 "error": "population_growth + depreciation 必须为正",
-                "inputs": {"savings_rate": savings_rate, "population_growth": population_growth,
-                           "depreciation": depreciation, "alpha": alpha, "technology": technology},
+                "inputs": {
+                    "savings_rate": savings_rate,
+                    "population_growth": population_growth,
+                    "depreciation": depreciation,
+                    "alpha": alpha,
+                    "technology": technology,
+                },
             }
         k_star = (savings_rate / denom) ** (1 / (1 - alpha))
 

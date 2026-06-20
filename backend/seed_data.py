@@ -18,20 +18,31 @@ from backend.core.storage.record_store import bulk_insert_records, get_record_co
 logger = logging.getLogger(__name__)
 
 _SEED_DATASET_ID = "_seed_10_cities"
-_INDICATOR_BLACKLIST = {"name", "year", "region", "industry", "industry_code",
-                         "data_source", "data_quality"}
+_INDICATOR_BLACKLIST = {"name", "year", "region", "industry", "industry_code", "data_source", "data_quality"}
 
 _SNAPSHOT_INDICATORS = [
-    "land_price", "salary_level", "energy_cost", "financing_cost",
-    "local_support_rate", "avg_delivery_time", "location_quotient",
-    "supplier_count", "tax_reduction", "policy_coverage", "tax_coverage",
-    "rd_subsidy", "avg_approval_time", "gdp", "gdp_growth",
-    "population", "fiscal_revenue", "rd_intensity",
+    "land_price",
+    "salary_level",
+    "energy_cost",
+    "financing_cost",
+    "local_support_rate",
+    "avg_delivery_time",
+    "location_quotient",
+    "supplier_count",
+    "tax_reduction",
+    "policy_coverage",
+    "tax_coverage",
+    "rd_subsidy",
+    "avg_approval_time",
+    "gdp",
+    "gdp_growth",
+    "population",
+    "fiscal_revenue",
+    "rd_intensity",
     "industry_high_tech_ratio",
 ]
 
-_HISTORICAL_INDICATORS = ["gdp", "population", "fiscal_revenue",
-                           "rd_intensity", "industry_high_tech_ratio"]
+_HISTORICAL_INDICATORS = ["gdp", "population", "fiscal_revenue", "rd_intensity", "industry_high_tech_ratio"]
 
 
 def seed_if_missing() -> bool:
@@ -73,12 +84,14 @@ def seed_if_missing() -> bool:
         {"col_name": "年份", "col_index": 1, "detected_role": "time", "data_type": "number"},
     ]
     for idx, ind in enumerate(_SNAPSHOT_INDICATORS, start=2):
-        columns.append({
-            "col_name": ind,
-            "col_index": idx,
-            "detected_role": "indicator",
-            "data_type": "number",
-        })
+        columns.append(
+            {
+                "col_name": ind,
+                "col_index": idx,
+                "detected_role": "indicator",
+                "data_type": "number",
+            }
+        )
     save_column_info(_SEED_DATASET_ID, columns)
 
     # ── 3) Convert CITY_DATA → records ──
@@ -88,12 +101,14 @@ def seed_if_missing() -> bool:
         for ind in _SNAPSHOT_INDICATORS:
             val = fields.get(ind)
             if val is not None:
-                records.append({
-                    "entity": city_name,
-                    "year": year,
-                    "indicator": ind,
-                    "value": float(val),
-                })
+                records.append(
+                    {
+                        "entity": city_name,
+                        "year": year,
+                        "indicator": ind,
+                        "value": float(val),
+                    }
+                )
 
     # ── 4) Convert HISTORICAL_DATA → records ──
     for city_name, rows in HISTORICAL_DATA.items():
@@ -104,12 +119,14 @@ def seed_if_missing() -> bool:
             for ind in _HISTORICAL_INDICATORS:
                 val = row.get(ind)
                 if val is not None:
-                    records.append({
-                        "entity": city_name,
-                        "year": year,
-                        "indicator": ind,
-                        "value": float(val),
-                    })
+                    records.append(
+                        {
+                            "entity": city_name,
+                            "year": year,
+                            "indicator": ind,
+                            "value": float(val),
+                        }
+                    )
 
     # ── 5) Bulk insert ──
     bulk_insert_records(_SEED_DATASET_ID, records)

@@ -86,7 +86,12 @@ class RegionLoader:
 
         # 如果没有显式历史数据，但 indicators 里包含多个年份，可以扩展
         if not historical and "year" in item:
-            historical = [{"year": item["year"], **{k: v for k, v in item.items() if k not in ("name", "code", "province", "region", "year")}}]
+            historical = [
+                {
+                    "year": item["year"],
+                    **{k: v for k, v in item.items() if k not in ("name", "code", "province", "region", "year")},
+                }
+            ]
 
         indicators = dict(item)
         for key in ("name", "code", "province", "region", "historical_data", "metadata", "parent_code", "country"):

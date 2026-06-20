@@ -28,7 +28,13 @@ class DataTransformer:
         """数据聚合"""
         return df.groupby(group_by).agg(aggregations).reset_index()
 
-    def merge_data(self, left: pd.DataFrame, right: pd.DataFrame, on: str, how: Literal["left", "right", "outer", "inner", "cross"] = "inner") -> pd.DataFrame:
+    def merge_data(
+        self,
+        left: pd.DataFrame,
+        right: pd.DataFrame,
+        on: str,
+        how: Literal["left", "right", "outer", "inner", "cross"] = "inner",
+    ) -> pd.DataFrame:
         """数据合并"""
         return pd.merge(left, right, on=on, how=how)
 

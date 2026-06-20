@@ -616,4 +616,3 @@ def _collect_all_city_records() -> list[dict[str, Any]]:
                 except (TypeError, ValueError):
                     continue
     return records
-

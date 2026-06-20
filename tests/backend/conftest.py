@@ -21,7 +21,6 @@ os.environ.setdefault("ALLOW_UNSIGNED_MODELS", "1")
 os.environ.setdefault("SECRET_KEY", "test-secret-key-not-for-production")
 
 
-
 @pytest.fixture(scope="session")
 def project_root_path() -> Path:
     """项目根目录路径"""

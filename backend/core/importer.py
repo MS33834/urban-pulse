@@ -62,9 +62,7 @@ def _coerce_value(val: Any) -> float | None:
     return None
 
 
-def detect_column_roles(
-    headers: list[str], sample_rows: list[dict[str, Any]]
-) -> list[dict[str, Any]]:
+def detect_column_roles(headers: list[str], sample_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Auto-detect the role of each column.
 
     Returns list of {col_name, col_index, detected_role, data_type}.
@@ -91,12 +89,14 @@ def detect_column_roles(
                 # Not enough numeric → could be categorical
                 role = "categorical"
 
-        result.append({
-            "col_name": col,
-            "col_index": idx,
-            "detected_role": role,
-            "data_type": dtype,
-        })
+        result.append(
+            {
+                "col_name": col,
+                "col_index": idx,
+                "detected_role": role,
+                "data_type": dtype,
+            }
+        )
 
     return result
 
@@ -108,12 +108,8 @@ def _records_from_rows(
 ) -> list[dict[str, Any]]:
     """Convert parsed rows to wide-table records (entity × year × indicator × value)."""
     # Find entity/time column indices
-    entity_col = next(
-        (c["col_name"] for c in col_roles if c["detected_role"] == "entity"), None
-    )
-    time_col = next(
-        (c["col_name"] for c in col_roles if c["detected_role"] == "time"), None
-    )
+    entity_col = next((c["col_name"] for c in col_roles if c["detected_role"] == "entity"), None)
+    time_col = next((c["col_name"] for c in col_roles if c["detected_role"] == "time"), None)
     indicator_cols = [c["col_name"] for c in col_roles if c["detected_role"] in ("indicator", "categorical")]
 
     if entity_col is None:
@@ -136,12 +132,14 @@ def _records_from_rows(
             raw_val = row.get(ic)
             val = _coerce_value(raw_val)
             if val is not None:
-                records.append({
-                    "entity": str(entity),
-                    "year": year,
-                    "indicator": ic,
-                    "value": val,
-                })
+                records.append(
+                    {
+                        "entity": str(entity),
+                        "year": year,
+                        "indicator": ic,
+                        "value": val,
+                    }
+                )
 
     return records
 

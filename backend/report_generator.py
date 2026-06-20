@@ -126,7 +126,11 @@ class ReportGenerator:
         return str(json_path)
 
     def generate_pdf_report(
-        self, data_quality: dict, insights: dict, visualizations: dict[str, Any] | None = None, filename: str = "analysis_report.pdf"
+        self,
+        data_quality: dict,
+        insights: dict,
+        visualizations: dict[str, Any] | None = None,
+        filename: str = "analysis_report.pdf",
     ):
         """
         生成PDF报告
@@ -208,7 +212,11 @@ class ReportGenerator:
             return None
 
     def generate_all_reports(
-        self, data_quality: dict, insights: dict, processed_data: pd.DataFrame | None = None, visualizations: dict[str, Any] | None = None
+        self,
+        data_quality: dict,
+        insights: dict,
+        processed_data: pd.DataFrame | None = None,
+        visualizations: dict[str, Any] | None = None,
     ) -> dict:
         """生成所有报告"""
         reports = {}

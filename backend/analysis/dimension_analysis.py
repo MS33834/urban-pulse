@@ -251,7 +251,9 @@ class CorrelationAnalyzer(BaseAnalyzer):
 
         insights = []
         for corr_info in strong_correlations:
-            insights.append(f"{corr_info['var1']} 与 {corr_info['var2']} 存在{corr_info['strength']}（r={corr_info['correlation']:.2f}）")
+            insights.append(
+                f"{corr_info['var1']} 与 {corr_info['var2']} 存在{corr_info['strength']}（r={corr_info['correlation']:.2f}）"
+            )
 
         if not strong_correlations:
             insights.append("未发现显著相关关系")

@@ -117,7 +117,10 @@ def get_score_benchmarks() -> dict[str, dict[str, float]]:
         "policy_coverage",
         "avg_approval_time",
     ]
-    return {key: {"low": _q(_values(key), 0.25), "medium": _q(_values(key), 0.5), "high": _q(_values(key), 0.75)} for key in keys}
+    return {
+        key: {"low": _q(_values(key), 0.25), "medium": _q(_values(key), 0.5), "high": _q(_values(key), 0.75)}
+        for key in keys
+    }
 
 
 def get_score_weights() -> dict[str, float]:

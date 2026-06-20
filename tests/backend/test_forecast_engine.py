@@ -1,10 +1,10 @@
 """
 Phase 4-7 投资决策级预测引擎测试
 """
+
 import sys
 
 sys.path.insert(0, ".")
-
 
 
 def test_auto_arima_finds_best_order():
@@ -30,7 +30,9 @@ def test_ets_forecast_basic():
     assert out["predictions"][-1] > y[-1] * 0.9, f"ETS 末年预测 {out['predictions'][-1]} 应接近 {y[-1]}"
     # 注意:完美线性 → ETS residuals=0 → CI 宽度=0(此时 CI 失去意义)
     # 现实数据总有 noise,所以 CI 宽度 > 0
-    print(f"✓ ETS forecast: {[round(p, 1) for p in out['predictions']]}, width={round(out['upper_ci'][0]-out['lower_ci'][0], 1)}")
+    print(
+        f"✓ ETS forecast: {[round(p, 1) for p in out['predictions']]}, width={round(out['upper_ci'][0] - out['lower_ci'][0], 1)}"
+    )
 
 
 def test_linear_regression_forecast():
@@ -123,7 +125,24 @@ def test_full_pipeline_shenzhen_gdp():
     """深圳 GDP 16 年全流水线"""
     from backend.core.forecast_engine import forecast_full_pipeline
 
-    shenzhen_gdp = [9772, 11506, 12971, 14573, 16002, 17503, 19493, 22438, 25267, 26927, 27700, 30700, 32400, 34600, 36500, 38500]
+    shenzhen_gdp = [
+        9772,
+        11506,
+        12971,
+        14573,
+        16002,
+        17503,
+        19493,
+        22438,
+        25267,
+        26927,
+        27700,
+        30700,
+        32400,
+        34600,
+        36500,
+        38500,
+    ]
     out = forecast_full_pipeline(shenzhen_gdp, start_year=2010, years=5)
     assert "ensemble" in out
     assert "diagnostics" in out
@@ -146,7 +165,9 @@ def test_full_pipeline_shenzhen_gdp():
     print(f"    集成权重: {out['ensemble']['weights']}")
     print(f"    残差诊断: {out['diagnostics']['verdict']}")
     print(f"    结构突变: {len(out['structural_breaks'])} 个")
-    print(f"    Backtest: MAPE={out['backtest']['metrics'].get('MAPE_pct')}%, MASE={out['backtest']['metrics'].get('MASE')}, Coverage={out['backtest']['metrics'].get('Coverage_pct')}%")
+    print(
+        f"    Backtest: MAPE={out['backtest']['metrics'].get('MAPE_pct')}%, MASE={out['backtest']['metrics'].get('MASE')}, Coverage={out['backtest']['metrics'].get('Coverage_pct')}%"
+    )
     print(f"    CAGR: 历史 {out['growth']['historical_cagr_pct']}% / 预测 {out['growth']['forecast_cagr_pct']}%")
 
 

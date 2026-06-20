@@ -119,18 +119,12 @@ async def get_rankings(dimension: str | None = None):
             )
         payload = {
             "dimension": dimension,
-            "rankings": [
-                {"city": city, "score": score}
-                for city, score in dim_rankings
-            ],
+            "rankings": [{"city": city, "score": score} for city, score in dim_rankings],
         }
     else:
         payload = {
             "dimension": "overall",
-            "rankings": [
-                {"city": city, "score": score}
-                for city, score in result["rankings"]["overall"]
-            ],
+            "rankings": [{"city": city, "score": score} for city, score in result["rankings"]["overall"]],
         }
 
     return JSONResponse(

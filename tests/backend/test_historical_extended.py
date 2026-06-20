@@ -1,6 +1,7 @@
 """
 投资决策级扩展数据测试
 """
+
 import sys
 
 sys.path.insert(0, ".")
@@ -61,9 +62,10 @@ def test_gdp_values_sanity():
     """GDP 数据合理性:不能倒退,数值合理范围"""
     from backend.data.historical_extended import get_city_timeseries
 
-    for city in get_city_timeseries.__module__ and __import__(
-        "backend.data.historical_extended", fromlist=["EXTENDED_HISTORICAL"]
-    ).EXTENDED_HISTORICAL.keys():
+    for city in (
+        get_city_timeseries.__module__
+        and __import__("backend.data.historical_extended", fromlist=["EXTENDED_HISTORICAL"]).EXTENDED_HISTORICAL.keys()
+    ):
         df = get_city_timeseries(city)
         gdp = df["gdp"].tolist()
         # 1. 不能倒退超过 5%(容差:疫情 2020 期间)
@@ -74,7 +76,7 @@ def test_gdp_values_sanity():
                 assert pct < 0, "武汉 2020 应该是负增长"
                 assert pct > -10, "武汉 2020 跌幅应 < 10%"
             else:
-                assert pct > -5, f"{city} 第 {i} 年(20{10+i-1})GDP 跌幅过大: {pct:.1f}%"
+                assert pct > -5, f"{city} 第 {i} 年(20{10 + i - 1})GDP 跌幅过大: {pct:.1f}%"
                 assert pct < 30, f"{city} 第 {i} 年 GDP 涨幅过大: {pct:.1f}%"
 
     print("✓ GDP 数据合理性检查通过(可容许疫情 2020 特殊点)")

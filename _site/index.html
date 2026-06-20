@@ -1,166 +1,3508 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Urban Pulse - 10座中国城市、16年经济数据、5年预测。一个想做很久的城市经济观测站。">
+<meta name="keywords" content="城市经济,GDP 预测,城市对比,数据分析,ECharts">
+<meta name="author" content="badhope">
+<meta name="theme-color" content="#0E1F3F" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0A1429" media="(prefers-color-scheme: dark)">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Urban Pulse · 城市脉搏">
+<meta property="og:description" content="一个城市经济数据的观测站。10城、16年、5年预测。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="Urban Pulse">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Urban Pulse · 城市脉搏">
+<meta name="twitter:description" content="一个城市经济数据的观测站。">
+<meta name="api-base" content="">
+<meta name="endpoint-count" content="40">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230E1F3F'/%3E%3Cpath d='M22 70 L40 50 L55 60 L78 30' stroke='%23D08560' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='78' cy='30' r='5' fill='%23D08560'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230E1F3F'/%3E%3Cpath d='M22 70 L40 50 L55 60 L78 30' stroke='%23D08560' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Geist:wght@300..700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<!--
+  CSP 设计取舍:
+  - script-src 'unsafe-inline': 单文件 SPA 必需,所有用户输入已用 esc() 转义,ECharts CDN 已 SRI
+  - 移除 'unsafe-eval': 不再依赖 Tailwind JIT
+  - connect-src 收紧: 默认同源 + 同主机 WebSocket
+  - style-src 'unsafe-inline': ECharts 等组件可能注入 style 属性
+-->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' ws://localhost:8000 wss://localhost:8000 http://localhost:8000 http://127.0.0.1:8000; base-uri 'self'; form-action 'self'; object-src 'none'">
 <title>Urban Pulse · 城市脉搏</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js" integrity="sha384-pPi0zxBAoDu6+JXW/C68UZLvBUUtU+7zonhif43rqj7pxsGyqyqzcian2Rj37Rss" crossorigin="anonymous"></script>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
+/* ============================================================
+ * 1 · Design Tokens · Editorial data publication
+ * 暖米纸张 + 深墨蓝 + 暖铜
+ * ============================================================ */
+:root {
+  --ink-900: #0E1F3F;
+  --ink-800: #142B52;
+  --ink-700: #1E3A5F;
+  --ink-600: #2D4D75;
+  --ink-500: #4B6B8C;
+  --ink-400: #7A93B0;
+  --ink-300: #A6B5C5;
+  --ink-200: #CDD6E0;
+  --ink-100: #E4E9EE;
+  --ink-50:  #F1F4F7;
 
-  @font-face {
-    font-family: 'Departure Mono';
-    src: url('https://github.com/hectorm/otf-fonts/raw/main/DepartureMono/DepartureMono-Regular.otf.woff') format('woff');
-    font-display: swap;
+  --copper-700: #8E5535;
+  --copper-600: #B8714A;
+  --copper-500: #D08560;
+  --copper-400: #DC9F7E;
+  --copper-300: #E8BFA6;
+  --copper-100: #F5E5D8;
+  --copper-50:  #FAF1E8;
+
+  --paper-50:  #FAF8F3;
+  --paper-100: #F5F1E8;
+  --paper-200: #EBE5D6;
+  --paper-300: #DDD3BD;
+
+  --sand-200: #E6DFD2;
+  --sand-300: #D4C9B4;
+  --sand-400: #B8A98A;
+
+  --stone-900: #1A1A1A;
+  --stone-800: #2A2A2A;
+  --stone-700: #3D3D3D;
+  --stone-500: #737373;
+  --stone-400: #9A9A9A;
+  --stone-300: #B8B8B8;
+  --stone-200: #D4D4D4;
+  --stone-100: #E8E8E8;
+  --stone-50:  #F2F2F2;
+
+  --success: #2D6A4F;
+  --success-bg: #E6F0EA;
+  --warning: #B8902F;
+  --warning-bg: #F5EBD2;
+  --danger:  #9B3A1F;
+  --danger-bg: #F2DDD3;
+  --info:    #2D5F8A;
+  --info-bg: #DEE9F2;
+
+  --shadow-xs: 0 1px 1px rgba(20, 30, 50, 0.04);
+  --shadow-sm: 0 1px 2px rgba(20, 30, 50, 0.04), 0 1px 3px rgba(20, 30, 50, 0.06);
+  --shadow-md: 0 2px 4px rgba(20, 30, 50, 0.04), 0 4px 8px rgba(20, 30, 50, 0.06);
+  --shadow-lg: 0 4px 8px rgba(20, 30, 50, 0.05), 0 12px 24px rgba(20, 30, 50, 0.08);
+  --shadow-xl: 0 8px 16px rgba(20, 30, 50, 0.06), 0 24px 48px rgba(20, 30, 50, 0.10);
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-base: 14px;
+  --fs-md: 15px;
+  --fs-lg: 17px;
+  --fs-xl: 20px;
+  --fs-2xl: 24px;
+  --fs-3xl: 30px;
+  --fs-4xl: 38px;
+  --fs-5xl: 48px;
+  --fs-6xl: 64px;
+
+  --font-display: "Fraunces", "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
+  --font-body: "Geist", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, "Courier New", monospace;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --t-fast: 150ms;
+  --t-base: 240ms;
+  --t-slow: 400ms;
+
+  --container-max: 1280px;
+  --container-pad: 32px;
+  --header-h: 88px;
+
+  --viz-1: #0E1F3F;
+  --viz-2: #B8714A;
+  --viz-3: #2D6A4F;
+  --viz-4: #9B3A1F;
+  --viz-5: #B8902F;
+  --viz-6: #4B6B8C;
+  --viz-7: #6B4A8C;
+  --viz-8: #3A6B6B;
+}
+
+[data-theme="dark"], :root:not([data-theme="light"]) {
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper-50:  #0F1726;
+    --paper-100: #142137;
+    --paper-200: #1A2A47;
+    --paper-300: #243657;
+    --sand-200: #2C4063;
+    --sand-300: #3B5280;
+    --sand-400: #5A7299;
+    --stone-900: #F1F4F7;
+    --stone-800: #E0E5EB;
+    --stone-700: #C5CCD6;
+    --stone-500: #94A0B0;
+    --stone-400: #6B7A8E;
+    --stone-300: #4F5C70;
+    --stone-200: #364254;
+    --stone-100: #1F2A3D;
+    --stone-50:  #182336;
+    --ink-50:  #142137;
+    --ink-100: #1A2A47;
+    --copper-100: #3D2818;
+    --copper-50:  #2C1D12;
+    --success-bg: #1F3D2E;
+    --warning-bg: #3D331C;
+    --danger-bg:  #3D241C;
+    --info-bg:    #1F3349;
+    --shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.35), 0 12px 24px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 8px 16px rgba(0, 0, 0, 0.4), 0 24px 48px rgba(0, 0, 0, 0.6);
   }
+}
+[data-theme="dark"] {
+  --paper-50:  #0F1726;
+  --paper-100: #142137;
+  --paper-200: #1A2A47;
+  --paper-300: #243657;
+  --sand-200: #2C4063;
+  --sand-300: #3B5280;
+  --sand-400: #5A7299;
+  --stone-900: #F1F4F7;
+  --stone-800: #E0E5EB;
+  --stone-700: #C5CCD6;
+  --stone-500: #94A0B0;
+  --stone-400: #6B7A8E;
+  --stone-300: #4F5C70;
+  --stone-200: #364254;
+  --stone-100: #1F2A3D;
+  --stone-50:  #182336;
+  --ink-50:  #142137;
+  --ink-100: #1A2A47;
+  --copper-100: #3D2818;
+  --copper-50:  #2C1D12;
+  --success-bg: #1F3D2E;
+  --warning-bg: #3D331C;
+  --danger-bg:  #3D241C;
+  --info-bg:    #1F3349;
+  --shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.35), 0 12px 24px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 8px 16px rgba(0, 0, 0, 0.4), 0 24px 48px rgba(0, 0, 0, 0.6);
+}
 
-  body {
-    font-family: 'Departure Mono', 'JetBrains Mono', 'Courier New', monospace;
-    background: #0d0d0d;
-    color: #d4d4d4;
-    line-height: 1.65;
+/* ============================================================
+ * 2 · Reset & Base
+ * ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "cv11", "kern";
+  font-variant-numeric: tabular-nums;
+}
+body {
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
+  line-height: 1.55;
+  color: var(--stone-900);
+  background: var(--paper-50);
+  background-image:
+    radial-gradient(at 0% 0%, rgba(184, 113, 74, 0.04) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(14, 31, 63, 0.04) 0px, transparent 50%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+img, svg, video { display: block; max-width: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { background: none; border: none; cursor: pointer; }
+a { color: var(--ink-700); text-decoration: none; transition: color var(--t-fast) var(--ease-out); }
+a:hover { color: var(--copper-600); }
+::selection { background: var(--copper-300); color: var(--stone-900); }
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid var(--copper-500);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* ============================================================
+ * 3 · Typography
+ * ============================================================ */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  color: var(--stone-900);
+}
+h1 { font-size: clamp(36px, 5vw, 60px); font-variation-settings: "opsz" 120, "SOFT" 30, "WONK" 0; font-weight: 400; }
+h2 { font-size: clamp(24px, 3vw, 32px); font-weight: 500; }
+h3 { font-size: var(--fs-lg); font-weight: 600; font-variation-settings: "opsz" 24; }
+h4 { font-size: var(--fs-base); font-weight: 600; }
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--copper-600);
+}
+.lede {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  line-height: 1.5;
+  color: var(--stone-700);
+  font-variation-settings: "opsz" 24;
+  font-weight: 300;
+  font-style: italic;
+  max-width: 60ch;
+}
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.numeric { font-variant-numeric: tabular-nums; }
+.muted { color: var(--stone-500); }
+.subtle { color: var(--stone-400); }
+.brand { color: var(--ink-700); }
+.accent { color: var(--copper-600); }
+
+/* ============================================================
+ * 4 · Skip Link & App Shell
+ * ============================================================ */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  background: var(--ink-900);
+  color: var(--paper-50);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  z-index: 10000;
+  transition: top var(--t-base) var(--ease-out);
+}
+.skip-link:focus { top: var(--space-4); }
+.app {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--space-6) var(--container-pad) var(--space-12);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+/* ============================================================
+ * 5 · Header
+ * ============================================================ */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  padding: var(--space-6) var(--space-8);
+  background: linear-gradient(135deg, var(--ink-900) 0%, #0A1730 100%);
+  border-radius: var(--radius-lg);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.app-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle, rgba(208, 133, 96, 0.18) 0%, transparent 65%);
+  pointer-events: none;
+}
+.app-header::after {
+  content: '';
+  position: absolute;
+  bottom: -40%;
+  left: 5%;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(75, 107, 140, 0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+.app-header > * { position: relative; z-index: 1; }
+.app-header__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex: 1 1 auto;
+  min-width: 280px;
+}
+.app-header__logo {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--copper-500) 0%, var(--copper-700) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-900);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 26px;
+  font-variation-settings: "opsz" 60, "WONK" 1;
+  box-shadow: 0 6px 20px rgba(208, 133, 96, 0.4);
+  flex-shrink: 0;
+}
+.app-header__title { display: flex; flex-direction: column; gap: 2px; }
+.app-header__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--copper-400);
+}
+.app-header__name {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  font-variation-settings: "opsz" 36;
+}
+.app-header__subtitle {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.04em;
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
+.app-header__status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+.health-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 7px 14px 7px 12px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  transition: all var(--t-base) var(--ease-out);
+}
+.health-badge[data-status="online"]  { background: rgba(45, 106, 79, 0.2); border-color: rgba(45, 106, 79, 0.4); color: #6FCB97; }
+.health-badge[data-status="offline"] { background: rgba(155, 58, 31, 0.2); border-color: rgba(155, 58, 31, 0.4); color: #E89F8E; }
+.health-badge[data-status="loading"] { background: rgba(184, 144, 47, 0.18); border-color: rgba(184, 144, 47, 0.35); color: #E8C66B; }
+.health-badge__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+.health-badge[data-status="online"] .health-badge__dot { animation: pulse-dot 2.2s var(--ease-in-out) infinite; }
+.version-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all var(--t-fast) var(--ease-out);
+}
+.theme-toggle:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
+.theme-toggle svg { width: 16px; height: 16px; }
+
+/* ============================================================
+ * 6 · Tab Navigation
+ * ============================================================ */
+.tab-nav {
+  display: flex;
+  gap: 0;
+  background: var(--paper-100);
+  border-radius: var(--radius-md);
+  padding: 6px;
+  border: 1px solid var(--sand-200);
+  box-shadow: var(--shadow-xs);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tab-nav::-webkit-scrollbar { display: none; }
+.tab-btn {
+  flex: 1 1 0;
+  min-width: 140px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
+  font-weight: 500;
+  color: var(--stone-700);
+  border-radius: var(--radius-sm);
+  transition: all var(--t-base) var(--ease-out);
+  position: relative;
+  text-align: left;
+  white-space: nowrap;
+}
+.tab-btn:hover { color: var(--stone-900); background: rgba(255, 255, 255, 0.4); }
+.tab-btn[aria-selected="true"] {
+  background: var(--paper-50);
+  color: var(--ink-900);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--sand-200);
+  font-weight: 600;
+}
+.tab-btn[aria-selected="true"]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: var(--copper-500);
+  border-radius: 0 0 2px 2px;
+}
+.tab-btn__num {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--stone-400);
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+}
+.tab-btn[aria-selected="true"] .tab-btn__num { color: var(--copper-600); }
+.tab-btn__icon { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.7; }
+.tab-btn[aria-selected="true"] .tab-btn__icon { opacity: 1; color: var(--copper-600); }
+.tab-btn__label { flex: 1 1 auto; }
+
+/* ============================================================
+ * 7 · Tab Panel
+ * ============================================================ */
+.tab-panel { display: grid; gap: var(--space-8); animation: panel-enter 360ms var(--ease-out); }
+.tab-panel[hidden] { display: none; }
+@keyframes panel-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.panel-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--sand-200);
+  position: relative;
+}
+.panel-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: var(--copper-500);
+}
+.panel-header__title { display: flex; flex-direction: column; gap: var(--space-2); }
+.panel-header__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--stone-500);
+  letter-spacing: 0.06em;
+}
+.panel-header__meta strong { color: var(--ink-700); font-weight: 600; }
+
+/* ============================================================
+ * 8 · Stat Cards
+ * ============================================================ */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+}
+.stat-card {
+  background: var(--paper-50);
+  border: 1px solid var(--sand-200);
+  border-radius: var(--radius-md);
+  padding: var(--space-5) var(--space-6);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--t-base) var(--ease-out);
+}
+.stat-card:hover { border-color: var(--sand-300); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.stat-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--copper-500);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform var(--t-base) var(--ease-out);
+}
+.stat-card:hover::before { transform: scaleY(1); }
+.stat-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.stat-card__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--stone-500);
+}
+.stat-card__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--copper-50);
+  color: var(--copper-600);
+}
+.stat-card__icon svg { width: 16px; height: 16px; }
+.stat-card__value {
+  font-family: var(--font-display);
+  font-size: var(--fs-3xl);
+  font-weight: 500;
+  font-variation-settings: "opsz" 48;
+  color: var(--stone-900);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  min-height: 36px;
+}
+.stat-card__unit { font-size: var(--fs-sm); color: var(--stone-500); font-family: var(--font-mono); font-weight: 400; letter-spacing: 0; }
+.stat-card__trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--stone-500);
+  font-weight: 500;
+}
+.stat-card__trend svg { width: 12px; height: 12px; }
+.stat-card__trend--up { color: var(--success); }
+.stat-card__trend--down { color: var(--danger); }
+.stat-card__trend--neutral { color: var(--stone-500); }
+
+/* ============================================================
+ * 9 · Card
+ * ============================================================ */
+.card {
+  background: var(--paper-50);
+  border: 1px solid var(--sand-200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color var(--t-base) var(--ease-out);
+}
+.card:hover { border-color: var(--sand-300); }
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--sand-200);
+}
+.card-head__title { display: flex; align-items: center; gap: var(--space-3); }
+.card-head__rule {
+  width: 4px;
+  height: 18px;
+  border-radius: 2px;
+  background: var(--ink-700);
+  flex-shrink: 0;
+}
+.card-head__rule--copper { background: var(--copper-500); }
+.card-head__rule--moss { background: var(--success); }
+.card-head__rule--gold { background: var(--warning); }
+.card-head__rule--rust { background: var(--danger); }
+.card-head__title h3 {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  font-variation-settings: "opsz" 24;
+  color: var(--stone-900);
+  margin: 0;
+}
+.card-head__title .eyebrow { font-size: 10px; }
+.card-head__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--stone-500);
+  letter-spacing: 0.05em;
+}
+.card-body { padding: var(--space-6); }
+.card-body--tight { padding: var(--space-4) var(--space-6); }
+.card-body--flush { padding: 0; }
+
+/* ============================================================
+ * 10 · Chart Container
+ * ============================================================ */
+.chart { width: 100%; position: relative; }
+.chart > div[id^="chart"] { min-height: 320px; }
+.chart--tall > div[id^="chart"] { min-height: 380px; }
+.chart--short > div[id^="chart"] { min-height: 220px; }
+.chart-skeleton {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper-50);
+  z-index: 2;
+  border-radius: var(--radius-md);
+}
+.chart-skeleton__bars { display: flex; align-items: flex-end; gap: 8px; height: 80px; }
+.chart-skeleton__bar {
+  width: 8px;
+  background: linear-gradient(180deg, var(--copper-100) 0%, var(--copper-300) 100%);
+  border-radius: 2px 2px 0 0;
+  animation: skeleton-bars 1.4s var(--ease-in-out) infinite;
+}
+.chart-skeleton__bar:nth-child(1) { height: 40%; animation-delay: 0s; }
+.chart-skeleton__bar:nth-child(2) { height: 70%; animation-delay: 0.1s; }
+.chart-skeleton__bar:nth-child(3) { height: 50%; animation-delay: 0.2s; }
+.chart-skeleton__bar:nth-child(4) { height: 85%; animation-delay: 0.3s; }
+.chart-skeleton__bar:nth-child(5) { height: 60%; animation-delay: 0.4s; }
+.chart-skeleton__bar:nth-child(6) { height: 75%; animation-delay: 0.5s; }
+.chart-skeleton__bar:nth-child(7) { height: 45%; animation-delay: 0.6s; }
+.chart-skeleton__bar:nth-child(8) { height: 90%; animation-delay: 0.7s; }
+@keyframes skeleton-bars { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.9; } }
+.chart-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-8);
+  color: var(--stone-500);
+  font-size: var(--fs-sm);
+  text-align: center;
+  min-height: 220px;
+}
+.chart-error__icon { width: 36px; height: 36px; color: var(--danger); margin-bottom: var(--space-2); }
+.chart-error__title { font-weight: 600; color: var(--stone-700); }
+.chart-error__detail { font-family: var(--font-mono); font-size: var(--fs-xs); }
+
+/* ============================================================
+ * 11 · City Cards Grid
+ * ============================================================ */
+.city-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-4);
+}
+.city-card {
+  background: var(--paper-50);
+  border: 1px solid var(--sand-200);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--t-base) var(--ease-out);
+  cursor: default;
+}
+.city-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--copper-500), var(--copper-300));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--t-base) var(--ease-out);
+}
+.city-card:hover::before { transform: scaleX(1); }
+.city-card:hover { border-color: var(--sand-300); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.city-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px dashed var(--sand-200);
+}
+.city-card__name {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  font-variation-settings: "opsz" 24;
+  color: var(--stone-900);
+  letter-spacing: -0.01em;
+}
+.city-card__region {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--stone-500);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  background: var(--copper-50);
+  color: var(--copper-700);
+  border: 1px solid var(--copper-100);
+  white-space: nowrap;
+}
+.tag--ink { background: var(--ink-50); color: var(--ink-700); border-color: var(--ink-100); }
+.tag--moss { background: var(--success-bg); color: var(--success); border-color: color-mix(in srgb, var(--success) 20%, transparent); }
+.tag--rust { background: var(--danger-bg); color: var(--danger); border-color: color-mix(in srgb, var(--danger) 20%, transparent); }
+.city-card__stats { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3) var(--space-4); }
+.city-card__stat { display: flex; flex-direction: column; gap: 2px; }
+.city-card__stat-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--stone-500);
+}
+.city-card__stat-value {
+  font-family: var(--font-mono);
+  font-size: var(--fs-base);
+  font-weight: 500;
+  color: var(--stone-900);
+  font-variant-numeric: tabular-nums;
+}
+.city-card__stat-value--accent { color: var(--copper-600); font-weight: 600; }
+.city-card--skeleton {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(90deg, var(--paper-100) 25%, var(--paper-200) 50%, var(--paper-100) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s linear infinite;
+  border-style: dashed;
+}
+@keyframes skeleton-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* ============================================================
+ * 12 · Form Controls
+ * ============================================================ */
+.field { display: flex; flex-direction: column; gap: var(--space-2); }
+.field__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--stone-500);
+}
+.field__help { font-size: var(--fs-xs); color: var(--stone-500); }
+.field__error { font-size: var(--fs-xs); color: var(--danger); }
+.select {
+  width: 100%;
+  padding: 10px 38px 10px 14px;
+  border: 1px solid var(--sand-300);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-base);
+  color: var(--stone-900);
+  background-color: var(--paper-50);
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23737373' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  transition: all var(--t-fast) var(--ease-out);
+  cursor: pointer;
+}
+.select:hover { border-color: var(--sand-400); }
+.select:focus { border-color: var(--copper-500); box-shadow: 0 0 0 3px color-mix(in srgb, var(--copper-500) 20%, transparent); }
+.select:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ============================================================
+ * 13 · Buttons
+ * ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 11px 20px;
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--t-fast) var(--ease-out);
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+.btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+.btn svg { width: 14px; height: 14px; }
+.btn--primary { background: var(--ink-900); color: var(--paper-50); border-color: var(--ink-900); }
+.btn--primary:hover:not(:disabled) { background: var(--ink-800); border-color: var(--ink-800); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.btn--primary:active:not(:disabled) { transform: translateY(0); }
+.btn--accent { background: var(--copper-600); color: #fff; border-color: var(--copper-600); }
+.btn--accent:hover:not(:disabled) { background: var(--copper-700); border-color: var(--copper-700); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.btn--ghost { background: transparent; color: var(--stone-700); border-color: var(--sand-300); }
+.btn--ghost:hover:not(:disabled) { background: var(--paper-100); color: var(--stone-900); border-color: var(--sand-400); }
+.btn--sm { padding: 6px 12px; font-size: var(--fs-sm); border-radius: var(--radius-xs); }
+.btn--block { width: 100%; }
+
+/* ============================================================
+ * 14 · Checkbox Pills
+ * ============================================================ */
+.checkbox-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px 7px 12px;
+  border: 1px solid var(--sand-300);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--t-fast) var(--ease-out);
+  user-select: none;
+  background: var(--paper-50);
+  color: var(--stone-700);
+  position: relative;
+}
+.checkbox-pill:hover { border-color: var(--copper-500); color: var(--stone-900); }
+.checkbox-pill input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
+.checkbox-pill__check {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1.5px solid var(--sand-400);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper-50);
+  transition: all var(--t-fast) var(--ease-out);
+  flex-shrink: 0;
+}
+.checkbox-pill__check svg { width: 9px; height: 9px; stroke: #fff; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity var(--t-fast) var(--ease-out); }
+.checkbox-pill input:checked + .checkbox-pill__check { background: var(--copper-600); border-color: var(--copper-600); }
+.checkbox-pill input:checked + .checkbox-pill__check svg { opacity: 1; }
+.checkbox-pill:has(input:checked) { background: var(--copper-50); border-color: var(--copper-500); color: var(--copper-700); font-weight: 600; }
+
+/* ============================================================
+ * 15 · Detail Items
+ * ============================================================ */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-3);
+}
+.detail-item {
+  background: var(--paper-100);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  transition: all var(--t-fast) var(--ease-out);
+}
+.detail-item:hover { background: var(--paper-50); border-color: var(--sand-200); }
+.detail-item__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--stone-500);
+  margin-bottom: 4px;
+}
+.detail-item__value {
+  font-family: var(--font-mono);
+  font-size: var(--fs-md);
+  font-weight: 500;
+  color: var(--stone-900);
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.detail-item__unit { font-size: 10px; color: var(--stone-500); font-weight: 400; }
+.detail-item__value--accent { color: var(--copper-600); font-weight: 600; }
+.detail-item__value--success { color: var(--success); font-weight: 600; }
+.detail-item__value--warning { color: var(--warning); font-weight: 600; }
+
+/* ============================================================
+ * 16 · Score Ring
+ * ============================================================ */
+.score-ring { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); }
+.score-ring__svg { width: 160px; height: 160px; transform: rotate(-90deg); }
+.score-ring__bg { fill: none; stroke: var(--sand-200); stroke-width: 8; }
+.score-ring__fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 800ms var(--ease-out), stroke 400ms var(--ease-out); }
+.score-ring__center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-top: -110px; height: 110px; }
+.score-ring__value { font-family: var(--font-display); font-size: 40px; font-weight: 500; font-variation-settings: "opsz" 60; color: var(--stone-900); line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+.score-ring__label { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--stone-500); margin-top: 4px; }
+.score-ring__rating { font-family: var(--font-mono); font-size: var(--fs-sm); font-weight: 500; color: var(--copper-600); letter-spacing: 0.04em; }
+
+/* ============================================================
+ * 17 · Data Table
+ * ============================================================ */
+.data-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.data-table th, .data-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--sand-200); vertical-align: middle; }
+.data-table thead th { font-family: var(--font-mono); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--stone-500); background: var(--paper-100); border-bottom: 2px solid var(--sand-300); position: sticky; top: 0; z-index: 1; }
+.data-table tbody tr { transition: background var(--t-fast) var(--ease-out); }
+.data-table tbody tr:hover { background: var(--paper-100); }
+.data-table__metric { font-family: var(--font-display); font-size: var(--fs-base); font-weight: 600; color: var(--stone-900); font-variation-settings: "opsz" 18; }
+.data-table__city { color: var(--stone-900); font-weight: 500; }
+.data-table__value { font-family: var(--font-mono); font-weight: 600; color: var(--stone-900); font-variant-numeric: tabular-nums; }
+.data-table__value--best { color: var(--success); }
+.data-table__value--worst { color: var(--danger); }
+.data-table__unit { font-family: var(--font-mono); font-size: 10px; color: var(--stone-500); margin-left: 2px; font-weight: 400; }
+.data-table__empty { text-align: center; padding: var(--space-12) var(--space-6); color: var(--stone-500); }
+.data-table__empty-icon { width: 48px; height: 48px; color: var(--sand-400); margin: 0 auto var(--space-3); }
+.data-table-wrap { overflow-x: auto; }
+
+/* ============================================================
+ * 18 · Empty State
+ * ============================================================ */
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--space-12) var(--space-6); text-align: center; color: var(--stone-500); gap: var(--space-3); }
+.empty-state__icon { width: 56px; height: 56px; color: var(--sand-400); }
+.empty-state__title { font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 600; color: var(--stone-700); font-variation-settings: "opsz" 24; }
+.empty-state__text { font-size: var(--fs-sm); max-width: 360px; line-height: 1.6; }
+
+/* ============================================================
+ * 19 · Toast
+ * ============================================================ */
+.toast-container { position: fixed; top: var(--space-5); right: var(--space-5); z-index: 9999; display: flex; flex-direction: column; gap: var(--space-2); pointer-events: none; max-width: 400px; }
+.toast { display: flex; align-items: flex-start; gap: var(--space-3); padding: 12px 16px; background: var(--paper-50); border: 1px solid var(--sand-300); border-left: 3px solid var(--stone-400); border-radius: var(--radius-md); font-size: var(--fs-sm); color: var(--stone-800); box-shadow: var(--shadow-lg); pointer-events: auto; animation: toast-in 320ms var(--ease-out); max-width: 100%; min-width: 280px; position: relative; overflow: hidden; }
+.toast--leaving { animation: toast-out 240ms var(--ease-in-out) forwards; }
+.toast__icon { flex-shrink: 0; margin-top: 1px; }
+.toast__icon svg { width: 16px; height: 16px; }
+.toast__body { flex: 1 1 auto; line-height: 1.5; min-width: 0; }
+.toast__title { font-weight: 600; color: var(--stone-900); margin-bottom: 2px; }
+.toast__detail { font-family: var(--font-mono); font-size: 11px; color: var(--stone-500); margin-top: 2px; word-break: break-word; }
+.toast__close { flex-shrink: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-xs); color: var(--stone-400); cursor: pointer; transition: all var(--t-fast) var(--ease-out); }
+.toast__close:hover { background: var(--paper-200); color: var(--stone-700); }
+.toast__close svg { width: 12px; height: 12px; }
+.toast--info { border-left-color: var(--info); }
+.toast--info .toast__icon { color: var(--info); }
+.toast--success { border-left-color: var(--success); }
+.toast--success .toast__icon { color: var(--success); }
+.toast--warning { border-left-color: var(--warning); }
+.toast--warning .toast__icon { color: var(--warning); }
+.toast--error { border-left-color: var(--danger); }
+.toast--error .toast__icon { color: var(--danger); }
+.toast__progress { position: absolute; left: 0; bottom: 0; height: 2px; background: currentColor; opacity: 0.4; animation: toast-progress 5s linear forwards; }
+@keyframes toast-in { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes toast-out { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(40px); } }
+@keyframes toast-progress { from { width: 100%; } to { width: 0%; } }
+
+/* ============================================================
+ * 20 · Footer
+ * ============================================================ */
+.app-footer { margin-top: var(--space-12); padding-top: var(--space-6); border-top: 1px solid var(--sand-200); display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--stone-500); letter-spacing: 0.04em; }
+.app-footer__brand { display: flex; align-items: center; gap: var(--space-2); }
+.app-footer__sep { color: var(--sand-400); }
+.app-footer__links { display: flex; gap: var(--space-4); }
+.app-footer__links a { color: var(--stone-500); }
+.app-footer__links a:hover { color: var(--copper-600); }
+
+/* ============================================================
+ * 21 · Animations
+ * ============================================================ */
+@keyframes pulse-dot { 0%, 100% { box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1); } 50% { box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.05); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; opacity: 0.7; }
+
+/* ============================================================
+ * 22 · Utilities
+ * ============================================================ */
+.cluster { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.stack   { display: flex; flex-direction: column; gap: var(--space-2); }
+.between { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.grow    { flex: 1 1 auto; }
+.shrink-0 { flex-shrink: 0; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6); }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-6); }
+@media (max-width: 960px) { .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+.text-center { text-align: center; }
+.hidden { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+/* ============================================================
+ * 23 · Responsive
+ * ============================================================ */
+@media (max-width: 880px) {
+  :root { --container-pad: 20px; --header-h: 76px; }
+  .app { padding: var(--space-4) var(--container-pad) var(--space-8); gap: var(--space-6); }
+  .app-header { padding: var(--space-5); flex-direction: column; align-items: flex-start; }
+  .app-header__name { font-size: 20px; }
+  .tab-btn { padding: 10px 12px; font-size: var(--fs-sm); min-width: 120px; }
+  .tab-btn__num { display: none; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .panel-header { flex-direction: column; align-items: flex-start; }
+  h1 { font-size: 36px; }
+  .score-ring__svg { width: 130px; height: 130px; }
+  .score-ring__center { margin-top: -90px; height: 90px; }
+  .score-ring__value { font-size: 32px; }
+}
+@media (max-width: 480px) {
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .stat-card { padding: var(--space-4); }
+  .stat-card__value { font-size: 22px; }
+  .city-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+ * 24 · View Transitions
+ * ============================================================ */
+@supports (view-transition-name: a) {
+  ::view-transition-old(root), ::view-transition-new(root) {
+    animation-duration: 320ms;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   }
+}
 
-  .page { max-width: 800px; margin: 0 auto; padding: 60px 24px; }
-
-  .prompt { color: #8b5cf6; }
-  .path { color: #2dd4bf; }
-  .sep { color: #525252; }
-
-  h1 { font-size: 28px; font-weight: 400; margin: 40px 0 8px; letter-spacing: -0.3px; }
-  h1 .highlight { color: #60a5fa; }
-  h2 { font-size: 18px; font-weight: 400; margin: 48px 0 16px; color: #a78bfa; }
-  h2::before { content: '## '; color: #525252; }
-  h3 { font-size: 15px; font-weight: 400; margin: 24px 0 8px; color: #2dd4bf; }
-
-  p, li { font-size: 14px; color: #a3a3a3; margin: 8px 0; }
-  a { color: #60a5fa; text-decoration: none; }
-  a:hover { text-decoration: underline; }
-
-  .tagline { color: #525252; font-size: 13px; margin: 4px 0 24px; }
-  .tagline::before { content: '# '; }
-
-  hr { border: none; border-top: 1px solid #262626; margin: 48px 0; }
-
-  .stat-box {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
-    background: #262626; margin: 24px 0; border: 1px solid #262626;
+/* ============================================================
+ * 25 · Reduced motion
+ * ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-  .stat-box > div { background: #0d0d0d; padding: 16px; text-align: center; }
-  .stat-box .num { font-size: 24px; color: #60a5fa; }
-  .stat-box .lbl { font-size: 11px; color: #525252; margin-top: 4px; }
+}
 
-  ul { list-style: none; padding: 0; }
-  ul li { padding: 4px 0; }
-  ul li::before { content: '  * '; color: #525252; }
+/* ============================================================
+ * 26 · Print
+ * ============================================================ */
+@media print {
+  body { background: #fff; color: #000; }
+  .app-header, .tab-nav, .toast-container, .app-footer, .btn, .theme-toggle { display: none; }
+  .tab-panel { display: grid !important; }
+  .tab-panel[hidden] { display: none !important; }
+  .card { break-inside: avoid; border: 1px solid #ccc; }
+}
 
-  code { background: #1a1a1a; padding: 1px 6px; border-radius: 3px; font-size: 13px; color: #d4d4d4; }
-
-  pre {
-    background: #1a1a1a; border: 1px solid #262626; border-radius: 6px;
-    padding: 16px; font-size: 13px; overflow-x: auto; margin: 16px 0;
-    line-height: 1.5;
-  }
-  pre .hl { color: #60a5fa; }
-  pre .gr { color: #34d399; }
-  pre .yl { color: #fbbf24; }
-  pre .cm { color: #525252; }
-
-  .badge { display: inline-block; border: 1px solid #262626; padding: 2px 8px; font-size: 11px; margin: 2px; border-radius: 3px; }
-
-  .footer { text-align: center; margin-top: 80px; padding: 24px 0; color: #525252; font-size: 12px; }
+/* ============================================================
+ * 27 · Backend-status banner (API 不可达时的全局提示)
+ * ============================================================ */
+.backend-banner {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  background: linear-gradient(180deg, rgba(184,113,74,0.18), rgba(184,113,74,0.10));
+  border-bottom: 1px solid rgba(184,113,74,0.35);
+  color: var(--ink-900);
+  font-size: 13.5px;
+  line-height: 1.55;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: banner-slide-down 0.32s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.backend-banner[hidden] { display: none; }
+.backend-banner__icon {
+  flex: 0 0 auto;
+  width: 20px; height: 20px;
+  margin-top: 1px;
+  color: var(--copper-600, #8A4F2E);
+}
+.backend-banner__body { flex: 1 1 auto; min-width: 0; }
+.backend-banner__title {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 2px;
+  color: var(--ink-900);
+}
+.backend-banner__detail {
+  color: var(--ink-700, #3F4F6E);
+}
+.backend-banner__detail code {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 12.5px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(14,31,63,0.06);
+  color: var(--ink-900);
+  user-select: all;
+}
+.backend-banner__actions {
+  display: flex;
+  gap: var(--space-2);
+  flex: 0 0 auto;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.backend-banner__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 4px;
+  border: 1px solid rgba(14,31,63,0.18);
+  background: var(--paper-50, #FAF8F3);
+  color: var(--ink-900);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.backend-banner__btn:hover { background: rgba(14,31,63,0.06); border-color: rgba(14,31,63,0.32); }
+.backend-banner__btn--primary {
+  background: var(--copper-500, #B8714A);
+  color: var(--paper-50, #FAF8F3);
+  border-color: transparent;
+}
+.backend-banner__btn--primary:hover { background: var(--copper-600, #8A4F2E); }
+.backend-banner__close {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px; height: 24px;
+  border: 0; padding: 0;
+  background: transparent;
+  color: var(--ink-700, #3F4F6E);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+.backend-banner__close:hover { background: rgba(14,31,63,0.08); }
+.backend-banner__close svg { width: 14px; height: 14px; }
+.backend-banner__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 10.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: var(--copper-500, #B8714A);
+  color: var(--paper-50, #FAF8F3);
+  border-radius: 9px;
+  margin-left: 6px;
+}
+@keyframes banner-slide-down {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);      opacity: 1; }
+}
+@media (max-width: 640px) {
+  .backend-banner { flex-wrap: wrap; padding: var(--space-3); }
+  .backend-banner__actions { width: 100%; }
+}
 </style>
 </head>
 <body>
-<div class="page">
 
-<div class="path">~/projects/urban-pulse <span class="sep">$</span></div>
-<h1><span class="highlight">Urban Pulse</span> · 城市脉搏</h1>
-<div class="tagline">中国城市经济智能分析平台</div>
+<a class="skip-link" href="#main-content">跳到主内容</a>
 
-<div class="stat-box">
-  <div><div class="num">35</div><div class="lbl">cities</div></div>
-  <div><div class="num">16</div><div class="lbl">years of data</div></div>
-  <div><div class="num">5</div><div class="lbl">forecast horizon</div></div>
-  <div><div class="num">148</div><div class="lbl">tests passing</div></div>
+<div class="app" id="app">
+  <header class="app-header" role="banner">
+    <div class="app-header__brand">
+      <div class="app-header__logo" aria-hidden="true">E</div>
+      <div class="app-header__title">
+        <div class="eyebrow app-header__eyebrow">URBAN · PULSE</div>
+        <div class="app-header__name">城市脉搏</div>
+        <div class="app-header__subtitle" id="headerSubtitle">City Economic Observatory · v1.0</div>
+      </div>
+    </div>
+    <div class="app-header__status">
+      <div class="health-badge" id="healthBadge" data-status="loading" role="status" aria-live="polite">
+        <span class="health-badge__dot" aria-hidden="true"></span>
+        <span id="healthText">连接中</span>
+      </div>
+      <span class="version-tag" id="versionTag" aria-label="API 版本">v--</span>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换主题" title="切换主题">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle class="theme-icon-sun" cx="12" cy="12" r="4"/>
+          <path class="theme-icon-sun" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          <path class="theme-icon-moon" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <nav class="tab-nav" role="tablist" aria-label="主导航" id="tabNav">
+    <button class="tab-btn" type="button" role="tab" id="tab-btn-dashboard" aria-selected="true" aria-controls="tab-dashboard" data-tab="dashboard" tabindex="0">
+      <span class="tab-btn__num" aria-hidden="true">01</span>
+      <span class="tab-btn__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+      </span>
+      <span class="tab-btn__label">总览仪表盘</span>
+    </button>
+    <button class="tab-btn" type="button" role="tab" id="tab-btn-enterprise" aria-selected="false" aria-controls="tab-enterprise" data-tab="enterprise" tabindex="-1">
+      <span class="tab-btn__num" aria-hidden="true">02</span>
+      <span class="tab-btn__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg>
+      </span>
+      <span class="tab-btn__label">企业选址分析</span>
+    </button>
+    <button class="tab-btn" type="button" role="tab" id="tab-btn-government" aria-selected="false" aria-controls="tab-government" data-tab="government" tabindex="-1">
+      <span class="tab-btn__num" aria-hidden="true">03</span>
+      <span class="tab-btn__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h20M3 22V8l9-5 9 5v14M9 22v-6h6v6M8 11h.01M12 11h.01M16 11h.01"/></svg>
+      </span>
+      <span class="tab-btn__label">政府产业分析</span>
+    </button>
+    <button class="tab-btn" type="button" role="tab" id="tab-btn-cities" aria-selected="false" aria-controls="tab-cities" data-tab="cities" tabindex="-1">
+      <span class="tab-btn__num" aria-hidden="true">04</span>
+      <span class="tab-btn__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8a2 2 0 0 1 2-2h4v15M11 21V11h6a2 2 0 0 1 2 2v8"/></svg>
+      </span>
+      <span class="tab-btn__label">城市数据对比</span>
+    </button>
+    <button class="tab-btn" type="button" role="tab" id="tab-btn-index" aria-selected="false" aria-controls="tab-index" data-tab="index" tabindex="-1">
+      <span class="tab-btn__num" aria-hidden="true">05</span>
+      <span class="tab-btn__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M18 20V4M6 20v-4"/><path d="M3 21h18"/></svg>
+      </span>
+      <span class="tab-btn__label">竞争力指数</span>
+    </button>
+
+  </nav>
+
+  <main id="main-content" class="app-main" role="main" aria-busy="true">
+
+    <section id="tab-dashboard" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-dashboard">
+      <header class="panel-header">
+        <div class="panel-header__title">
+          <span class="eyebrow">SECTION 01 · OVERVIEW</span>
+          <h2>总览仪表盘</h2>
+          <p class="lede" id="dashboardLede">系统正在加载,稍候片刻。</p>
+        </div>
+        <div class="panel-header__meta">
+          <span>更新于 <strong id="dashboardUpdated">--:--</strong></span>
+          <span aria-hidden="true">·</span>
+          <span><strong id="dashboardDataPoints">--</strong> 数据点</span>
+        </div>
+      </header>
+
+      <div class="stat-grid" id="statGrid">
+        <article class="stat-card">
+          <div class="stat-card__head">
+            <span class="stat-card__label">覆盖城市</span>
+            <span class="stat-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8a2 2 0 0 1 2-2h4v15M11 21V11h6a2 2 0 0 1 2 2v8"/></svg></span>
+          </div>
+          <div class="stat-card__value" id="statCities">--</div>
+          <div class="stat-card__trend stat-card__trend--neutral">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg>
+            <span>持续接入中</span>
+          </div>
+        </article>
+
+        <article class="stat-card">
+          <div class="stat-card__head">
+            <span class="stat-card__label">核心指标</span>
+            <span class="stat-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-7"/></svg></span>
+          </div>
+          <div class="stat-card__value" id="statIndicators">--</div>
+          <div class="stat-card__trend stat-card__trend--up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17l5-5 5 5M7 7l5 5 5-5"/></svg>
+            <span>覆盖 2020-2025</span>
+          </div>
+        </article>
+
+        <article class="stat-card">
+          <div class="stat-card__head">
+            <span class="stat-card__label">数据来源</span>
+            <span class="stat-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v6c0 1.66 4.03 3 9 3s9-1.34 9-3V5M3 11v6c0 1.66 4.03 3 9 3s9-1.34 9-3v-6"/></svg></span>
+          </div>
+          <div class="stat-card__value" id="statSources">--</div>
+          <div class="stat-card__trend stat-card__trend--neutral">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <span>国家统计局 + 地方年报</span>
+          </div>
+        </article>
+
+        <article class="stat-card">
+          <div class="stat-card__head">
+            <span class="stat-card__label">系统状态</span>
+            <span class="stat-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
+          </div>
+          <div class="stat-card__value" id="statStatus">--</div>
+          <div class="stat-card__trend" id="statStatusTrend">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg>
+            <span>健康监测中</span>
+          </div>
+        </article>
+      </div>
+
+      <div class="grid-2">
+        <article class="card">
+          <header class="card-head">
+            <div class="card-head__title">
+              <span class="card-head__rule card-head__rule--copper" aria-hidden="true"></span>
+              <div>
+                <span class="eyebrow">RANKING · 2025</span>
+                <h3>城市 GDP 排名</h3>
+              </div>
+            </div>
+            <div class="card-head__meta">单位:万亿元</div>
+          </header>
+          <div class="card-body">
+            <div class="chart chart--tall">
+              <div class="chart-skeleton" id="chartGdpRankSkeleton"><div class="chart-skeleton__bars" aria-hidden="true"><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div></div></div>
+              <div id="chartGdpRank" role="img" aria-label="城市 GDP 排名条形图"></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <div class="card-head__title">
+              <span class="card-head__rule" aria-hidden="true"></span>
+              <div>
+                <span class="eyebrow">CROSS-CITY · 2025</span>
+                <h3>核心指标横向对比</h3>
+              </div>
+            </div>
+            <div class="card-head__meta">归一化展示</div>
+          </header>
+          <div class="card-body">
+            <div class="chart chart--tall">
+              <div class="chart-skeleton" id="chartIndustryOverviewSkeleton"><div class="chart-skeleton__bars" aria-hidden="true"><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div></div></div>
+              <div id="chartIndustryOverview" role="img" aria-label="核心指标横向对比柱状图"></div>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <article class="card">
+        <header class="card-head">
+          <div class="card-head__title">
+            <span class="card-head__rule card-head__rule--moss" aria-hidden="true"></span>
+            <div>
+              <span class="eyebrow">CITY · SNAPSHOT</span>
+              <h3>城市详情速览</h3>
+            </div>
+          </div>
+          <div class="card-head__meta" id="cityCardHint">加载中...</div>
+        </header>
+        <div class="card-body">
+          <div class="city-grid" id="cityCards" aria-live="polite">
+            <div class="city-card city-card--skeleton" aria-hidden="true"></div>
+            <div class="city-card city-card--skeleton" aria-hidden="true"></div>
+            <div class="city-card city-card--skeleton" aria-hidden="true"></div>
+            <div class="city-card city-card--skeleton" aria-hidden="true"></div>
+            <div class="city-card city-card--skeleton" aria-hidden="true"></div>
+            <div class="city-card city-card--skeleton" aria-hidden="true"></div>
+            <div class="city-card city-card--skeleton" aria-hidden="true"></div>
+            <div class="city-card city-card--skeleton" aria-hidden="true"></div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section id="tab-enterprise" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-enterprise" hidden>
+      <header class="panel-header">
+        <div class="panel-header__title">
+          <span class="eyebrow">SECTION 02 · ENTERPRISE</span>
+          <h2>企业选址分析</h2>
+          <p class="lede">各城市核心指标一览，谁在跑、谁在追、谁掉了队。</p>
+        </div>
+      </header>
+
+      <div class="grid-3">
+        <div class="stack">
+          <article class="card">
+            <header class="card-head">
+              <div class="card-head__title">
+                <span class="card-head__rule" aria-hidden="true"></span>
+                <h3>分析参数</h3>
+              </div>
+            </header>
+            <div class="card-body">
+              <div class="field">
+                <label class="field__label" for="entCitySelect">目标城市</label>
+                <select id="entCitySelect" class="select" aria-label="企业分析目标城市"></select>
+                <span class="field__help">系统已接入 8 个主要城市数据</span>
+              </div>
+              <button id="btnEntAnalyze" type="button" class="btn btn--primary btn--block" style="margin-top:var(--space-5)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+                <span>刷新数据</span>
+              </button>
+            </div>
+          </article>
+
+          <article class="card" id="entScoreCard" hidden>
+            <header class="card-head">
+              <div class="card-head__title">
+                <span class="card-head__rule card-head__rule--moss" aria-hidden="true"></span>
+                <h3>综合评估得分</h3>
+              </div>
+            </header>
+            <div class="card-body" style="display:flex;flex-direction:column;align-items:center;padding:var(--space-6) var(--space-4);">
+              <div class="score-ring">
+                <svg class="score-ring__svg" viewBox="0 0 120 120" aria-hidden="true">
+                  <circle class="score-ring__bg" cx="60" cy="60" r="52"/>
+                  <circle class="score-ring__fill" id="scoreRingFill" cx="60" cy="60" r="52" stroke="var(--copper-500)" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+                </svg>
+                <div class="score-ring__center">
+                  <div class="score-ring__value" id="entTotalScore">--</div>
+                  <div class="score-ring__label">/ 100 分</div>
+                </div>
+              </div>
+              <div class="score-ring__rating" id="entScoreRating">--</div>
+              <div class="muted" style="font-size:var(--fs-xs);margin-top:var(--space-3);text-align:center;">基于统计分位数的多维度评分</div>
+            </div>
+          </article>
+        </div>
+
+        <div class="stack" style="grid-column:span 2;">
+          <article class="card">
+            <header class="card-head">
+              <div class="card-head__title">
+                <span class="card-head__rule card-head__rule--copper" aria-hidden="true"></span>
+                <div>
+                  <span class="eyebrow">DIMENSIONS</span>
+                  <h3>评分维度雷达</h3>
+                </div>
+              </div>
+              <div class="card-head__meta">3 维评分</div>
+            </header>
+            <div class="card-body">
+              <div class="chart chart--tall">
+                <div class="chart-skeleton" id="chartEntRadarSkeleton"><div class="chart-skeleton__bars" aria-hidden="true"><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div></div></div>
+                <div id="chartEntRadar" role="img" aria-label="评分维度雷达图"></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="card" id="entDetailCard" hidden>
+            <header class="card-head">
+              <div class="card-head__title">
+                <span class="card-head__rule" aria-hidden="true"></span>
+                <h3>细分指标详情</h3>
+              </div>
+            </header>
+            <div class="card-body">
+              <div class="detail-grid" id="entDetails" aria-live="polite"></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-government" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-government" hidden>
+      <header class="panel-header">
+        <div class="panel-header__title">
+          <span class="eyebrow">SECTION 03 · GOVERNMENT</span>
+          <h2>政府产业分析</h2>
+          <p class="lede">GDP 历史趋势、机器学习预测、置信区间一图尽览。</p>
+        </div>
+      </header>
+
+      <div class="grid-3">
+        <div class="stack">
+          <article class="card">
+            <header class="card-head">
+              <div class="card-head__title">
+                <span class="card-head__rule" aria-hidden="true"></span>
+                <h3>分析参数</h3>
+              </div>
+            </header>
+            <div class="card-body">
+              <div class="field">
+                <label class="field__label" for="govCitySelect">目标城市</label>
+                <select id="govCitySelect" class="select" aria-label="政府分析目标城市"></select>
+              </div>
+              <div class="field" style="margin-top:var(--space-4)">
+                <label class="field__label" for="govForecastYears">预测年数</label>
+                <select id="govForecastYears" class="select" aria-label="预测年数">
+                  <option value="3" selected>3 年 (2026-2028)</option>
+                  <option value="5">5 年 (2026-2030)</option>
+                </select>
+              </div>
+              <button id="btnGovAnalyze" type="button" class="btn btn--primary btn--block" style="margin-top:var(--space-5)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
+                <span>运行产业分析</span>
+              </button>
+            </div>
+          </article>
+        </div>
+
+        <div class="stack" style="grid-column:span 2;">
+          <article class="card">
+            <header class="card-head">
+              <div class="card-head__title">
+                <span class="card-head__rule card-head__rule--gold" aria-hidden="true"></span>
+                <div>
+                  <span class="eyebrow">FORECAST · ML</span>
+                  <h3>GDP 历史趋势与预测</h3>
+                </div>
+              </div>
+              <div class="card-head__meta" id="govMethodTag">--</div>
+            </header>
+            <div class="card-body">
+              <div class="chart chart--tall">
+                <div class="chart-skeleton" id="chartGdpForecastSkeleton"><div class="chart-skeleton__bars" aria-hidden="true"><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div></div></div>
+                <div id="chartGdpForecast" role="img" aria-label="GDP 历史趋势与机器学习预测折线图,含置信区间"></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <header class="card-head">
+              <div class="card-head__title">
+                <span class="card-head__rule card-head__rule--moss" aria-hidden="true"></span>
+                <div>
+                  <span class="eyebrow">METRICS</span>
+                  <h3>核心经济指标</h3>
+                </div>
+              </div>
+            </header>
+            <div class="card-body">
+              <div class="detail-grid" id="govDetails" aria-live="polite">
+                <div class="empty-state" style="grid-column:1/-1;">
+                  <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+                  <div class="empty-state__title">尚未开始分析</div>
+                  <div class="empty-state__text">请选择城市后点击「运行产业分析」,我们将展示该城市最新经济指标。</div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-cities" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-cities" hidden>
+      <header class="panel-header">
+        <div class="panel-header__title">
+          <span class="eyebrow">SECTION 04 · COMPARE</span>
+          <h2>城市数据对比</h2>
+          <p class="lede">2-8 个城市横向比较,支持时序、热力、详细指标三视图。</p>
+        </div>
+        <div class="panel-header__meta">
+          <span id="compareSelectedCount">已选 0 个城市</span>
+        </div>
+      </header>
+
+      <article class="card">
+        <div class="card-body card-body--tight">
+          <div class="between" style="gap:var(--space-4);">
+            <div class="cluster" style="flex:1;">
+              <span class="eyebrow">CITIES</span>
+              <div id="cityCheckboxes" class="cluster" role="group" aria-label="选择对比城市"></div>
+            </div>
+            <div class="cluster" style="flex-shrink:0;">
+              <button type="button" class="btn btn--ghost btn--sm" id="btnSelectAll" aria-label="全选">全选</button>
+              <button type="button" class="btn btn--ghost btn--sm" id="btnSelectNone" aria-label="清空">清空</button>
+              <button type="button" class="btn btn--accent" id="btnCompare" aria-label="开始城市对比分析">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
+                <span>对比分析</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <div class="grid-2">
+        <article class="card">
+          <header class="card-head">
+            <div class="card-head__title">
+              <span class="card-head__rule" aria-hidden="true"></span>
+              <div>
+                <span class="eyebrow">TIME-SERIES</span>
+                <h3>GDP 时序趋势</h3>
+              </div>
+            </div>
+          </header>
+          <div class="card-body">
+            <div class="chart chart--tall">
+              <div class="chart-skeleton" id="chartCityCompareSkeleton"><div class="chart-skeleton__bars" aria-hidden="true"><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div></div></div>
+              <div id="chartCityCompare" role="img" aria-label="多城市 GDP 时序趋势折线图"></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <div class="card-head__title">
+              <span class="card-head__rule card-head__rule--copper" aria-hidden="true"></span>
+              <div>
+                <span class="eyebrow">HEATMAP</span>
+                <h3>多指标热力</h3>
+              </div>
+            </div>
+          </header>
+          <div class="card-body">
+            <div class="chart chart--tall">
+              <div class="chart-skeleton" id="chartCityHeatmapSkeleton"><div class="chart-skeleton__bars" aria-hidden="true"><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div></div></div>
+              <div id="chartCityHeatmap" role="img" aria-label="城市 × 指标热力图"></div>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <article class="card">
+        <header class="card-head">
+          <div class="card-head__title">
+            <span class="card-head__rule card-head__rule--moss" aria-hidden="true"></span>
+            <div>
+              <span class="eyebrow">TABLE</span>
+              <h3>城市对比详情表</h3>
+            </div>
+          </div>
+        </header>
+        <div class="card-body card-body--flush">
+          <div class="data-table-wrap">
+            <table class="data-table" id="compareTable" aria-label="城市对比详情">
+              <thead></thead>
+              <tbody id="compareTableBody">
+                <tr><td colspan="8" class="data-table__empty">
+                  <div class="empty-state">
+                    <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                    <div class="empty-state__title">尚未对比</div>
+                    <div class="empty-state__text">请选择 2 个以上城市,点击「对比分析」查看详细对比结果。</div>
+                  </div>
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </article>
+    </section>
+    <section id="tab-index" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-index" hidden>
+      <header class="panel-header">
+        <div class="panel-header__title">
+          <span class="eyebrow">SECTION 05 · CITY INDEX</span>
+          <h2>城市竞争力指数</h2>
+          <p class="lede" id="indexLede">基于倪鹏飞弩弦箭模型·熵权法赋权·MinMax标准化。正在加载...</p>
+        </div>
+        <div class="panel-header__meta">
+          <span>方法论 <strong id="indexMethodology">熵权法</strong></span>
+          <span aria-hidden="true">·</span>
+          <span>覆盖城市: <strong id="indexCityCount">--</strong></span>
+        </div>
+      </header>
+
+      <div class="stat-grid">
+        <article class="stat-card" id="indexOverallCard" hidden>
+          <div class="stat-card__head">
+            <span class="stat-card__label">综合排名 Top 3</span>
+            <span class="stat-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9h.01M6 15h.01M10 9h8M10 15h8"/></svg>
+            </span>
+          </div>
+          <div class="stat-card__body">
+            <ol id="indexTopThree" style="padding:0;list-style:none;margin:0;">
+              <li style="padding:8px 0;border-bottom:1px solid var(--sand-200);">加载中...</li>
+            </ol>
+          </div>
+        </article>
+
+        <article class="stat-card" id="indexDimensionCard" hidden>
+          <div class="stat-card__head">
+            <span class="stat-card__label">数据覆盖</span>
+            <span class="stat-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </span>
+          </div>
+          <div class="stat-card__body" id="indexCoverageBody" style="font-size:var(--fs-sm);color:var(--stone-600);">
+            加载中...
+          </div>
+        </article>
+
+        <article class="stat-card" id="indexMethodCard" hidden>
+          <div class="stat-card__head">
+            <span class="stat-card__label">数据总览</span>
+          </div>
+          <div class="stat-card__body" id="indexMethodBody" style="font-size:var(--fs-sm);color:var(--stone-600);">
+            加载中...
+          </div>
+        </article>
+      </div>
+
+      <div class="chart-grid chart-grid--2col">
+        <article class="card" id="indexRankingCard">
+          <div class="card__head">
+            <span class="card__title">综合竞争力排名</span>
+          </div>
+          <div class="card__body">
+            <div id="chartIndexRanking" style="width:100%;height:400px"></div>
+          </div>
+        </article>
+        <article class="card" id="indexRadarCard">
+          <div class="card__head">
+            <span class="card__title">
+              维度得分
+              <select id="indexCitySelector" style="margin-left:12px;padding:4px 8px;border:1px solid var(--sand-300);border-radius:6px;background:var(--paper-50);color:var(--stone-800);font-size:13px;">
+              </select>
+            </span>
+          </div>
+          <div class="card__body">
+            <div id="chartIndexRadar" style="width:100%;height:400px"></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="chart-grid chart-grid--1col">
+        <article class="card" id="indexHeatmapCard">
+          <div class="card__head">
+            <span class="card__title">城市 × 维度 得分矩阵</span>
+          </div>
+          <div class="card__body">
+            <div id="chartIndexHeatmap" style="width:100%;height:500px"></div>
+          </div>
+        </article>
+        <article class="card" id="indexMissingCard">
+          <div class="card__head">
+            <span class="card__title">缺失维度 &amp; 贡献指南</span>
+          </div>
+          <div class="card__body" id="indexMissingBody" style="font-size:var(--fs-sm);color:var(--stone-600);padding:16px;">
+            加载中...
+          </div>
+        </article>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <div class="app-footer__brand">
+      <span>Urban Pulse · 城市脉搏</span>
+      <span class="app-footer__sep" aria-hidden="true">·</span>
+      <span>中国城市经济智能分析平台</span>
+    </div>
+    <div class="app-footer__links">
+      <a href="/docs" target="_blank" rel="noopener">API 文档</a>
+      <a href="/redoc" target="_blank" rel="noopener">ReDoc</a>
+      <span class="app-footer__sep" aria-hidden="true">·</span>
+      <span>Powered by FastAPI + ECharts</span>
+    </div>
+  </footer>
 </div>
 
-<hr>
+<div class="toast-container" id="toastContainer" role="region" aria-label="通知"></div>
 
-<h2>项目介绍</h2>
-
-<p>Urban Pulse 是一个中国城市经济数据分析平台，基于公开统计数据，提供城市经济画像、多城市对比、产业选址分析、时序预测与竞争力指数。</p>
-
-<p>数据来源包括国家统计局、各省市统计公报与统计年鉴，商业成本与政策环境等字段为模型估算值，生产环境建议接入官方或调研数据源。</p>
-
-<h2>功能</h2>
-
-<h3>城市经济数据</h3>
-<p>覆盖 35 座主要城市的 GDP、人口、财政收入、研发强度等指标与历史时序。</p>
-
-<h3>时间序列预测</h3>
-<p>AutoARIMA + ETS + 线性回归集成，带置信区间，支持多城市对比。</p>
-
-<h3>企业选址分析</h3>
-<p>基于真实城市数据的成本、供应链、政策环境评分，辅助选址决策。</p>
-
-<h3>政府端分析</h3>
-<p>财政杠杆、产业带动效应与产业链完整性评估。</p>
-
-<h3>竞争力指数</h3>
-<p>熵权法多维度评分与排名。</p>
-
-<h2>快速开始</h2>
-
-<pre>
-<span class="cm"># Docker</span>
-git clone https://gitcode.com/badhope/urban-pulse
-cd urban-pulse
-docker compose up
-<span class="cm"># → http://localhost:8000/dashboard</span>
-<span class="cm"># → http://localhost:8000/docs</span>
-</pre>
-
-<pre>
-<span class="cm"># 本地 Python</span>
-pip install -r requirements.txt
-uvicorn backend.api.main:app --reload
-</pre>
-
-<h2>技术栈</h2>
-
-<p>
-  <span class="badge">Python 3.11+</span>
-  <span class="badge">FastAPI</span>
-  <span class="badge">Pandas / NumPy</span>
-  <span class="badge">statsmodels</span>
-  <span class="badge">scikit-learn</span>
-  <span class="badge">ECharts 5</span>
-  <span class="badge">Docker</span>
-</p>
-
-<h2>主要 API</h2>
-
-<ul>
-  <li><code>GET /api/v1/cities/list</code> — 城市列表</li>
-  <li><code>GET /api/v1/cities/{city_name}</code> — 城市详情</li>
-  <li><code>GET /api/v1/cities/{city_name}/historical</code> — 历史时序数据</li>
-  <li><code>GET /api/v1/forecast/gdp/{city_name}</code> — GDP 预测</li>
-  <li><code>POST /api/v1/analysis/enterprise</code> — 企业选址分析</li>
-  <li><code>POST /api/v1/analysis/government</code> — 政府端产业分析</li>
-  <li><code>POST /api/v1/index/compute</code> — 竞争力指数计算</li>
-</ul>
-
-<p>完整 API 文档在运行后访问 <code>/docs</code>。</p>
-
-<h2>License</h2>
-
-<p>GPL-3.0-or-later</p>
-
-<div class="footer">
-  <a href="https://gitcode.com/badhope/urban-pulse">gitcode.com/badhope/urban-pulse</a>
-  · <span class="sep">GPL-3.0</span>
+<!--
+  后端不可达提示条:由 BackendStatus 动态控制显隐
+  任何 API 调用返回 0(网络)/ 401 / 404 / 5xx 时触发,提供启动后端命令
+-->
+<div class="backend-banner" id="backendBanner" role="alert" aria-live="assertive" hidden>
+  <svg class="backend-banner__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+    <path d="M12 9v4M12 17h.01"/>
+  </svg>
+  <div class="backend-banner__body">
+    <div class="backend-banner__title">
+      <span id="backendBannerTitle">无法连接后端服务</span>
+      <span class="backend-banner__count" id="backendBannerCount" hidden>0</span>
+    </div>
+    <div class="backend-banner__detail" id="backendBannerDetail">
+      请先启动后端 API:<code>uvicorn backend.api.main:app --port 8000</code>
+    </div>
+  </div>
+  <div class="backend-banner__actions">
+    <button class="backend-banner__btn backend-banner__btn--primary" id="backendBannerRetry" type="button" title="重新探测后端">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="12" height="12">
+        <path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/>
+      </svg>
+      重试
+    </button>
+    <button class="backend-banner__btn" id="backendBannerCopy" type="button" title="复制启动命令到剪贴板">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="12" height="12">
+        <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+      </svg>
+      复制命令
+    </button>
+    <button class="backend-banner__close" id="backendBannerClose" type="button" aria-label="关闭提示">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
 </div>
 
-</div>
+<!--
+  Script: 见下 — IIFE 闭包内的完整 SPA 框架
+-->
+<script>
+/*
+ * citylens — single-file SPA bootstrap
+ * IIFE 闭包内聚所有可变作用域;无第三方 SPA 框架,仅依赖 ECharts (head 中已 SRI 加载)。
+ * 视图层 (Views) 各自负责一个 Tab 的渲染与生命周期;基础设施与视图解耦。
+ */
+(function () {
+  "use strict";
+
+  // ============================================================
+  // 0. CONFIG  (frozen, 集中所有静态配置)
+  // ============================================================
+  const CONFIG = Object.freeze({
+    API_TIMEOUT_MS: 18000,
+    CACHE_TTL_MS: 60_000,
+    CACHE_MAX: 64,
+    RETRY_MAX: 2,
+    RETRY_BACKOFF_MS: 600,
+    RETRY_STATUSES: [502, 503, 504, 408, 429],
+    DEFAULT_CITIES: ["上海", "深圳", "北京", "广州", "杭州", "南京"],
+    CITY_CARD_FIELDS: Object.freeze([
+      { key: "gdp",            label: "GDP",          unit: "亿元", source: "summary", accessor: (d) => d.gdp },
+      { key: "gdp_per_capita", label: "人均GDP",     unit: "元",   source: "summary", accessor: (d) => d.population ? Math.round(d.gdp * 1e8 / (d.population * 1e4)) : null },
+      { key: "population",     label: "常住人口",     unit: "万人", source: "summary", accessor: (d) => d.population },
+      { key: "gdp_growth",     label: "GDP增速",      unit: "%",    source: "summary", accessor: (d) => d.gdp_growth },
+      { key: "industry_high_tech_ratio", label: "高新产业占比", unit: "%", source: "summary", accessor: (d) => d.industry_high_tech_ratio }
+    ]),
+    COMPARE_INDICATORS: Object.freeze([
+      { key: "gdp",            label: "GDP",     unit: "亿元" },
+      { key: "gdp_per_capita", label: "人均GDP", unit: "元"   },
+      { key: "population",     label: "人口",   unit: "万人" },
+      { key: "growth_rate",    label: "增速",   unit: "%"    }
+    ]),
+    VIZ_PALETTE: Object.freeze([
+      "#0E1F3F", "#B8714A", "#7B8B5C", "#A4805C",
+      "#3F4F6E", "#C8A27A", "#5C6B85", "#8A6F4E"
+    ]),
+    RATING_THRESHOLDS: Object.freeze([
+      { min: 85, stars: 5, label: "卓越" },
+      { min: 70, stars: 4, label: "良好" },
+      { min: 55, stars: 3, label: "中等" },
+      { min: 40, stars: 2, label: "偏弱" },
+      { min:  0, stars: 1, label: "不足" }
+    ])
+  });
+
+  // ============================================================
+  // 1. Utils
+  // ============================================================
+  const $  = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+  const Utils = Object.freeze({
+    esc(s) {
+      if (s == null) return "";
+      return String(s).replace(/[&<>"']/g, (c) => (
+        { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+      ));
+    },
+    fmtInt(n) {
+      if (n == null || n === "" || Number.isNaN(+n)) return "—";
+      return new Intl.NumberFormat("zh-CN").format(Math.round(+n));
+    },
+    fmtCompact(n) {
+      if (n == null || n === "" || Number.isNaN(+n)) return "—";
+      const v = +n;
+      const abs = Math.abs(v);
+      if (abs >= 1e12) return (v / 1e12).toFixed(2) + " 万亿";
+      if (abs >= 1e8)  return (v / 1e8).toFixed(2)  + " 亿";
+      if (abs >= 1e4)  return (v / 1e4).toFixed(2)  + " 万";
+      return new Intl.NumberFormat("zh-CN").format(v);
+    },
+    fmtPct(n, digits = 2) {
+      if (n == null || n === "" || Number.isNaN(+n)) return "—";
+      return (+n).toFixed(digits) + "%";
+    },
+    fmtScore(n) {
+      if (n == null || n === "" || Number.isNaN(+n)) return "—";
+      return (+n).toFixed(1);
+    },
+    rating(score) {
+      const v = +score;
+      if (Number.isNaN(v)) return { stars: 0, label: "—" };
+      for (const t of CONFIG.RATING_THRESHOLDS) {
+        if (v >= t.min) return { stars: t.stars, label: t.label };
+      }
+      return { stars: 1, label: "不足" };
+    },
+    cssVar(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    },
+    debounce(fn, wait = 200) {
+      let t;
+      return function (...args) {
+        clearTimeout(t);
+        t = setTimeout(() => fn.apply(this, args), wait);
+      };
+    },
+    sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+  });
+
+  // ============================================================
+  // 2. LRUCache
+  // ============================================================
+  class LRUCache {
+    constructor(max = 64) {
+      this.max = max;
+      this.map = new Map();
+    }
+    get(k) {
+      if (!this.map.has(k)) return undefined;
+      const v = this.map.get(k);
+      this.map.delete(k);
+      this.map.set(k, v);
+      return v;
+    }
+    set(k, v, ttl) {
+      if (this.map.has(k)) this.map.delete(k);
+      this.map.set(k, { v, exp: ttl > 0 ? Date.now() + ttl : Infinity });
+      if (this.map.size > this.max) {
+        const oldest = this.map.keys().next().value;
+        this.map.delete(oldest);
+      }
+    }
+    has(k) {
+      const e = this.map.get(k);
+      if (!e) return false;
+      if (e.exp !== Infinity && Date.now() > e.exp) {
+        this.map.delete(k);
+        return false;
+      }
+      return true;
+    }
+    clear() { this.map.clear(); }
+    get size() { return this.map.size; }
+  }
+
+  // ============================================================
+  // 3. ApiError
+  // ============================================================
+  class ApiError extends Error {
+    constructor(message, { status, code, cause, url } = {}) {
+      super(message);
+      this.name = "ApiError";
+      this.status = status || 0;
+      this.code = code || "ERR_UNKNOWN";
+      this.cause = cause;
+      this.url = url;
+    }
+  }
+
+  // ============================================================
+  // 4. APIClient
+  // ============================================================
+  class APIClient {
+    constructor({ baseURL, timeout = CONFIG.API_TIMEOUT_MS, cache } = {}) {
+      this.baseURL = baseURL || resolveApiBase();
+      this.timeout = timeout;
+      this.cache   = cache || new LRUCache(CONFIG.CACHE_MAX);
+      this.inflight = new Map();
+    }
+    _join(path) {
+      if (/^https?:/i.test(path)) return path;
+      if (!path.startsWith("/")) path = "/" + path;
+      return this.baseURL.replace(/\/$/, "") + path;
+    }
+    _key(method, url) { return method + " " + url; }
+    cancelAll(reason = "navigate") {
+      for (const [, c] of this.inflight) {
+        try { c.abort(reason); } catch { /* noop */ }
+      }
+      this.inflight.clear();
+    }
+    async request(method, path, opts = {}) {
+      const { body, headers, cacheTTL, signal, retry = CONFIG.RETRY_MAX } = opts;
+      const url = this._join(path);
+      const key = this._key(method, url);
+      const isRead = method === "GET";
+
+      if (isRead && cacheTTL !== 0 && this.cache.has(key)) {
+        return this.cache.get(key).v;
+      }
+      const ac = new AbortController();
+      this.inflight.set(key, ac);
+      const onSignalAbort = () => ac.abort(signal.reason || "external");
+      if (signal) signal.addEventListener("abort", onSignalAbort, { once: true });
+      const timer = setTimeout(() => ac.abort("timeout"), this.timeout);
+
+      try {
+        const reqOpts = {
+          method,
+          headers: { Accept: "application/json", ...(headers || {}) },
+          signal: ac.signal,
+          credentials: "omit",
+          mode: "cors",
+          referrerPolicy: "no-referrer"
+        };
+        if (body !== undefined) {
+          reqOpts.body = typeof body === "string" ? body : JSON.stringify(body);
+          reqOpts.headers["Content-Type"] = "application/json";
+        }
+        const res = await fetch(url, reqOpts);
+        clearTimeout(timer);
+        if (!res.ok) {
+          if (retry > 0 && CONFIG.RETRY_STATUSES.includes(res.status)) {
+            this.inflight.delete(key);
+            await Utils.sleep(CONFIG.RETRY_BACKOFF_MS * (CONFIG.RETRY_MAX - retry + 1));
+            return this.request(method, path, { ...opts, retry: retry - 1 });
+          }
+          let payload = null;
+          try { payload = await res.json(); } catch { /* noop */ }
+          throw new ApiError(`HTTP ${res.status}`, { status: res.status, code: payload?.error?.code || "ERR_HTTP", url });
+        }
+        if (res.status === 204) return null;
+        const data = await res.json();
+        if (isRead && cacheTTL !== 0) this.cache.set(key, data, CONFIG.CACHE_TTL_MS);
+        return data;
+      } catch (err) {
+        clearTimeout(timer);
+        if (err.name === "AbortError") {
+          const ae = new ApiError("请求超时或被取消", { code: ac.signal.reason === "timeout" ? "ERR_TIMEOUT" : "ERR_CANCELED", url });
+          this._dispatchError(ae);
+          throw ae;
+        }
+        if (err instanceof ApiError) {
+          this._dispatchError(err);
+          throw err;
+        }
+        const ne = new ApiError(err.message || "网络异常", { code: "ERR_NETWORK", cause: err, url });
+        this._dispatchError(ne);
+        throw ne;
+      } finally {
+        this.inflight.delete(key);
+        if (signal) signal.removeEventListener("abort", onSignalAbort);
+      }
+    }
+    _dispatchError(err) {
+      // 全局广播,BackendStatus 监听后展示顶部条幅
+      // 业务层也可以监听 'backend:error' 自定义处理
+      try {
+        const evt = new CustomEvent("backend:error", {
+          detail: {
+            status: err.status || 0,
+            code: err.code || "ERR_UNKNOWN",
+            message: err.message || "",
+            url: err.url || "",
+            cause: err.cause
+          }
+        });
+        if (typeof window !== "undefined") window.dispatchEvent(evt);
+      } catch { /* SSR / 极端环境兜底 */ }
+    }
+    get(path, opts = {})  { return this.request("GET", path, opts); }
+    post(path, body, opts = {}) { return this.request("POST", path, { ...opts, body }); }
+  }
+
+  // ============================================================
+  // 5. Store
+  // ============================================================
+  class Store extends EventTarget {
+    constructor(initial = {}) {
+      super();
+      this.state = Object.freeze({ ...initial });
+    }
+    get() { return this.state; }
+    set(patch) {
+      this.state = Object.freeze({ ...this.state, ...patch });
+      this.dispatchEvent(new CustomEvent("change", { detail: { state: this.state } }));
+    }
+  }
+
+  // ============================================================
+  // 6. ToastManager
+  // ============================================================
+  const TOAST_ICON = {
+    info:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>',
+    success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>',
+    warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>',
+    error:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>'
+  };
+  const TOAST_CLOSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+
+  class ToastManager {
+    constructor(root) {
+      this.root = root;
+      this.active = new Set();
+    }
+    show(message, { type = "info", title, timeout = 5000 } = {}) {
+      const el = document.createElement("div");
+      el.className = `toast toast--${type}`;
+      el.setAttribute("role", type === "error" ? "alert" : "status");
+      el.setAttribute("aria-live", type === "error" ? "assertive" : "polite");
+      el.innerHTML = `
+        <span class="toast__icon" aria-hidden="true">${TOAST_ICON[type] || TOAST_ICON.info}</span>
+        <div class="toast__body">
+          ${title ? `<div class="toast__title">${Utils.esc(title)}</div>` : ""}
+          <div class="toast__detail">${Utils.esc(message)}</div>
+        </div>
+        <span class="toast__close" role="button" aria-label="关闭" tabindex="0">${TOAST_CLOSE}</span>
+        <span class="toast__progress" aria-hidden="true"></span>`;
+      this.root.appendChild(el);
+      this.active.add(el);
+      const close = () => {
+        if (el.classList.contains("toast--leaving")) return;
+        el.classList.add("toast--leaving");
+        setTimeout(() => { el.remove(); this.active.delete(el); }, 260);
+      };
+      el.querySelector(".toast__close").addEventListener("click", close);
+      el.querySelector(".toast__close").addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); close(); }
+      });
+      setTimeout(close, timeout);
+      return { close };
+    }
+    info(m, o)    { return this.show(m, { ...o, type: "info" }); }
+    success(m, o) { return this.show(m, { ...o, type: "success" }); }
+    warn(m, o)    { return this.show(m, { ...o, type: "warning" }); }
+    error(m, o)   { return this.show(m, { ...o, type: "error", timeout: 7000 }); }
+  }
+
+  // ============================================================
+  // 6.5 BackendStatus (API 不可达时的全局提示条)
+  // ------------------------------------------------------------
+  // 监听 APIClient 派发的 backend:error 事件,聚合错误数并显示
+  // 顶部条幅。任何 4xx/5xx/网络错误都会触发,提供:
+  //   - 当前错误计数
+  //   - 启动后端命令(可一键复制)
+  //   - 重试按钮
+  //   - 关闭按钮
+  // 健康检查(GET /health)成功后会调用 markOnline() 隐藏条幅
+  // ============================================================
+  class BackendStatus extends EventTarget {
+    constructor(els) {
+      super();
+      this.els = els;
+      this.count = 0;
+      this.dismissed = false;
+      this.lastError = null;
+      this._bind();
+    }
+    _bind() {
+      this.els.close?.addEventListener("click", () => this.hide());
+      this.els.copy?.addEventListener("click", () => this._copyCommand());
+      this.els.retry?.addEventListener("click", () => this._retry());
+    }
+    /**
+     * 由 APIClient 派发: { status, code, url, message, fatal }
+     * fatal=true 视为后端整体不可达(网络/5xx/401);404/业务错误仅计数不强行展开
+     */
+    reportError(err) {
+      if (this.dismissed) {
+        // 用户已关闭,继续累加计数但不展开条幅
+        this.count += 1;
+        this._refreshCount();
+        return;
+      }
+      this.count += 1;
+      this.lastError = err;
+      this._render(err);
+      this._show();
+    }
+    markOnline() {
+      this.dismissed = false;
+      this.count = 0;
+      this._hide();
+    }
+    markOffline(reason) {
+      if (this.dismissed) {
+        this.count += 1;
+        this._refreshCount();
+        return;
+      }
+      this.count = Math.max(this.count, 1);
+      this._render({ status: 0, code: "ERR_HEALTHCHECK", message: reason || "健康检查失败", url: this.els.banner?.dataset.healthUrl || "/health" });
+      this._show();
+    }
+    _show() {
+      if (this.els.banner) this.els.banner.hidden = false;
+      this.dispatchEvent(new CustomEvent("show"));
+    }
+    _hide() {
+      if (this.els.banner) this.els.banner.hidden = true;
+    }
+    hide() {
+      this.dismissed = true;
+      this._hide();
+    }
+    _render(err) {
+      const status = err?.status || 0;
+      const code   = err?.code   || "ERR_UNKNOWN";
+      const titles = {
+        0:    "无法连接后端服务",
+        401:  "后端鉴权失败",
+        403:  "后端拒绝访问",
+        404:  "后端接口不存在或路径错误",
+        500:  "后端服务异常 (HTTP 500)",
+        502:  "后端网关错误 (HTTP 502)",
+        503:  "后端暂不可用 (HTTP 503)",
+        504:  "后端响应超时 (HTTP 504)"
+      };
+      const title = titles[status] || (status >= 500 ? "后端服务异常" : "后端请求失败");
+      if (this.els.title) this.els.title.textContent = title;
+      const detail = this._buildDetail(err);
+      if (this.els.detail) this.els.detail.innerHTML = detail;
+      this._refreshCount();
+    }
+    _buildDetail(err) {
+      const code   = err?.code   || "ERR_UNKNOWN";
+      const status = err?.status || 0;
+      const url    = err?.url    || "—";
+      const msg    = err?.message || "";
+      const cmd    = "uvicorn backend.api.main:app --port 8000 --reload";
+      const note   = status === 0
+        ? `请确认后端已启动:<code>${cmd}</code>`
+        : status === 401 || status === 403
+          ? `请检查 <code>TRUSTED_HOSTS</code> / CORS 白名单与鉴权配置。`
+          : status === 404
+            ? `可能是接口路径或城市代码不存在,请核对 <code>backend/api/routes/</code>。`
+            : status >= 500
+              ? `后端进程可能崩溃或数据库连接失败,查看 <code>/tmp/api.log</code>。`
+              : `请检查 <code>backend/api/routes/</code> 对应模块。`;
+      return `<div>${note}</div>
+        <div style="margin-top:4px;font-size:12px;color:var(--ink-700,#3F4F6E);">
+          <span style="opacity:.7">最近错误:</span> HTTP ${status} · ${code} · ${Utils.esc(msg)}<br>
+          <span style="opacity:.7">URL:</span> <code>${Utils.esc(url)}</code>
+        </div>`;
+    }
+    _refreshCount() {
+      if (!this.els.count) return;
+      if (this.count > 1) {
+        this.els.count.textContent = String(this.count);
+        this.els.count.hidden = false;
+      } else {
+        this.els.count.hidden = true;
+      }
+    }
+    async _copyCommand() {
+      const cmd = "uvicorn backend.api.main:app --port 8000 --reload";
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(cmd);
+        } else {
+          const ta = document.createElement("textarea");
+          ta.value = cmd; ta.style.position = "fixed"; ta.style.opacity = "0";
+          document.body.appendChild(ta); ta.select();
+          document.execCommand("copy"); ta.remove();
+        }
+        const orig = this.els.copy?.innerHTML;
+        if (this.els.copy) {
+          this.els.copy.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="12" height="12"><path d="M20 6L9 17l-5-5"/></svg> 已复制';
+          setTimeout(() => { if (orig && this.els.copy) this.els.copy.innerHTML = orig; }, 1600);
+        }
+      } catch {
+        /* 剪贴板不可用时静默 */
+      }
+    }
+    _retry() {
+      this.dispatchEvent(new CustomEvent("retry"));
+    }
+  }
+
+  // ============================================================
+  // 7. ChartsManager
+  // ============================================================
+  class ChartsManager {
+    constructor(echarts) {
+      this.echarts = echarts;
+      this.instances = new Map();
+      this.observers = new Map();
+    }
+    _key(el) { return el.id || el; }
+    ensure(el) {
+      const key = this._key(el);
+      let inst = this.instances.get(key);
+      if (!inst) {
+        inst = this.echarts.init(el, echartsTheme(), { renderer: "canvas" });
+        this.instances.set(key, inst);
+        const ro = new ResizeObserver(Utils.debounce(() => {
+          if (inst && !inst.isDisposed()) inst.resize();
+        }, 120));
+        ro.observe(el);
+        this.observers.set(key, ro);
+      }
+      return inst;
+    }
+    setOption(el, opt) {
+      const inst = this.ensure(el);
+      inst.setOption(opt, true);
+      return inst;
+    }
+    clear(el) {
+      const inst = this.instances.get(this._key(el));
+      if (inst) inst.clear();
+    }
+    disposeAll() {
+      for (const [, ro] of this.observers) ro.disconnect();
+      this.observers.clear();
+      for (const [, inst] of this.instances) inst.dispose();
+      this.instances.clear();
+    }
+  }
+
+  // ============================================================
+  // 8. ThemeManager  (light / dark / system)
+  // ============================================================
+  class ThemeManager {
+    constructor(root) {
+      this.root = root;
+      this.key = "citylens.theme";
+      this.media = window.matchMedia("(prefers-color-scheme: dark)");
+      this._mode = "system";
+      this.media.addEventListener("change", () => {
+        if (this._mode === "system") this._apply(this._resolve("system"));
+      });
+    }
+    _resolve(mode) {
+      return mode === "system" ? (this.media.matches ? "dark" : "light") : mode;
+    }
+    _apply(effective) {
+      this.root.dataset.theme = effective;
+      const btn = $("#themeToggle");
+      if (btn) {
+        btn.setAttribute("aria-pressed", effective === "dark" ? "true" : "false");
+        btn.setAttribute("title", effective === "dark" ? "切换到浅色" : "切换到深色");
+      }
+    }
+    set(mode) {
+      this._mode = mode;
+      try { localStorage.setItem(this.key, mode); } catch { /* noop */ }
+      this._apply(this._resolve(mode));
+    }
+    cycle() {
+      const order = ["light", "dark", "system"];
+      const next = order[(order.indexOf(this._mode) + 1) % order.length];
+      this.set(next);
+      return next;
+    }
+    init() {
+      try {
+        const saved = localStorage.getItem(this.key);
+        if (saved && ["light", "dark", "system"].includes(saved)) this._mode = saved;
+      } catch { /* noop */ }
+      this._apply(this._resolve(this._mode));
+    }
+  }
+
+  // ============================================================
+  // 9. TabRouter  (ARIA + 键盘 + hash 同步)
+  // ============================================================
+  class TabRouter {
+    constructor(root, tabsSel, panelSel) {
+      this.root = root;
+      this.tabs = $$(tabsSel, root);
+      this.panels = $$(panelSel, root);
+      this.current = this.tabs.find((t) => t.getAttribute("aria-selected") === "true")?.dataset.tab || this.tabs[0]?.dataset.tab;
+    }
+    _activate(name, { focus = true, push = true } = {}) {
+      if (!name || name === this.current) return;
+      const nextTab = this.tabs.find((t) => t.dataset.tab === name);
+      if (!nextTab) return;
+      this.tabs.forEach((t) => {
+        const active = t === nextTab;
+        t.setAttribute("aria-selected", active ? "true" : "false");
+        t.tabIndex = active ? 0 : -1;
+      });
+      this.panels.forEach((p) => {
+        const active = p.dataset.panel === name;
+        p.hidden = !active;
+        p.setAttribute("aria-hidden", active ? "false" : "true");
+      });
+      this.current = name;
+      if (focus) nextTab.focus({ preventScroll: true });
+      if (push && history.replaceState) {
+        try { history.replaceState({}, "", "#" + name); } catch { /* noop */ }
+      }
+      this.root.dispatchEvent(new CustomEvent("tab:change", { detail: { name } }));
+    }
+    on(name, handler) {
+      this.root.addEventListener("tab:change", (e) => e.detail.name === name && handler(e));
+    }
+    bind() {
+      this.tabs.forEach((tab) => {
+        tab.addEventListener("click", () => this._activate(tab.dataset.tab, { focus: false }));
+        tab.addEventListener("keydown", (e) => {
+          const i = this.tabs.indexOf(tab);
+          let next = null;
+          if (e.key === "ArrowRight") next = this.tabs[(i + 1) % this.tabs.length];
+          else if (e.key === "ArrowLeft") next = this.tabs[(i - 1 + this.tabs.length) % this.tabs.length];
+          else if (e.key === "Home") next = this.tabs[0];
+          else if (e.key === "End")  next = this.tabs[this.tabs.length - 1];
+          if (next) { e.preventDefault(); this._activate(next.dataset.tab); }
+        });
+      });
+      const hash = (location.hash || "").replace(/^#/, "");
+      if (hash && this.tabs.some((t) => t.dataset.tab === hash)) this._activate(hash, { focus: false, push: false });
+    }
+  }
+
+  // ============================================================
+  // 10. resolveApiBase
+  // ============================================================
+  function resolveApiBase() {
+    try {
+      const { protocol, hostname, port } = window.location;
+      const isDev = hostname === "localhost" || hostname === "127.0.0.1";
+      if (isDev) return `${protocol}//${hostname}:8000/api/v1`;
+      return `${protocol}//${hostname}${port ? ":" + port : ""}/api/v1`;
+    } catch {
+      return "/api/v1";
+    }
+  }
+
+  // ============================================================
+  // 11. echartsTheme
+  // ============================================================
+  function echartsTheme() {
+    const v = (n, fb) => (getComputedStyle(document.documentElement).getPropertyValue(n).trim() || fb);
+    return {
+      color: CONFIG.VIZ_PALETTE.slice(),
+      textStyle: { fontFamily: v("--font-sans", "system-ui, sans-serif"), color: v("--ink-900", "#0E1F3F") },
+      legend: { textStyle: { color: v("--ink-700", "#3F4F6E") } },
+      axisLine: { lineStyle: { color: v("--stone-300", "#D4CFC2") } },
+      splitLine: { lineStyle: { color: v("--stone-200", "#E5E0D3"), type: "dashed" } },
+      tooltip: {
+        backgroundColor: v("--paper-50", "#FAF8F3"),
+        borderColor: v("--sand-300", "#C7B997"),
+        textStyle: { color: v("--ink-900", "#0E1F3F") },
+        extraCssText: "box-shadow: 0 8px 32px rgba(14,31,63,0.12); border-radius: 6px;"
+      }
+    };
+  }
+
+  // ============================================================
+  // 12. Skeleton / Error helpers (使用 HTML 既有 ID 模式)
+  // ============================================================
+  const Skeleton = {
+    show(chartId) { const el = document.getElementById(chartId + "Skeleton"); if (el) el.style.display = "flex"; },
+    hide(chartId) { const el = document.getElementById(chartId + "Skeleton"); if (el) el.style.display = "none"; }
+  };
+
+  function showChartError(chartId, message, retryFn) {
+    const el = document.getElementById(chartId);
+    if (!el) return;
+    const parent = el.parentElement;
+    if (!parent) return;
+    const old = parent.querySelector(".chart-error");
+    if (old) old.remove();
+    const box = document.createElement("div");
+    box.className = "chart-error";
+    box.setAttribute("role", "alert");
+    box.innerHTML = `
+      <svg class="chart-error__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+      </svg>
+      <div class="chart-error__title">图表加载失败</div>
+      <div class="chart-error__detail">${Utils.esc(message || "")}</div>
+      ${retryFn ? '<button class="btn btn--ghost btn--sm" type="button" data-retry>重试</button>' : ""}`;
+    if (retryFn) box.querySelector("[data-retry]").addEventListener("click", retryFn);
+    parent.appendChild(box);
+  }
+
+  function clearChartError(chartId) {
+    const el = document.getElementById(chartId);
+    if (!el) return;
+    const parent = el.parentElement;
+    if (!parent) return;
+    const old = parent.querySelector(".chart-error");
+    if (old) old.remove();
+  }
+
+  // ============================================================
+  // 13. Views
+  // ============================================================
+  const Views = {};
+
+  // ---- Dashboard ----
+  Views.Dashboard = {
+    abortCtl: null,
+    _renderCityCard(city, payload) {
+      const data = payload?.data || {};
+      const cells = CONFIG.CITY_CARD_FIELDS.map((f) => {
+        const v = typeof f.accessor === "function" ? f.accessor(data) : data[f.key];
+        let display = "—";
+        if (v != null && v !== "" && !Number.isNaN(+v)) {
+          if (f.key === "gdp" || f.key === "gdp_per_capita") display = Utils.fmtCompact(v);
+          else if (f.unit === "%") display = Utils.fmtPct(v, 2);
+          else display = Utils.fmtInt(v) + (f.unit && f.unit !== "元" ? " <small>" + f.unit + "</small>" : "");
+        }
+        return `<div class="city-card__stat"><span class="city-card__stat-label">${Utils.esc(f.label)}</span><span class="city-card__stat-value ${f.key === "gdp" ? "city-card__stat-value--accent" : ""}">${display}</span></div>`;
+      }).join("");
+
+      const tier = data.tier || (data.gdp >= 30000 ? "一线" : data.gdp >= 15000 ? "新一线" : data.gdp >= 8000 ? "二线" : "三线");
+      return `
+        <article class="city-card" data-city="${Utils.esc(city)}">
+          <header class="city-card__head">
+            <div>
+              <div class="city-card__name">${Utils.esc(city)}</div>
+              <div class="city-card__region">${Utils.esc(data.region || "—")} · ${Utils.esc(data.industry || "综合")}</div>
+            </div>
+            <span class="tag tag--ink">${Utils.esc(tier)}</span>
+          </header>
+          <div class="city-card__stats">${cells}</div>
+        </article>`;
+    },
+
+    async loadCityCards(api, cities) {
+      const grid = $("#cityCards");
+      if (!grid) return;
+      this.abortCtl?.abort?.("reload");
+      this.abortCtl = new AbortController();
+      const { signal } = this.abortCtl;
+
+      grid.innerHTML = cities.map(() => `<div class="city-card city-card--skeleton" aria-hidden="true"></div>`).join("");
+
+      const tasks = cities.map((city) => api.get(`/cities/${encodeURIComponent(city)}`, { signal, cacheTTL: CONFIG.CACHE_TTL_MS }));
+      const results = await Promise.allSettled(tasks);
+      const ok = results.filter((r) => r.status === "fulfilled");
+      const failed = results.length - ok.length;
+      if (failed > 0) window.__citylens_toast?.warn(`${failed} 个城市数据加载失败,已跳过`);
+      if (ok.length === 0) {
+        grid.innerHTML = `<div class="empty-state"><svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8v4M12 16h.01"/><circle cx="12" cy="12" r="10"/></svg><div class="empty-state__title">城市数据不可用</div><div class="empty-state__text">请检查后端服务并稍后重试。</div></div>`;
+        return;
+      }
+      grid.innerHTML = ok.map((r) => this._renderCityCard(cities[results.indexOf(r)], r.value)).join("");
+    },
+
+    async loadGdpRankChart(api, signal) {
+      const chartId = "chartGdpRank";
+      clearChartError(chartId);
+      Skeleton.show(chartId);
+      try {
+        const list = await api.get("/cities/list", { signal, cacheTTL: CONFIG.CACHE_TTL_MS });
+        const cities = (list.cities || []).slice(0, 10);
+        const tasks = cities.map((c) => api.get(`/cities/${encodeURIComponent(c)}`, { signal, cacheTTL: CONFIG.CACHE_TTL_MS }));
+        const results = await Promise.allSettled(tasks);
+        const data = results
+          .map((r, i) => ({ city: cities[i], value: r.status === "fulfilled" ? r.value?.data?.gdp : null }))
+          .filter((d) => d.value != null)
+          .sort((a, b) => b.value - a.value);
+
+        Skeleton.hide(chartId);
+        window.__citylens_charts.setOption(document.getElementById(chartId), {
+          grid: { left: 90, right: 60, top: 16, bottom: 24, containLabel: false },
+          tooltip: { trigger: "axis", axisPointer: { type: "shadow" }, valueFormatter: (v) => Utils.fmtCompact(v) + " 亿元" },
+          xAxis: { type: "value", axisLabel: { formatter: (v) => Utils.fmtCompact(v) } },
+          yAxis: { type: "category", data: data.map((d) => d.city), axisLabel: { fontWeight: 600, color: Utils.cssVar("--stone-800") }, inverse: true },
+          series: [{
+            type: "bar",
+            data: data.map((d) => d.value),
+            itemStyle: { color: Utils.cssVar("--copper-500"), borderRadius: [0, 4, 4, 0] },
+            barMaxWidth: 16,
+            label: { show: true, position: "right", formatter: (p) => Utils.fmtCompact(p.value) + " 亿元", color: Utils.cssVar("--ink-700"), fontSize: 11 }
+          }]
+        });
+      } catch (err) {
+        Skeleton.hide(chartId);
+        showChartError(chartId, err.message || "加载失败", () => this.loadGdpRankChart(api, signal));
+      }
+    },
+
+    async loadIndustryOverview(api, signal) {
+      const chartId = "chartIndustryOverview";
+      clearChartError(chartId);
+      Skeleton.show(chartId);
+      try {
+        const list = await api.get("/cities/list", { signal, cacheTTL: CONFIG.CACHE_TTL_MS });
+        const cities = (list.cities || []).slice(0, 6);
+        const tasks = cities.map((c) => api.get(`/cities/${encodeURIComponent(c)}`, { signal, cacheTTL: CONFIG.CACHE_TTL_MS }).catch(() => null));
+        const results = await Promise.all(tasks);
+        // 后端没有三产占比,使用 data 中的成本/供应链/政策维度作为对比
+        const data = results
+          .filter(Boolean)
+          .map((r, i) => ({
+            city: cities[i],
+            land: r.data?.land_price ?? 0,
+            salary: r.data?.salary_level ?? 0,
+            support: r.data?.local_support_rate ?? 0
+          }))
+          .filter((d) => d.land || d.salary || d.support);
+
+        Skeleton.hide(chartId);
+        window.__citylens_charts.setOption(document.getElementById(chartId), {
+          grid: { left: 16, right: 16, top: 32, bottom: 24, containLabel: true },
+          tooltip: { trigger: "axis", axisPointer: { type: "shadow" }, valueFormatter: (v) => Utils.fmtInt(v) },
+          legend: { top: 0, data: ["地价(元/㎡)", "薪酬(元/月)", "本地支持力度(%)"] },
+          xAxis: { type: "category", data: data.map((d) => d.city) },
+          yAxis: { type: "value" },
+          series: [
+            { name: "地价(元/㎡)", type: "bar", data: data.map((d) => d.land), itemStyle: { color: Utils.cssVar("--copper-500") } },
+            { name: "薪酬(元/月)", type: "bar", data: data.map((d) => d.salary), itemStyle: { color: Utils.cssVar("--viz-2") } },
+            { name: "本地支持力度(%)", type: "bar", data: data.map((d) => +d.support.toFixed(1)), itemStyle: { color: Utils.cssVar("--viz-3") } }
+          ]
+        });
+      } catch (err) {
+        Skeleton.hide(chartId);
+        showChartError(chartId, err.message || "加载失败", () => this.loadIndustryOverview(api, signal));
+      }
+    },
+
+    async mount(api, store) {
+      const cities = (store.get().cities && store.get().cities.length) ? store.get().cities : CONFIG.DEFAULT_CITIES;
+      const hint = $("#cityCardHint");
+      if (hint) hint.textContent = `${cities.length} 个城市`;
+
+      const list = await api.get("/cities/list", { cacheTTL: CONFIG.CACHE_TTL_MS }).catch(() => ({ cities: [] }));
+      const allCities = list.cities || cities;
+      const sc = $("#statCities");
+      if (sc) sc.textContent = String(allCities.length);
+
+      await this.loadCityCards(api, cities);
+      await Promise.allSettled([
+        this.loadGdpRankChart(api),
+        this.loadIndustryOverview(api)
+      ]);
+
+      const lede = $("#dashboardLede");
+      if (lede) lede.textContent = "数据已就绪。所有视图均经过 ECharts 渲染与本地缓存。";
+      const upd = $("#dashboardUpdated");
+      if (upd) upd.textContent = new Date().toLocaleTimeString("zh-CN", { hour12: false });
+      const dp = $("#dashboardDataPoints");
+      if (dp) dp.textContent = String(allCities.length * CONFIG.CITY_CARD_FIELDS.length);
+
+      store.set({ allCities });
+    }
+  };
+
+  // ---- Enterprise ----
+  Views.Enterprise = {
+    abortCtl: null,
+    _setScoreRing(score) {
+      const R = 52, C = 2 * Math.PI * R;
+      const ratio = Math.max(0, Math.min(100, +score || 0)) / 100;
+      const fill = document.getElementById("scoreRingFill");
+      if (fill) fill.setAttribute("stroke-dashoffset", String(C * (1 - ratio)));
+      const t = document.getElementById("entTotalScore");
+      if (t) t.textContent = Utils.fmtScore(score);
+      const r = Utils.rating(score);
+      const rt = document.getElementById("entScoreRating");
+      if (rt) rt.textContent = r.label + " · " + "★".repeat(r.stars) + "☆".repeat(5 - r.stars);
+    },
+    _renderRadar(details) {
+      const dims = [
+        { key: "cost_details",   label: "经营成本" },
+        { key: "supply_details", label: "供应链" },
+        { key: "policy_details", label: "政策红利" }
+      ];
+      const seen = new Set();
+      dims.forEach((d) => {
+        const obj = details?.[d.key] || {};
+        Object.keys(obj).forEach((k) => seen.add(k));
+      });
+      const indicators = Array.from(seen).map((k) => ({ name: k, max: 100 }));
+      const series = [{
+        type: "radar",
+        symbol: "circle",
+        symbolSize: 4,
+        data: dims.map((d) => {
+          const obj = details?.[d.key] || {};
+          return { name: d.label, value: indicators.map((ind) => Math.round(+obj[ind.name] || 0)) };
+        }),
+        areaStyle: { opacity: 0.2 },
+        lineStyle: { width: 2 }
+      }];
+      return { indicators, series };
+    },
+
+    async analyze(api, city) {
+      this.abortCtl?.abort?.("reload");
+      this.abortCtl = new AbortController();
+      const { signal } = this.abortCtl;
+      const card = document.getElementById("entScoreCard");
+      const detail = document.getElementById("entDetailCard");
+      if (card) card.hidden = true;
+      if (detail) detail.hidden = true;
+      try {
+        const data = await api.get(`/analysis/enterprise/location/${encodeURIComponent(city)}`, { signal });
+        if (card) card.hidden = false;
+        this._setScoreRing(data.total_score);
+
+        const rOpt = this._renderRadar(data.details || {});
+        window.__citylens_charts.setOption(document.getElementById("chartEntRadar"), {
+          tooltip: {},
+          legend: { bottom: 0, data: rOpt.series[0].data.map((d) => d.name) },
+          radar: {
+            indicator: rOpt.indicators,
+            radius: "64%",
+            splitArea: { areaStyle: { color: ["rgba(184,113,74,0.04)", "rgba(14,31,63,0.02)"] } },
+            axisName: { color: Utils.cssVar("--stone-700"), fontSize: 11 }
+          },
+          series: rOpt.series
+        });
+
+        if (detail) {
+          detail.hidden = false;
+          const det = document.getElementById("entDetails");
+          if (det) {
+            const dims = [
+              { key: "cost_details",   label: "经营成本" },
+              { key: "supply_details", label: "供应链" },
+              { key: "policy_details", label: "政策红利" }
+            ];
+            det.innerHTML = dims.map((d) => {
+              const obj = data.details?.[d.key] || {};
+              const rows = Object.entries(obj).map(([k, v]) => (
+                `<div class="detail-item"><div class="detail-item__label">${Utils.esc(k)}</div><div class="detail-item__value detail-item__value--accent">${Utils.esc(Utils.fmtScore(v))}</div></div>`
+              )).join("");
+              return `<div class="detail-item" style="grid-column:1/-1;"><div class="detail-item__label" style="font-weight:600;">${Utils.esc(d.label)}</div></div>${rows || `<div class="detail-item"><div class="detail-item__label">无数据</div></div>`}`;
+            }).join("");
+          }
+        }
+      } catch (err) {
+        if (err.name !== "AbortError") window.__citylens_toast?.error("企业分析失败:" + (err.message || "未知错误"));
+      }
+    },
+
+    async mount(api) {
+      const sel = document.getElementById("entCitySelect");
+      const btn = document.getElementById("btnEntAnalyze");
+      if (!sel || !btn) return;
+      try {
+        const list = await api.get("/cities/list", { cacheTTL: CONFIG.CACHE_TTL_MS });
+        sel.innerHTML = (list.cities || []).map((c) => `<option value="${Utils.esc(c)}">${Utils.esc(c)}</option>`).join("");
+        if (!sel.value && sel.options.length) sel.value = sel.options[0].value;
+      } catch {
+        sel.innerHTML = CONFIG.DEFAULT_CITIES.map((c) => `<option>${Utils.esc(c)}</option>`).join("");
+      }
+      const run = () => this.analyze(api, sel.value);
+      btn.addEventListener("click", run);
+      sel.addEventListener("change", Utils.debounce(run, 200));
+      await run();
+    }
+  };
+
+  // ---- Government ----
+  Views.Government = {
+    abortCtl: null,
+    async analyze(api, city, years) {
+      this.abortCtl?.abort?.("reload");
+      this.abortCtl = new AbortController();
+      const { signal } = this.abortCtl;
+      const det = document.getElementById("govDetails");
+      const chartId = "chartGdpForecast";
+      clearChartError(chartId);
+      Skeleton.show(chartId);
+      if (det) det.innerHTML = `<div class="placeholder placeholder--loading" style="grid-column:1/-1;"><div class="spinner" aria-hidden="true"></div><p>正在为 ${Utils.esc(city)} 运行产业分析…</p></div>`;
+      try {
+        // 先取城市信息以获得 region/industry
+        const cityInfo = await api.get(`/cities/${encodeURIComponent(city)}`, { signal, cacheTTL: CONFIG.CACHE_TTL_MS });
+        const cd = cityInfo?.data || {};
+        const analysisBody = {
+          region: cd.region || "全国",
+          industry: cd.industry || "综合",
+          year: years,
+          data: { gdp: cd.gdp, gdp_growth: cd.gdp_growth, population: cd.population }
+        };
+        const data = await api.post("/analysis/government", analysisBody, { signal, cacheTTL: CONFIG.CACHE_TTL_MS });
+        const payload = data?.data || {};
+        const tag = document.getElementById("govMethodTag");
+        if (tag) tag.textContent = "已就绪 · " + (cd.region || "全国");
+
+        if (det) {
+          const fl = payload.fiscal_leverage || {};
+          const ind = payload.industry_drive || {};
+          const sub = [
+            { name: "财政杠杆评分", value: fl.score, unit: "/100" },
+            { name: "收入效率", value: fl.revenue_efficiency, unit: "/100" },
+            { name: "支出效率", value: fl.expenditure_efficiency, unit: "/100" },
+            { name: "产业驱动评分", value: ind.score, unit: "/100" },
+            { name: "就业贡献", value: ind.employment_contribution, unit: "/100" },
+            { name: "税收贡献", value: ind.tax_contribution, unit: "/100" },
+            { name: "财政总收入", value: cd.fiscal_revenue, unit: "亿元" },
+            { name: "研发强度", value: cd.rd_intensity, unit: "%" }
+          ].filter((x) => x.value != null && x.value !== "");
+          det.innerHTML = sub.length
+            ? sub.map((s) => {
+                const v = s.value;
+                return `<div class="detail-item"><div class="detail-item__label">${Utils.esc(s.name)}</div><div class="detail-item__value">${Utils.esc(Utils.fmtScore(v))}</div><div class="detail-item__unit">${Utils.esc(s.unit)}</div></div>`;
+              }).join("") +
+              `<div class="detail-item" style="grid-column:1/-1;background:var(--copper-50);"><div class="detail-item__label" style="font-weight:600;color:var(--copper-700);">城市画像</div><div class="detail-item__value detail-item__value--accent">${Utils.esc(cd.region || "—")} · ${Utils.esc(cd.industry || "综合")}</div><div class="detail-item__unit">数据质量:${Utils.esc(cd.data_quality || "—")}</div></div>`
+            : `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state__title">暂无数据</div></div>`;
+        }
+
+        try {
+          const fc = await api.get(`/forecast/gdp/${encodeURIComponent(city)}?forecast_years=${years}`, { signal, cacheTTL: CONFIG.CACHE_TTL_MS });
+          this._renderForecast(chartId, fc);
+        } catch {
+          Skeleton.hide(chartId);
+          showChartError(chartId, "预测数据暂不可用");
+        }
+      } catch (err) {
+        Skeleton.hide(chartId);
+        if (err.name !== "AbortError") {
+          if (det) det.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><div class="empty-state__title">分析失败</div><div class="empty-state__text">${Utils.esc(err.message || "未知错误")}</div><button class="btn btn--ghost" type="button" id="govRetry">重试</button></div>`;
+          document.getElementById("govRetry")?.addEventListener("click", () => this.analyze(api, city, years));
+          window.__citylens_toast?.error("政府分析失败:" + (err.message || "未知错误"));
+        }
+      }
+    },
+    _renderForecast(chartId, payload) {
+      const hist = payload.historical_data || [];
+      const fc = payload.forecast_data || [];
+      const years = [...hist.map((d) => d.year), ...fc.map((d) => d.year)];
+      const histSeries = hist.map((d) => d.gdp);
+      const fcSeries   = fc.map((d) => d.forecast);
+      const lower = hist.map(() => null).concat(fc.map((d) => d.forecast_lower ?? null));
+      const upper = hist.map(() => null).concat(fc.map((d, i) => {
+        const lo = fc[i].forecast_lower;
+        return lo != null && d.forecast_upper != null ? d.forecast_upper - lo : null;
+      }));
+      const mid   = hist.map(() => null).concat(fcSeries);
+
+      Skeleton.hide(chartId);
+      window.__citylens_charts.setOption(document.getElementById(chartId), {
+        grid: { left: 16, right: 16, top: 32, bottom: 32, containLabel: true },
+        tooltip: { trigger: "axis", valueFormatter: (v) => v == null ? "—" : Utils.fmtCompact(v) + " 亿元" },
+        legend: { top: 0, data: ["历史 GDP", "预测 GDP", "置信区间"] },
+        xAxis: { type: "category", data: years, boundaryGap: false },
+        yAxis: { type: "value", axisLabel: { formatter: (v) => Utils.fmtCompact(v) } },
+        series: [
+          { name: "历史 GDP", type: "line", data: histSeries, smooth: true, symbol: "circle", symbolSize: 6,
+            itemStyle: { color: Utils.cssVar("--ink-900") }, lineStyle: { width: 2 } },
+          { name: "置信区间", type: "line", data: lower, lineStyle: { opacity: 0 }, stack: "ci",
+            symbol: "none", tooltip: { show: false } },
+          { name: "置信区间", type: "line", data: upper, lineStyle: { opacity: 0 }, stack: "ci",
+            areaStyle: { color: "rgba(184,113,74,0.18)" }, symbol: "none" },
+          { name: "预测 GDP", type: "line", data: mid, smooth: true,
+            itemStyle: { color: Utils.cssVar("--copper-500") }, lineStyle: { width: 2, type: "dashed" },
+            symbol: "circle", symbolSize: 6 }
+        ]
+      });
+    },
+
+    async mount(api) {
+      const sel = document.getElementById("govCitySelect");
+      const years = document.getElementById("govForecastYears");
+      const btn = document.getElementById("btnGovAnalyze");
+      if (!sel || !btn) return;
+      try {
+        const list = await api.get("/cities/list", { cacheTTL: CONFIG.CACHE_TTL_MS });
+        sel.innerHTML = (list.cities || []).map((c) => `<option value="${Utils.esc(c)}">${Utils.esc(c)}</option>`).join("");
+        if (!sel.value && sel.options.length) sel.value = sel.options[0].value;
+      } catch {
+        sel.innerHTML = CONFIG.DEFAULT_CITIES.map((c) => `<option>${Utils.esc(c)}</option>`).join("");
+      }
+      const run = () => this.analyze(api, sel.value, years?.value || 3);
+      btn.addEventListener("click", run);
+      sel.addEventListener("change", Utils.debounce(run, 200));
+      years?.addEventListener("change", run);
+      await run();
+    }
+  };
+
+  // ---- Cities (Compare) ----
+  Views.Cities = {
+    abortCtl: null,
+    async runCityComparison(api, cities, indicator) {
+      this.abortCtl?.abort?.("reload");
+      this.abortCtl = new AbortController();
+      const { signal } = this.abortCtl;
+      const chartTs = "chartCityCompare";
+      const chartHm = "chartCityHeatmap";
+      clearChartError(chartTs); clearChartError(chartHm);
+      Skeleton.show(chartTs); Skeleton.show(chartHm);
+      try {
+        const now = new Date().getFullYear();
+        const ts = await api.post("/cities/time-series", {
+          city_codes: cities, indicator, year_start: now - 7, year_end: now
+        }, { signal, cacheTTL: CONFIG.CACHE_TTL_MS });
+        const groups = ts?.time_series?.groups || [];
+        const allYears = Array.from(new Set(groups.flatMap((g) => g.time_points || []))).sort();
+
+        Skeleton.hide(chartTs);
+        window.__citylens_charts.setOption(document.getElementById(chartTs), {
+          grid: { left: 16, right: 16, top: 32, bottom: 32, containLabel: true },
+          tooltip: { trigger: "axis", valueFormatter: (v) => v == null ? "—" : Utils.fmtCompact(v) },
+          legend: { top: 0, data: cities },
+          xAxis: { type: "category", data: allYears, boundaryGap: false },
+          yAxis: { type: "value" },
+          series: cities.map((c, i) => {
+            const g = groups.find((x) => x.city === c);
+            const map = new Map((g?.time_points || []).map((y, idx) => [y, g.values?.[idx]]));
+            return {
+              name: c, type: "line", smooth: true,
+              data: allYears.map((y) => map.get(y) ?? null),
+              itemStyle: { color: CONFIG.VIZ_PALETTE[i % CONFIG.VIZ_PALETTE.length] }
+            };
+          })
+        });
+
+        // 热力(按指标归一化,避免量纲差异压平)
+        const matrix = cities.map((c) => {
+          const g = groups.find((x) => x.city === c);
+          const vals = (g?.values || []).map((v) => +v || 0);
+          const max = Math.max(...vals, 1);
+          return allYears.map((y) => {
+            const idx = (g?.time_points || []).indexOf(y);
+            return idx >= 0 ? +((vals[idx] / max) * 100).toFixed(1) : null;
+          });
+        });
+        Skeleton.hide(chartHm);
+        window.__citylens_charts.setOption(document.getElementById(chartHm), {
+          grid: { left: 80, right: 16, top: 16, bottom: 56, containLabel: true },
+          tooltip: { position: "top", valueFormatter: (v) => v == null ? "—" : v + "% (相对最大值)" },
+          xAxis: { type: "category", data: allYears, splitArea: { show: true } },
+          yAxis: { type: "category", data: cities, splitArea: { show: true } },
+          visualMap: { min: 0, max: 100, calculable: true, orient: "horizontal", left: "center", bottom: 0,
+            inRange: { color: ["#FAF8F3", "#A4805C", "#0E1F3F"] } },
+          series: [{ type: "heatmap", data: matrix.flatMap((row, i) => row.map((v, j) => [j, i, v])),
+            progressive: 1000, itemStyle: { borderRadius: 2 } }]
+        });
+
+        // 表格
+        const head = document.querySelector("#compareTable thead");
+        const body = document.getElementById("compareTableBody");
+        if (head && body) {
+          head.innerHTML = `<tr><th scope="col">城市</th>${allYears.map((y) => `<th scope="col">${y}</th>`).join("")}</tr>`;
+          body.innerHTML = cities.map((c) => {
+            const g = groups.find((x) => x.city === c);
+            const map = new Map((g?.time_points || []).map((y, idx) => [y, g.values?.[idx]]));
+            return `<tr><th scope="row">${Utils.esc(c)}</th>${allYears.map((y) => `<td>${map.has(y) ? Utils.esc(Utils.fmtInt(map.get(y))) : "—"}</td>`).join("")}</tr>`;
+          }).join("");
+        }
+      } catch (err) {
+        Skeleton.hide(chartTs); Skeleton.hide(chartHm);
+        if (err.name !== "AbortError") {
+          showChartError(chartTs, err.message || "对比失败", () => this.runCityComparison(api, cities, indicator));
+          window.__citylens_toast?.error("对比失败:" + (err.message || "未知错误"));
+        }
+      }
+    },
+
+    async mount(api, store) {
+      const citySel = document.getElementById("cityCheckboxes");
+      const btn = document.getElementById("btnCompare");
+      const btnAll = document.getElementById("btnSelectAll");
+      const btnNone = document.getElementById("btnSelectNone");
+      const counter = document.getElementById("compareSelectedCount");
+      if (!citySel || !btn) return;
+
+      const allCities = store.get().allCities?.length
+        ? store.get().allCities
+        : (await api.get("/cities/list", { cacheTTL: CONFIG.CACHE_TTL_MS }).then((r) => r.cities || []).catch(() => CONFIG.DEFAULT_CITIES));
+      const defaultSelected = CONFIG.DEFAULT_CITIES.slice(0, 4);
+
+      const renderCities = (selected) => {
+        citySel.innerHTML = "";
+        const frag = document.createDocumentFragment();
+        allCities.forEach((c) => {
+          const id = "cmp-" + c;
+          const wrap = document.createElement("label");
+          wrap.className = "tag";
+          wrap.setAttribute("for", id);
+          wrap.style.cursor = "pointer";
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.id = id;
+          cb.value = c;
+          cb.style.position = "absolute";
+          cb.style.opacity = "0";
+          cb.style.pointerEvents = "none";
+          if (selected.includes(c)) {
+            cb.checked = true;
+            wrap.classList.add("tag--ink");
+          }
+          cb.addEventListener("change", () => {
+            wrap.classList.toggle("tag--ink", cb.checked);
+            updateCount();
+          });
+          wrap.append(cb, document.createTextNode(" " + c));
+          frag.appendChild(wrap);
+        });
+        citySel.appendChild(frag);
+        updateCount();
+      };
+
+      const updateCount = () => {
+        const n = citySel.querySelectorAll("input:checked").length;
+        if (counter) counter.textContent = `已选 ${n} 个城市`;
+      };
+
+      const gather = () => Array.from(citySel.querySelectorAll("input:checked")).map((i) => i.value);
+
+      const run = () => {
+        const cities = gather();
+        if (cities.length < 2) {
+          window.__citylens_toast?.warn("请至少选择 2 个城市");
+          return;
+        }
+        this.runCityComparison(api, cities, "gdp");
+      };
+
+      btn.addEventListener("click", run);
+      btnAll?.addEventListener("click", () => {
+        citySel.querySelectorAll("input").forEach((cb) => {
+          cb.checked = true;
+          cb.parentElement.classList.add("tag--ink");
+        });
+        updateCount();
+        run();
+      });
+      btnNone?.addEventListener("click", () => {
+        citySel.querySelectorAll("input").forEach((cb) => {
+          cb.checked = false;
+          cb.parentElement.classList.remove("tag--ink");
+        });
+        updateCount();
+      });
+
+      renderCities(defaultSelected);
+      await this.runCityComparison(api, defaultSelected, "gdp");
+    }
+  };
+
+  // ============================================================
+  // 14. App boot
+  // ============================================================
+  const App = {
+    async init() {
+      if (!window.echarts) {
+        console.error("[citylens] ECharts 未加载");
+        return;
+      }
+      const charts = new ChartsManager(window.echarts);
+      const api = new APIClient();
+      const toast = new ToastManager($("#toastContainer"));
+      const theme = new ThemeManager(document.documentElement);
+      theme.init();
+      const router = new TabRouter(document, ".tab-btn", ".tab-panel");
+      const store = new Store({ cities: CONFIG.DEFAULT_CITIES, allCities: [] });
+
+      // 全局后端状态条幅 —— 监听 APIClient 派发的 backend:error,
+      // 任何 4xx / 5xx / 网络错误都会触发;健康检查成功时自动隐藏
+      const backendStatus = new BackendStatus({
+        banner: $("#backendBanner"),
+        title:  $("#backendBannerTitle"),
+        detail: $("#backendBannerDetail"),
+        count:  $("#backendBannerCount"),
+        close:  $("#backendBannerClose"),
+        copy:   $("#backendBannerCopy"),
+        retry:  $("#backendBannerRetry")
+      });
+      window.addEventListener("backend:error", (e) => {
+        backendStatus.reportError(e.detail || {});
+        // 关键错误额外弹一个 toast,确保用户感知
+        const det = e.detail || {};
+        if (det.status === 0 || det.status >= 500) {
+          toast.error(`后端不可达:${det.message || "网络异常"}`, { timeout: 6000 });
+        }
+      });
+      backendStatus.addEventListener("retry", () => {
+        // 用户主动重试:重新探测后端并刷新当前 Tab
+        toast.info("正在重新探测后端…");
+        fetch(healthURL, { cache: "no-store" })
+          .then((r) => r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status)))
+          .then((h) => {
+            backendStatus.markOnline();
+            toast.success("后端已恢复");
+            // 刷新当前 Tab 数据
+            const cur = router.current;
+            mounted[cur] = false;
+            mountIfNeeded(cur);
+          })
+          .catch(() => {
+            toast.error("后端仍不可达,请确认服务已启动");
+            backendStatus.markOffline("重试失败");
+          });
+      });
+
+      window.__citylens_toast = toast;
+      window.__citylens_charts = charts;
+      window.__citylens_api = api;
+      window.__citylens_store = store;
+      window.__citylens_backend = backendStatus;
+
+      // 主题切换
+      $("#themeToggle")?.addEventListener("click", () => {
+        const next = theme.cycle();
+        toast.info(`主题已切换:${next === "system" ? "跟随系统" : (next === "dark" ? "深色" : "浅色")}`);
+        charts.instances.forEach((inst) => { if (!inst.isDisposed()) inst.resize(); });
+      });
+
+      // 健康检查 (后端 /health 不在 /api/v1 前缀下;直接走根路径)
+      const healthURL = (() => {
+        try {
+          const { protocol, hostname, port } = window.location;
+          const isDev = hostname === "localhost" || hostname === "127.0.0.1";
+          return isDev
+            ? `${protocol}//${hostname}:8000/health`
+            : `${protocol}//${hostname}${port ? ":" + port : ""}/health`;
+        } catch { return "/health"; }
+      })();
+      // 记录到 banner 节点,BackendStatus 渲染时能拿到 URL
+      $("#backendBanner")?.setAttribute("data-health-url", healthURL);
+      fetch(healthURL, { cache: "no-store" })
+        .then((r) => r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status)))
+        .then((h) => {
+        const badge = $("#healthBadge");
+        const txt = $("#healthText");
+        const ok = h?.status === "healthy" || h?.status === "ok";
+        if (badge) badge.dataset.status = ok ? "online" : "warn";
+        if (txt) txt.textContent = ok ? "运行正常" : "部分降级";
+        const stat = $("#statStatus");
+        if (stat) stat.textContent = ok ? "ONLINE" : "DEGRADED";
+        const trend = $("#statStatusTrend");
+        if (trend) {
+          trend.classList.remove("stat-card__trend--neutral", "stat-card__trend--up", "stat-card__trend--down");
+          trend.classList.add(ok ? "stat-card__trend--up" : "stat-card__trend--down");
+        }
+        const v = $("#versionTag");
+        if (v) v.textContent = "v" + (h?.version || "—");
+        const ind = $("#statIndicators");
+        if (ind) ind.textContent = String(h?.indicators || 25);
+        const src = $("#statSources");
+        if (src) src.textContent = String(h?.data_sources || 4);
+        // 后端健康 → 清除错误状态
+        if (ok) backendStatus.markOnline();
+      }).catch((err) => {
+        const badge = $("#healthBadge");
+        const txt = $("#healthText");
+        if (badge) badge.dataset.status = "down";
+        if (txt) txt.textContent = "服务离线";
+        const stat = $("#statStatus");
+        if (stat) stat.textContent = "OFFLINE";
+        // 健康检查本身失败 → 弹出条幅
+        backendStatus.markOffline(err?.message || "无法连接后端");
+      });
+
+      // Tab 路由
+      router.bind();
+      const mounted = { dashboard: false, enterprise: false, government: false, cities: false, index: false };
+      let indexTab = null;
+      const mountIfNeeded = (name) => {
+        if (mounted[name]) return;
+        mounted[name] = true;
+        const map = {
+          dashboard:  () => Views.Dashboard.mount(api, store),
+          enterprise: () => Views.Enterprise.mount(api),
+          government: () => Views.Government.mount(api),
+          cities:     () => Views.Cities.mount(api, store),
+          index:      () => { indexTab = new IndexTab(api); return indexTab.load(); }
+        };
+        Promise.resolve()
+          .then(() => map[name]?.())
+          .catch((e) => toast.error(`视图加载失败:${e.message || e}`));
+      };
+      mountIfNeeded(router.current);
+      router.on("dashboard",  () => mountIfNeeded("dashboard"));
+      router.on("enterprise", () => mountIfNeeded("enterprise"));
+      router.on("government", () => mountIfNeeded("government"));
+      router.on("cities",     () => mountIfNeeded("cities"));
+      router.on("index",      () => mountIfNeeded("index"));
+
+      // 全局错误兜底
+      window.addEventListener("error", (e) => {
+        console.error("[citylens] uncaught", e.error || e.message);
+        toast.error("页面出现未捕获错误");
+      });
+      window.addEventListener("unhandledrejection", (e) => {
+        console.error("[citylens] unhandled", e.reason);
+        toast.error(`请求失败:${e.reason?.message || "未知原因"}`);
+      });
+
+      // 卸载清理
+      window.addEventListener("beforeunload", () => {
+        api.cancelAll("unload");
+        charts.disposeAll();
+      });
+    }
+  };
+
+  // ============================================================
+  // 13. Competitiveness Index Tab
+  // ============================================================
+  class IndexTab {
+    constructor(api) {
+      this.api = api;
+      this.indexResult = null;
+      this.currentCity = null;
+    }
+
+    async load() {
+      const lede = document.getElementById("indexLede");
+      try {
+        lede.textContent = "正在计算竞争力指数...";
+        const resp = await this.api.post("/index/compute", { method: "entropy" });
+        this.indexResult = resp;
+
+        const cities = Object.keys(resp.overall || {}).length;
+        document.getElementById("indexCityCount").textContent = cities;
+        document.getElementById("indexMethodology").textContent = resp.methodology || "熵权法";
+
+        this._renderTopThree(resp.rankings?.overall || []);
+        this._renderCoverage(resp);
+        this._renderStats(resp, cities);
+        this._renderRankingChart(resp);
+        this._initRadarSelector(resp);
+        this._renderHeatmap(resp);
+        this._renderMissing(resp);
+
+        lede.textContent = `已完成 \u2014 ${cities} 个城市竞争力指数分析`;
+        document.getElementById("indexOverallCard").hidden = false;
+        document.getElementById("indexDimensionCard").hidden = false;
+        document.getElementById("indexMethodCard").hidden = false;
+      } catch (e) {
+        lede.textContent = "未能加载竞争力指数，请确保后端运行中";
+        console.error("IndexTab.load error:", e);
+      }
+    }
+
+    _renderTopThree(rankings) {
+      const ol = document.getElementById("indexTopThree");
+      if (!ol || rankings.length === 0) return;
+      const medals = ["\u{1F947}", "\u{1F948}", "\u{1F949}"];
+      ol.innerHTML = rankings.slice(0, 3).map(([city, score], i) =>
+        `<li style="padding:8px 0;border-bottom:${i < 2 ? '1px solid var(--sand-200)' : 'none'};font-weight:${i === 0 ? 700 : 500};color:${i === 0 ? 'var(--copper-600)' : 'var(--stone-800)'}">${medals[i] || ""} ${Utils.esc(city)} \u2014 <strong>${score.toFixed(1)}</strong></li>`
+      ).join("");
+    }
+
+    _renderCoverage(resp) {
+      const el = document.getElementById("indexCoverageBody");
+      if (!el) return;
+      const covered = Object.keys(resp.dimensions || {}).length;
+      const missing = (resp.missing_dimensions || []).length;
+      const total = covered + missing;
+      el.innerHTML = `
+        <div>维度覆盖: <strong>${covered}/${total}</strong></div>
+        <div style="margin-top:8px;background:var(--sand-200);height:6px;border-radius:3px;">
+          <div style="background:var(--copper-500);height:6px;border-radius:3px;width:${total > 0 ? (covered/total*100).toFixed(0) : 0}%;"></div>
+        </div>
+        <div style="margin-top:4px;color:var(--stone-500);font-size:11px;">
+          缺失: ${missing} 个维度(结构力/环境力/秩序力/文化力/开放力)
+        </div>
+      `;
+    }
+
+    _renderStats(resp, cityCount) {
+      const el = document.getElementById("indexMethodBody");
+      if (!el) return;
+      const scores = Object.values(resp.overall || {});
+      const avg = scores.length > 0 ? (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1) : "--";
+      const maxScore = scores.length > 0 ? Math.max(...scores).toFixed(1) : "--";
+      const minScore = scores.length > 0 ? Math.min(...scores).toFixed(1) : "--";
+      el.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div><span style="color:var(--stone-500)">平均分</span><br><strong style="font-size:var(--fs-lg)">${avg}</strong></div>
+          <div><span style="color:var(--stone-500)">最高分</span><br><strong style="font-size:var(--fs-lg);color:var(--success)">${maxScore}</strong></div>
+          <div><span style="color:var(--stone-500)">最低分</span><br><strong style="font-size:var(--fs-lg);color:var(--danger)">${minScore}</strong></div>
+          <div><span style="color:var(--stone-500)">极差</span><br><strong style="font-size:var(--fs-lg)">${(parseFloat(maxScore) - parseFloat(minScore)).toFixed(1)}</strong></div>
+        </div>
+      `;
+    }
+
+    _renderRankingChart(resp) {
+      const el = document.getElementById("chartIndexRanking");
+      if (!el || !resp.rankings?.overall) return;
+      const data = resp.rankings.overall;
+      const cities = data.map(([c]) => c).reverse();
+      const scores = data.map(([, s]) => s).reverse();
+
+      window.__citylens_charts.setOption(el, {
+        tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+        grid: { left: 80, right: 60, top: 20, bottom: 40 },
+        xAxis: { type: "value", max: 100, axisLabel: { fontSize: 10 } },
+        yAxis: {
+          type: "category", data: cities, axisLabel: { fontSize: 11, fontWeight: 500 },
+          axisLine: { show: false }, axisTick: { show: false }
+        },
+        series: [{
+          type: "bar",
+          data: scores.map((v, i) => ({
+            value: v,
+            itemStyle: {
+              color: i >= scores.length - 3 ? "#D08560" : "#2D4D75",
+              borderRadius: [0, 4, 4, 0]
+            }
+          })),
+          barWidth: 24,
+          label: {
+            show: true, position: "right",
+            formatter: (p) => p.value.toFixed(1),
+            fontSize: 11, fontWeight: 600,
+            color: "#2D4D75"
+          }
+        }]
+      });
+    }
+
+    _initRadarSelector(resp) {
+      const sel = document.getElementById("indexCitySelector");
+      if (!sel || !resp.overall) return;
+      const cities = Object.keys(resp.overall);
+      sel.innerHTML = cities.map(c => `<option value="${Utils.esc(c)}">${Utils.esc(c)}</option>`).join("");
+      this.currentCity = cities[0] || null;
+      this._renderRadar(resp, this.currentCity);
+      sel.addEventListener("change", () => {
+        this.currentCity = sel.value;
+        this._renderRadar(resp, this.currentCity);
+      });
+    }
+
+    _renderRadar(resp, city) {
+      const el = document.getElementById("chartIndexRadar");
+      if (!el || !resp.dimensions || !city) return;
+      const dimData = Object.entries(resp.dimensions).map(([name, scores]) => ({
+        name, score: scores[city] || 0
+      }));
+      const indicators = dimData.map(d => ({ name: d.name, max: 100 }));
+      const values = dimData.map(d => d.score);
+
+      window.__citylens_charts.setOption(el, {
+        tooltip: {},
+        radar: {
+          indicator: indicators,
+          radius: "68%",
+          center: ["50%", "55%"],
+          splitArea: { areaStyle: { color: ["rgba(184,113,74,0.04)", "rgba(14,31,63,0.02)"] } },
+          axisName: { color: "var(--stone-700)", fontSize: 10 }
+        },
+        series: [{
+          type: "radar",
+          symbol: "circle",
+          symbolSize: 6,
+          data: [{ value: values, name: city, areaStyle: { opacity: 0.2 } }],
+          lineStyle: { width: 2, color: "#D08560" },
+          itemStyle: { color: "#D08560" }
+        }]
+      });
+    }
+
+    _renderHeatmap(resp) {
+      const el = document.getElementById("chartIndexHeatmap");
+      if (!el || !resp.dimensions) return;
+      const dims = Object.keys(resp.dimensions);
+      const cities = Object.keys(resp.overall);
+      if (dims.length === 0 || cities.length === 0) return;
+
+      const data = [];
+      dims.forEach((dim, di) => {
+        cities.forEach((city, ci) => {
+          data.push([ci, di, resp.dimensions[dim][city] || 0]);
+        });
+      });
+
+      window.__citylens_charts.setOption(el, {
+        tooltip: {
+          position: "top",
+          formatter: (p) => `${cities[p.data[0]]} \u00b7 ${dims[p.data[1]]}<br><strong>${p.data[2].toFixed(1)}</strong>`
+        },
+        grid: { left: 100, right: 60, top: 20, bottom: 100 },
+        xAxis: {
+          type: "category", data: cities, position: "top",
+          axisLabel: { fontSize: 10, rotate: 30 }
+        },
+        yAxis: {
+          type: "category", data: dims,
+          axisLabel: { fontSize: 10 }
+        },
+        visualMap: {
+          min: 0, max: 100, calculable: true,
+          orient: "horizontal", left: "center", bottom: 10,
+          inRange: { color: ["#e8e0d8", "#b8724a", "#5a3e2b", "#2d1f14"] }
+        },
+        series: [{
+          type: "heatmap", data: data,
+          label: { show: true, fontSize: 9, color: "#333" },
+          emphasis: { itemStyle: { shadowBlur: 6 } }
+        }]
+      });
+    }
+
+    _renderMissing(resp) {
+      const el = document.getElementById("indexMissingBody");
+      if (!el) return;
+      const missing = resp.missing_dimensions || [];
+      if (missing.length === 0) {
+        el.innerHTML = '<div style="color:var(--success);font-weight:500;">所有维度均有数据覆盖 ✓</div>';
+        return;
+      }
+      el.innerHTML = `
+        <div style="margin-bottom:12px;color:var(--stone-600);">
+          以下 <strong>${missing.length}</strong> 个维度暂无数据覆盖：
+        </div>
+        <ul style="padding-left:16px;margin:0 0 12px 0;">
+          ${missing.map(d => `<li style="margin-bottom:4px;">${Utils.esc(d)}</li>`).join('')}
+        </ul>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--sand-200);">
+          <div style="font-weight:500;margin-bottom:8px;">💡 贡献数据</div>
+          <div style="font-size:12px;line-height:1.6;">
+            如果你有教育(高校数量/在校生)、环境(AQI/绿化率)、医疗(床位数/医师数)、交通(地铁里程/机场吞吐量)等数据，欢迎通过
+            <a href="https://gitcode.com/badhope/urban-pulse/issues" target="_blank" style="color:var(--copper-600);">GitCode Issues</a>
+            或 PR 提交。
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => App.init().catch((e) => console.error("[citylens] boot failed", e)));
+  } else {
+    App.init().catch((e) => console.error("[citylens] boot failed", e));
+  }
+})();
+</script>
 </body>
 </html>
+

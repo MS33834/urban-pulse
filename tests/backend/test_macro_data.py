@@ -1,6 +1,7 @@
 """
 Phase 3: 数据血缘 + provenance API
 """
+
 import sys
 
 sys.path.insert(0, ".")
@@ -20,6 +21,7 @@ def test_macro_data_basic():
         compute_growth_rates,
         get_macro_timeseries,
     )
+
     assert len(MACRO_HISTORICAL) == 16
     df = get_macro_timeseries()
     assert df.shape == (16, 5)

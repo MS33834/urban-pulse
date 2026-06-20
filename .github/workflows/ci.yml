@@ -28,14 +28,44 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - name: Install ruff
-        run: pip install ruff
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential gfortran && rm -rf /var/lib/apt/lists/*
+      - name: Install lint tools
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
       - name: Run ruff check
-        run: ruff check backend/ config/ scripts/
+        run: ruff check backend/ config/ scripts/ tests/
+      - name: Check code format
+        run: ruff format --check .
+
+  typecheck:
+    name: Type Check
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential gfortran && rm -rf /var/lib/apt/lists/*
+      - name: Install type check tools
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt mypy
+          pip install pandas-stubs types-PyYAML types-reportlab
+      - name: Run mypy
+        run: mypy backend/ config/ scripts/
 
   test:
     name: Test
-    needs: lint
+    needs: typecheck
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -49,10 +79,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
           cache-dependency-path: requirements.txt
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential gfortran && rm -rf /var/lib/apt/lists/*
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install -r requirements.txt pytest pytest-cov
+          pip install -r requirements.txt
       - name: Run tests
         run: |
           pytest tests/backend/ -q --tb=short --cov=backend --cov-report=term --cov-fail-under=30
@@ -65,6 +97,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: Build showcase site
         run: python scripts/build_site.py
       - name: Upload Pages artifact

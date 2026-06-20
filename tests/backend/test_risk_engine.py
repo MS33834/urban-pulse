@@ -1,6 +1,7 @@
 """
 Phase 8-9 风险 + 情景 + Monte Carlo 测试
 """
+
 import sys
 
 sys.path.insert(0, ".")
@@ -14,7 +15,7 @@ def test_rolling_volatility():
     assert "volatility" in out
     assert "annualized_volatility" in out
     assert out["volatility"] > 0
-    print(f"✓ 滚动波动率: {out['annualized_volatility']*100:.2f}% (3年窗口)")
+    print(f"✓ 滚动波动率: {out['annualized_volatility'] * 100:.2f}% (3年窗口)")
 
 
 def test_var_cvar_basic():
@@ -26,7 +27,7 @@ def test_var_cvar_basic():
     assert "cvar_pct" in out
     assert out["var_pct"] > 0
     assert out["cvar_pct"] >= out["var_pct"], "CVaR 应 ≥ VaR"
-    print(f"✓ VaR 95%: 损失 {out['var_pct']*100:.2f}%, CVaR: 损失 {out['cvar_pct']*100:.2f}%")
+    print(f"✓ VaR 95%: 损失 {out['var_pct'] * 100:.2f}%, CVaR: 损失 {out['cvar_pct'] * 100:.2f}%")
 
 
 def test_scenario_analysis_4_scenarios():
@@ -45,7 +46,9 @@ def test_scenario_analysis_4_scenarios():
     assert out["scenarios"]["recession"]["final_value"] < out["scenarios"]["pessimistic"]["final_value"]
     print("✓ 4 情景:")
     for sid, s in out["scenarios"].items():
-        print(f"    {s['name']} (shock {s['shock_per_year']*100:+.0f}%/y): 末年 {s['final_value']:.0f} ({s['final_change_pct']:+.2f}%)")
+        print(
+            f"    {s['name']} (shock {s['shock_per_year'] * 100:+.0f}%/y): 末年 {s['final_value']:.0f} ({s['final_change_pct']:+.2f}%)"
+        )
 
 
 def test_monte_carlo_1000_sims():
@@ -63,15 +66,34 @@ def test_monte_carlo_1000_sims():
     assert out["quantiles"]["p05"][-1] < out["quantiles"]["p50"][-1] < out["quantiles"]["p95"][-1]
     # 末年值范围合理
     print("✓ Monte Carlo 1000 次:")
-    print(f"    末年 P5/P50/P95: {out['quantiles']['p05'][-1]:.0f} / {out['quantiles']['p50'][-1]:.0f} / {out['quantiles']['p95'][-1]:.0f}")
-    print(f"    高于 baseline 概率: {out['final_value_stats']['prob_above_baseline']*100:.1f}%")
+    print(
+        f"    末年 P5/P50/P95: {out['quantiles']['p05'][-1]:.0f} / {out['quantiles']['p50'][-1]:.0f} / {out['quantiles']['p95'][-1]:.0f}"
+    )
+    print(f"    高于 baseline 概率: {out['final_value_stats']['prob_above_baseline'] * 100:.1f}%")
 
 
 def test_risk_full_pipeline():
     from backend.core.forecast_engine import forecast_full_pipeline
     from backend.core.risk_engine import risk_full_pipeline
 
-    shenzhen_gdp = [9772, 11506, 12971, 14573, 16002, 17503, 19493, 22438, 25267, 26927, 27700, 30700, 32400, 34600, 36500, 38500]
+    shenzhen_gdp = [
+        9772,
+        11506,
+        12971,
+        14573,
+        16002,
+        17503,
+        19493,
+        22438,
+        25267,
+        26927,
+        27700,
+        30700,
+        32400,
+        34600,
+        36500,
+        38500,
+    ]
     pipe = forecast_full_pipeline(shenzhen_gdp, 2010, 5)
     baseline = pipe["ensemble"]["predictions"]
     risk = risk_full_pipeline(shenzhen_gdp, baseline, 38500, n_sims=1000)
@@ -82,11 +104,13 @@ def test_risk_full_pipeline():
     assert "scenarios" in risk
     assert "monte_carlo" in risk
     print("\n✓ 深圳 GDP 风险全流水线:")
-    print(f"    波动率: {risk['volatility']['annualized_volatility']*100:.2f}%")
-    print(f"    VaR 95%: 损失 {risk['var_95']['var_pct']*100:.2f}%")
-    print(f"    VaR 99%: 损失 {risk['var_99']['var_pct']*100:.2f}%")
+    print(f"    波动率: {risk['volatility']['annualized_volatility'] * 100:.2f}%")
+    print(f"    VaR 95%: 损失 {risk['var_95']['var_pct'] * 100:.2f}%")
+    print(f"    VaR 99%: 损失 {risk['var_99']['var_pct'] * 100:.2f}%")
     print(f"    衰退情景末年: {risk['scenarios']['scenarios']['recession']['final_value']:.0f}")
-    print(f"    MC P5-P95 末年: {risk['monte_carlo']['quantiles']['p05'][-1]:.0f} ~ {risk['monte_carlo']['quantiles']['p95'][-1]:.0f}")
+    print(
+        f"    MC P5-P95 末年: {risk['monte_carlo']['quantiles']['p05'][-1]:.0f} ~ {risk['monte_carlo']['quantiles']['p95'][-1]:.0f}"
+    )
 
 
 if __name__ == "__main__":

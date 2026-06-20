@@ -71,4 +71,3 @@ async def list_charts():
         return {"status": "success", "charts": charts}
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error") from None
-

@@ -17,6 +17,7 @@
 - 2024-2025 部分指标为预测/估算值
 - LPR 改革从 2019 年 8 月开始,之前用贷款基准利率
 """
+
 from __future__ import annotations
 
 import logging

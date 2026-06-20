@@ -56,12 +56,20 @@ data = [
 forecast = [
     "statsforecast>=1.7",
     "arch>=7.0",
+    "pmdarima>=2.0",
+]
+cli = [
+    "typer>=0.12",
+    "rich>=13.7",
+    "shellingham>=1.5",
 ]
 dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
+    "pytest-mock>=3.12",
     "hypothesis>=6.100",
     "httpx2>=0.27",
+    "ruff>=0.4",
 ]
 
 [tool.pytest.ini_options]

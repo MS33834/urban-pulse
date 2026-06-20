@@ -42,9 +42,7 @@ def get_dataset(dataset_id: str) -> dict[str, Any] | None:
 
 def list_datasets() -> list[dict[str, Any]]:
     conn = get_connection()
-    rows = conn.execute(
-        "SELECT * FROM datasets ORDER BY created_at DESC"
-    ).fetchall()
+    rows = conn.execute("SELECT * FROM datasets ORDER BY created_at DESC").fetchall()
     return [dict(r) for r in rows]
 
 
@@ -79,6 +77,7 @@ def save_column_info(dataset_id: str, cols: list[dict[str, Any]]) -> None:
     """Save column metadata. `cols` items: {col_name, col_index, detected_role, data_type, human_label?}"""
     conn = get_connection()
     from backend.core.storage import _lock
+
     with _lock:
         conn.execute("DELETE FROM dataset_columns WHERE dataset_id = ?", (dataset_id,))
         # 批量插入,减少 SQLite 调用开销
@@ -87,9 +86,14 @@ def save_column_info(dataset_id: str, cols: list[dict[str, Any]]) -> None:
                (dataset_id, col_name, col_index, detected_role, data_type, human_label)
                VALUES (?, ?, ?, ?, ?, ?)""",
             [
-                (dataset_id, c["col_name"], c["col_index"],
-                 c.get("detected_role"), c.get("data_type"),
-                 c.get("human_label", c["col_name"]))
+                (
+                    dataset_id,
+                    c["col_name"],
+                    c["col_index"],
+                    c.get("detected_role"),
+                    c.get("data_type"),
+                    c.get("human_label", c["col_name"]),
+                )
                 for c in cols
             ],
         )

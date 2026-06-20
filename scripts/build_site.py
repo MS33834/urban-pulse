@@ -1,13 +1,13 @@
-"""Build static site for GitCode Pages.
+"""Build static site for GitHub / GitCode Pages.
 
-Simply copies the site/ directory to _site/.
+Copies the latest frontend/ application to _site/.
 No backend dependency.
 """
 
 import shutil
 from pathlib import Path
 
-SITE_DIR = Path(__file__).parent.parent / "site"
+FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
 OUTPUT_DIR = Path(__file__).parent.parent / "_site"
 
 
@@ -16,20 +16,18 @@ def main():
     print("  Urban Pulse — Static Site Builder")
     print("=" * 40)
 
+    if not FRONTEND_DIR.exists():
+        raise FileNotFoundError(f"Frontend directory not found: {FRONTEND_DIR}")
+
     # Clean and copy
     if OUTPUT_DIR.exists():
         shutil.rmtree(OUTPUT_DIR)
-    shutil.copytree(SITE_DIR, OUTPUT_DIR)
+    shutil.copytree(FRONTEND_DIR, OUTPUT_DIR)
 
-    # Copy favicon if exists
-    favicon = Path(__file__).parent.parent / "frontend" / "favicon.ico"
-    if favicon.exists():
-        shutil.copy2(favicon, OUTPUT_DIR / "favicon.ico")
-
-    print(f"  ✓ Copied {SITE_DIR} → {OUTPUT_DIR}")
+    print(f"  ✓ Copied {FRONTEND_DIR} → {OUTPUT_DIR}")
     print(f"  ✓ Files: {len(list(OUTPUT_DIR.rglob('*')))}")
     print()
-    print("  Deployment: _site/ → GitCode Pages")
+    print("  Deployment: _site/ → GitHub Pages / GitCode Pages")
     print()
 
 

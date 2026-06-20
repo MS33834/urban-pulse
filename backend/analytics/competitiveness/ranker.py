@@ -37,9 +37,7 @@ class CompetitivenessRanker:
         self._data_provider = data_provider
         self._framework = framework
 
-    def _load_data(
-        self, city_names: list[str] | None = None
-    ) -> dict[str, dict[str, float]]:
+    def _load_data(self, city_names: list[str] | None = None) -> dict[str, dict[str, float]]:
         """加载城市数据，只取框架中定义的指标
 
         Args:
@@ -71,9 +69,7 @@ class CompetitivenessRanker:
 
         return result
 
-    def compute_index(
-        self, city_names: list[str] | None = None, method: str = "entropy"
-    ) -> dict[str, Any]:
+    def compute_index(self, city_names: list[str] | None = None, method: str = "entropy") -> dict[str, Any]:
         """计算城市竞争力指数
 
         Args:
@@ -111,12 +107,8 @@ class CompetitivenessRanker:
         # 4. 计算权重
         # 构建数据矩阵用于熵权法（向量化构建，缺失值用 NaN 填充，由熵权法内部处理）
         all_cities = sorted(normalized.keys())
-        all_indicators = sorted(
-            set(k for c in normalized.values() for k in c.keys())
-        )
-        data_matrix = pd.DataFrame.from_dict(normalized, orient="index").reindex(
-            columns=all_indicators
-        )
+        all_indicators = sorted(set(k for c in normalized.values() for k in c.keys()))
+        data_matrix = pd.DataFrame.from_dict(normalized, orient="index").reindex(columns=all_indicators)
         # data_matrix 已经是 [0,100] 分，需要转为 [0,1] 用于熵权法
         data_matrix_01 = data_matrix / 100.0
 
@@ -156,9 +148,7 @@ class CompetitivenessRanker:
                     dim_data[city] = 0.0
 
             dim_scores[dim_name] = dim_data
-            dim_rankings[dim_name] = sorted(
-                dim_data.items(), key=lambda x: x[1], reverse=True
-            )
+            dim_rankings[dim_name] = sorted(dim_data.items(), key=lambda x: x[1], reverse=True)
 
         # 6. 计算综合得分
         overall_scores: dict[str, float] = {}
@@ -171,10 +161,7 @@ class CompetitivenessRanker:
                 dim_score = dim_scores.get(dim_name, {}).get(city)
                 if dim_score is not None and dim_score > 0:
                     # 维度权重 = 该维度下所有指标权重之和
-                    dim_weight = sum(
-                        weights.get(k, 0.0) for k in dim["indicators"]
-                        if k in weights
-                    )
+                    dim_weight = sum(weights.get(k, 0.0) for k in dim["indicators"] if k in weights)
                     weighted_sum += dim_score * dim_weight
                     total_weight += dim_weight
 
@@ -183,9 +170,7 @@ class CompetitivenessRanker:
             else:
                 overall_scores[city] = 0.0
 
-        overall_rankings = sorted(
-            overall_scores.items(), key=lambda x: x[1], reverse=True
-        )
+        overall_rankings = sorted(overall_scores.items(), key=lambda x: x[1], reverse=True)
 
         # 7. 组装结果
         return {
@@ -233,9 +218,7 @@ class CompetitivenessRanker:
         dim_details: dict[str, dict[str, Any]] = {}
         for dim_name, dim_scores in index_result["dimensions"].items():
             dim_rank = -1
-            sorted_dim = sorted(
-                dim_scores.items(), key=lambda x: x[1], reverse=True
-            )
+            sorted_dim = sorted(dim_scores.items(), key=lambda x: x[1], reverse=True)
             for i, (name, score) in enumerate(sorted_dim):
                 if name == city_name:
                     dim_rank = i + 1
@@ -260,9 +243,7 @@ class CompetitivenessRanker:
         city_data = all_normalized.get(city_name, {})
         for ind_key, ind_value in city_data.items():
             # 该指标在所有城市的平均分
-            all_scores = [
-                all_normalized[c].get(ind_key, 0) for c in all_normalized
-            ]
+            all_scores = [all_normalized[c].get(ind_key, 0) for c in all_normalized]
             avg_score = np.mean(all_scores) if all_scores else 0
 
             indicator_info = self._framework.get_all_indicators().get(ind_key, {})

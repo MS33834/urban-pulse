@@ -48,4 +48,3 @@ class TestAnalysisAPI:
 
         assert data is not None
         assert analysis is not None
-

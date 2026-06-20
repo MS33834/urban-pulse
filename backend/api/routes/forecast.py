@@ -301,4 +301,3 @@ def get_full_forecast_report(
             "note": "真实预测区间;statsforecast 不可用时透明 fallback 到 OLS+t",
         },
     }
-

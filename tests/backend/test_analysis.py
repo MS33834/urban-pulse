@@ -3,8 +3,6 @@
 """
 
 
-
-
 class TestIndicatorRegistry:
     """指标注册系统测试"""
 
@@ -42,7 +40,6 @@ class TestIndicatorRegistry:
         assert len(indicators) > 0  # 应该有默认注册的指标
 
 
-
 class TestCustomIndicators:
     """自定义指标计算引擎测试"""
 
@@ -53,7 +50,6 @@ class TestCustomIndicators:
         assert custom_indicators is not None
 
 
-
 class TestDimensionAnalysis:
     """维度分析框架测试"""
 
@@ -62,7 +58,6 @@ class TestDimensionAnalysis:
         from backend.analysis import dimension_analysis
 
         assert dimension_analysis is not None
-
 
 
 class TestEnterpriseAnalyzer:
@@ -104,7 +99,6 @@ class TestEnterpriseAnalyzer:
         assert "business_costs" in report
         assert "supply_chain" in report
         assert "policy_benefits" in report
-
 
 
 class TestGovernmentAnalyzer:
@@ -149,7 +143,6 @@ class TestGovernmentAnalyzer:
         assert "industry_chain" in report
 
 
-
 class TestEconomicModels:
     """经济模型测试"""
 
@@ -158,4 +151,3 @@ class TestEconomicModels:
         from backend.analysis import economic_models
 
         assert economic_models is not None
-

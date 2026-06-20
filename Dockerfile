@@ -25,7 +25,7 @@ COPY . .
 RUN useradd -r -u 1000 -g users appuser \
     && mkdir -p /app/data \
     && chown -R appuser:users /app \
-    && chmod 777 /app/data
+    && chmod 755 /app/data
 USER appuser
 
 # Expose API port (default 8000)

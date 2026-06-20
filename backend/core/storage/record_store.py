@@ -16,10 +16,7 @@ def bulk_insert_records(dataset_id: str, records: list[dict[str, Any]]) -> int:
     Returns the number of rows inserted.
     """
     conn = get_connection()
-    data = [
-        (dataset_id, r["entity"], r.get("year"), r["indicator"], r["value"])
-        for r in records
-    ]
+    data = [(dataset_id, r["entity"], r.get("year"), r["indicator"], r["value"]) for r in records]
     with _lock:
         conn.executemany(
             "INSERT INTO records (dataset_id, entity, year, indicator, value) VALUES (?, ?, ?, ?, ?)",
@@ -90,14 +87,13 @@ def get_year_range(dataset_id: str) -> tuple[int | None, int | None]:
 
 def get_record_count(dataset_id: str) -> int:
     conn = get_connection()
-    row = conn.execute(
-        "SELECT COUNT(*) AS cnt FROM records WHERE dataset_id = ?", (dataset_id,)
-    ).fetchone()
+    row = conn.execute("SELECT COUNT(*) AS cnt FROM records WHERE dataset_id = ?", (dataset_id,)).fetchone()
     return int(row["cnt"])
 
 
 def delete_records(dataset_id: str) -> None:
     from backend.core.storage import execute_write
+
     execute_write("DELETE FROM records WHERE dataset_id = ?", (dataset_id,))
 
 

@@ -15,6 +15,7 @@
 - `forecast_full_pipeline()` 是主入口,串起所有步骤
 - 全部带真实数学(非占位)
 """
+
 from __future__ import annotations
 
 import itertools
@@ -56,7 +57,15 @@ def auto_arima(values: list[float], max_p: int = 2, max_d: int = 1, max_q: int =
     y = np.asarray(values, dtype=float)
     n = len(y)
     if n < 5:
-        return {"model": None, "order": None, "aic": float("inf"), "bic": float("inf"), "n": n, "reason": "n<5", "backend": "statsmodels"}
+        return {
+            "model": None,
+            "order": None,
+            "aic": float("inf"),
+            "bic": float("inf"),
+            "n": n,
+            "reason": "n<5",
+            "backend": "statsmodels",
+        }
 
     from statsmodels.tsa.arima.model import ARIMA
 
@@ -79,7 +88,15 @@ def auto_arima(values: list[float], max_p: int = 2, max_d: int = 1, max_q: int =
             continue
 
     if best_model is None:
-        return {"model": None, "order": None, "aic": float("inf"), "bic": float("inf"), "n": n, "reason": "all orders failed", "backend": "statsmodels"}
+        return {
+            "model": None,
+            "order": None,
+            "aic": float("inf"),
+            "bic": float("inf"),
+            "n": n,
+            "reason": "all orders failed",
+            "backend": "statsmodels",
+        }
     return {
         "model": best_model,
         "order": best_order,
@@ -105,7 +122,15 @@ def auto_arima_native(values: list[float], max_p: int = 5, max_d: int = 2, max_q
     y = np.asarray(values, dtype=float)
     n = len(y)
     if n < 5:
-        return {"model": None, "order": None, "aic": float("inf"), "bic": float("inf"), "n": n, "reason": "n<5", "backend": _ARIMA_BACKEND}
+        return {
+            "model": None,
+            "order": None,
+            "aic": float("inf"),
+            "bic": float("inf"),
+            "n": n,
+            "reason": "n<5",
+            "backend": _ARIMA_BACKEND,
+        }
 
     # --- 路径 1: statsforecast ---
     if statsforecast_available():
@@ -115,7 +140,7 @@ def auto_arima_native(values: list[float], max_p: int = 5, max_d: int = 2, max_q
             from statsforecast.models import AutoARIMA as SF_AutoARIMA
 
             logger.debug("ARIMA: using statsforecast.AutoARIMA")
-            sf = StatsForecast(models=[SF_AutoARIMA(season_length=1)], freq='YS', n_jobs=1)
+            sf = StatsForecast(models=[SF_AutoARIMA(season_length=1)], freq="YS", n_jobs=1)
             df = pd.DataFrame(
                 {
                     "unique_id": ["y"] * n,
@@ -205,7 +230,7 @@ def arima_forecast(values: list[float], years: int, confidence: float = 0.95) ->
             from statsforecast import StatsForecast
             from statsforecast.models import AutoARIMA as SF_AutoARIMA
 
-            sf = StatsForecast(models=[SF_AutoARIMA(season_length=1)], freq='YS', n_jobs=1)
+            sf = StatsForecast(models=[SF_AutoARIMA(season_length=1)], freq="YS", n_jobs=1)
             df = pd.DataFrame(
                 {
                     "unique_id": ["y"] * n,
@@ -393,7 +418,7 @@ def linear_regression_forecast(values: list[float], years: int, confidence: floa
         "predictions": [float(x) for x in preds],
         "lower_ci": lowers,
         "upper_ci": uppers,
-        "method": f"LinearRegression (OLS + t{confidence*100:.0f}%)",
+        "method": f"LinearRegression (OLS + t{confidence * 100:.0f}%)",
         "aic": float(aic),
         "bic": float(bic),
     }
@@ -790,7 +815,24 @@ def forecast_full_pipeline(
 
 if __name__ == "__main__":
     # 自检:深圳 GDP 16 年
-    shenzhen_gdp: list[float] = [9772, 11506, 12971, 14573, 16002, 17503, 19493, 22438, 25267, 26927, 27700, 30700, 32400, 34600, 36500, 38500]
+    shenzhen_gdp: list[float] = [
+        9772,
+        11506,
+        12971,
+        14573,
+        16002,
+        17503,
+        19493,
+        22438,
+        25267,
+        26927,
+        27700,
+        30700,
+        32400,
+        34600,
+        36500,
+        38500,
+    ]
     out = forecast_full_pipeline(shenzhen_gdp, start_year=2010, years=5)
     print("=== 深圳 GDP 5 年预测 ===")
     print("Ensemble:", [round(x) for x in out["ensemble"]["predictions"]])

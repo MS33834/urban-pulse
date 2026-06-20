@@ -345,7 +345,9 @@ def forecast_series(
             arima["metrics"] = {
                 "r_squared": round(1.0 - ss_res / ss_tot, 4) if ss_tot > 0 else 0.0,
                 "mae": round(float(np.mean(np.abs(resid))), 4),
-                "mape_pct": round(float(np.mean(np.abs(resid[y != 0] / y[y != 0])) * 100), 4) if (y != 0).any() else float("nan"),
+                "mape_pct": round(float(np.mean(np.abs(resid[y != 0] / y[y != 0])) * 100), 4)
+                if (y != 0).any()
+                else float("nan"),
                 "n_points": n,
             }
         except Exception:

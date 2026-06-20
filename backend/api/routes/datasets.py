@@ -129,9 +129,13 @@ def get_dataset_data(
 ):
     """Return raw records with optional filters."""
     rows = get_records(
-        dataset_id, entity=entity, indicator=indicator,
-        year_start=year_start, year_end=year_end,
-        limit=limit, offset=offset,
+        dataset_id,
+        entity=entity,
+        indicator=indicator,
+        year_start=year_start,
+        year_end=year_end,
+        limit=limit,
+        offset=offset,
     )
     return {"records": rows, "count": len(rows)}
 

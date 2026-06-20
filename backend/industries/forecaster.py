@@ -83,8 +83,7 @@ def forecast_industry(
     """
     series = industry.get_time_series(indicator)
     years = sorted(
-        int(year) for row in industry.historical_data
-        if indicator in row and (year := row.get("year")) is not None
+        int(year) for row in industry.historical_data if indicator in row and (year := row.get("year")) is not None
     )
 
     if len(series) < 3:
@@ -137,8 +136,7 @@ def forecast_industry(
         "adjusted_cagr_pct": round(adjusted_cagr, 2),
         "method": f"{base['method']} + 多因素调整" if use_factors else base["method"],
         "factors": [
-            {"name": f.name, "score": f.score, "weight": f.weight, "source": f.source}
-            for f in industry.factors
+            {"name": f.name, "score": f.score, "weight": f.weight, "source": f.source} for f in industry.factors
         ],
     }
 

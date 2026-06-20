@@ -10,6 +10,7 @@ Engine stack 探测 + fallback 测试。
 - garch_volatility 在 arch 未装时返回 failed dict,不抛异常
 - risk_full_pipeline 输出含 garch + engine_stack 字段
 """
+
 import sys
 
 sys.path.insert(0, ".")
@@ -95,7 +96,7 @@ def test_arima_forecast_schema_unchanged():
     assert out["upper_ci"][0] > out["lower_ci"][0]
     # method 应包含 backend 标签
     assert "statsmodels" in out["method"] or "statsforecast" in out["method"] or "pmdarima" in out["method"]
-    print(f"✓ arima_forecast schema: method={out['method']}, CI width={out['upper_ci'][0]-out['lower_ci'][0]:.2f}")
+    print(f"✓ arima_forecast schema: method={out['method']}, CI width={out['upper_ci'][0] - out['lower_ci'][0]:.2f}")
 
 
 def test_garch_volatility_fallback_or_compute():
@@ -155,7 +156,24 @@ def test_full_pipeline_still_works_without_extras():
 
     # 先确认 sandbox 状态
     engine_stack()
-    shenzhen_gdp = [9772, 11506, 12971, 14573, 16002, 17503, 19493, 22438, 25267, 26927, 27700, 30700, 32400, 34600, 36500, 38500]
+    shenzhen_gdp = [
+        9772,
+        11506,
+        12971,
+        14573,
+        16002,
+        17503,
+        19493,
+        22438,
+        25267,
+        26927,
+        27700,
+        30700,
+        32400,
+        34600,
+        36500,
+        38500,
+    ]
     out = forecast_full_pipeline(shenzhen_gdp, start_year=2010, years=5)
     assert "ensemble" in out
     assert "diagnostics" in out
@@ -167,9 +185,12 @@ def test_full_pipeline_still_works_without_extras():
     method = out["models"]["arima"]["method"]
     # Extract actual backend from method string like "ARIMA[0,1,0] (pmdarima, AIC=238.3)"
     import re
-    match = re.search(r'\(([^,]+),', method)
+
+    match = re.search(r"\(([^,]+),", method)
     actual_backend = match.group(1) if match else "unknown"
-    assert actual_backend in ["statsforecast", "pmdarima", "statsmodels"], f"Unexpected backend '{actual_backend}' in '{method}'"
+    assert actual_backend in ["statsforecast", "pmdarima", "statsmodels"], (
+        f"Unexpected backend '{actual_backend}' in '{method}'"
+    )
     print(f"✓ Full pipeline: 2026 pred={pred_2026:.0f}, backend={actual_backend}")
     print(f"    arima method = {method}")
 
