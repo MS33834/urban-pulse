@@ -2055,9 +2055,28 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M21.18 8.02A10 10 0 0 0 12 2v10h9.18a10 10 0 0 0 .18-1.98c0-.68-.07-1.35-.18-2z"/></svg>
                 使用演示数据
               </button>
+              <div class="btn-group" style="display:flex;gap:8px;">
+                <button class="btn btn--ghost" type="button" id="healthTemplateXlsxBtn" title="下载 Excel 模板">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                  Excel 模板
+                </button>
+                <button class="btn btn--ghost" type="button" id="healthTemplateCsvBtn" title="下载 CSV 模板">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                  CSV 模板
+                </button>
+              </div>
+              <button class="btn btn--ghost" type="button" id="healthImportBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                上传指标数据
+              </button>
+              <input type="file" id="healthImportInput" accept=".xlsx,.csv" style="display:none;" aria-label="上传 CEHI 指标数据文件">
               <button class="btn btn--primary" type="submit" id="healthCalcBtn">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                 计算健康指数
+              </button>
+              <button class="btn btn--ghost" type="button" id="healthExportPdfBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                导出 PDF 报告
               </button>
             </div>
           </form>
@@ -2427,8 +2446,16 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
           referrerPolicy: "no-referrer"
         };
         if (body !== undefined) {
-          reqOpts.body = typeof body === "string" ? body : JSON.stringify(body);
-          reqOpts.headers["Content-Type"] = "application/json";
+          if (body instanceof FormData) {
+            reqOpts.body = body;
+            delete reqOpts.headers["Content-Type"];
+          } else if (typeof body === "string") {
+            reqOpts.body = body;
+            reqOpts.headers["Content-Type"] = "application/json";
+          } else {
+            reqOpts.body = JSON.stringify(body);
+            reqOpts.headers["Content-Type"] = "application/json";
+          }
         }
         const res = await fetch(url, reqOpts);
         clearTimeout(timer);
@@ -2483,6 +2510,9 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
     }
     get(path, opts = {})  { return this.request("GET", path, opts); }
     post(path, body, opts = {}) { return this.request("POST", path, { ...opts, body }); }
+    upload(path, formData, opts = {}) {
+      return this.request("POST", path, { ...opts, body: formData, headers: {} });
+    }
   }
 
   // ============================================================
@@ -4016,17 +4046,128 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
       );
     }
 
-    async calculate(city, year) {
+    async calculate(city, year, indicatorValues = null) {
+      const body = indicatorValues ? { city, year, indicator_values: indicatorValues } : { city, year };
       await this._fetchAndRender(
-        (signal) => this.api.post("/health/calculate", { city, year }, { signal }),
+        (signal) => this.api.post("/health/calculate", body, { signal }),
         city,
         year
       );
     }
 
+    async exportPDF(city, year) {
+      if (!city || !year) {
+        window.__citylens_toast?.warn("请填写城市名称与年份");
+        return;
+      }
+      const btn = $("#healthExportPdfBtn");
+      if (btn) btn.disabled = true;
+      try {
+        const url = `${this.api.baseURL}/health/report/pdf`;
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/pdf" },
+          body: JSON.stringify({ city, year }),
+          credentials: "omit",
+          mode: "cors",
+          referrerPolicy: "no-referrer"
+        });
+        if (!resp.ok) {
+          let detail = `HTTP ${resp.status}`;
+          try { const payload = await resp.json(); detail = payload.detail || detail; } catch { /* noop */ }
+          throw new Error(detail);
+        }
+        const blob = await resp.blob();
+        const disposition = resp.headers.get("Content-Disposition") || "";
+        const match = disposition.match(/filename\*=UTF-8''([^;]+)/);
+        const filename = match ? decodeURIComponent(match[1]) : `${city}_${year}_CEHI报告.pdf`;
+        const objectUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = objectUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(objectUrl);
+        window.__citylens_toast?.success("PDF 报告已开始下载");
+      } catch (err) {
+        window.__citylens_toast?.error(`导出 PDF 失败: ${err.message || "未知错误"}`);
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    downloadTemplate(format) {
+      const url = this.api._join(`/health/template?format=${encodeURIComponent(format)}`);
+      fetch(url, { credentials: "omit", mode: "cors", referrerPolicy: "no-referrer" })
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.blob();
+        })
+        .then((blob) => {
+          const ext = format === "xlsx" ? "xlsx" : "csv";
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = `cehi_indicator_template.${ext}`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(link.href);
+          window.__citylens_toast?.success(`CEHI ${format.toUpperCase()} 模板已下载`);
+        })
+        .catch((err) => {
+          window.__citylens_toast?.error(`下载模板失败: ${err.message || "未知错误"}`);
+        });
+    }
+
+    async importFile(file) {
+      if (!file) return;
+      const cityInput = $("#healthCity");
+      const yearInput = $("#healthYear");
+      const city = (cityInput?.value || "").trim() || "未知城市";
+      const year = parseInt(yearInput?.value || "0", 10) || new Date().getFullYear();
+
+      this._setLoading(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const resp = await this.api.upload("/health/import", formData, { signal: null, cacheTTL: 0 });
+        const values = resp?.indicator_values || {};
+        const missing = resp?.missing || [];
+        const invalid = resp?.invalid || [];
+
+        if (invalid.length > 0) {
+          window.__citylens_toast?.error(`导入失败: ${invalid.length} 行无效数值`);
+          return;
+        }
+
+        const valueCount = Object.keys(values).length;
+        if (valueCount === 0) {
+          window.__citylens_toast?.warn("未从文件中解析到有效指标数据");
+          return;
+        }
+
+        let msg = `成功导入 ${valueCount} 个指标数据`;
+        if (missing.length > 0) {
+          msg += `，缺失 ${missing.length} 个指标`;
+        }
+        window.__citylens_toast?.success(msg);
+
+        await this.calculate(city, year, values);
+      } catch (err) {
+        window.__citylens_toast?.error(`导入失败: ${err.message || "未知错误"}`);
+      } finally {
+        this._setLoading(false);
+      }
+    }
+
     mount() {
       const form = $("#healthForm");
       const demoBtn = $("#healthDemoBtn");
+      const templateXlsxBtn = $("#healthTemplateXlsxBtn");
+      const templateCsvBtn = $("#healthTemplateCsvBtn");
+      const importBtn = $("#healthImportBtn");
+      const importInput = $("#healthImportInput");
 
       form?.addEventListener("submit", (e) => {
         e.preventDefault();
@@ -4040,6 +4181,22 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
       });
 
       demoBtn?.addEventListener("click", () => this.loadDemo());
+      templateXlsxBtn?.addEventListener("click", () => this.downloadTemplate("xlsx"));
+      templateCsvBtn?.addEventListener("click", () => this.downloadTemplate("csv"));
+      importBtn?.addEventListener("click", () => importInput?.click());
+      importInput?.addEventListener("change", (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          this.importFile(file);
+          e.target.value = "";
+        }
+      });
+      const exportPdfBtn = $("#healthExportPdfBtn");
+      exportPdfBtn?.addEventListener("click", () => {
+        const city = ($("#healthCity")?.value || "").trim();
+        const year = parseInt($("#healthYear")?.value || "0", 10);
+        this.exportPDF(city, year);
+      });
 
       // 初始加载演示数据,让用户一进入就看到内容
       this.loadDemo();
