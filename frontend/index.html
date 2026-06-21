@@ -893,6 +893,20 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
 .select:hover { border-color: var(--sand-400); }
 .select:focus { border-color: var(--copper-500); box-shadow: 0 0 0 3px color-mix(in srgb, var(--copper-500) 20%, transparent); }
 .select:disabled { opacity: 0.5; cursor: not-allowed; }
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--sand-300);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-base);
+  color: var(--stone-900);
+  background-color: var(--paper-50);
+  transition: all var(--t-fast) var(--ease-out);
+}
+.input::placeholder { color: var(--stone-400); }
+.input:hover { border-color: var(--sand-400); }
+.input:focus { border-color: var(--copper-500); box-shadow: 0 0 0 3px color-mix(in srgb, var(--copper-500) 20%, transparent); outline: none; }
+.input:disabled { opacity: 0.5; cursor: not-allowed; background: var(--paper-100); }
 
 /* ============================================================
  * 13 · Buttons
@@ -926,6 +940,172 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
 .btn--ghost:hover:not(:disabled) { background: var(--paper-100); color: var(--stone-900); border-color: var(--sand-400); }
 .btn--sm { padding: 6px 12px; font-size: var(--fs-sm); border-radius: var(--radius-xs); }
 .btn--block { width: 100%; }
+
+/* ============================================================
+ * 13.5 · CEHI Health Dashboard
+ * ============================================================ */
+.health-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(200px, 1fr)) auto;
+  gap: var(--space-4);
+  align-items: end;
+}
+.health-form__actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.chart-grid {
+  display: grid;
+  gap: var(--space-6);
+}
+.chart-grid--2col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.chart-grid--1col { grid-template-columns: 1fr; }
+@media (max-width: 960px) {
+  .chart-grid--2col { grid-template-columns: 1fr; }
+  .health-form { grid-template-columns: 1fr; }
+}
+.dimension-card {
+  background: var(--paper-50);
+  border: 1px solid var(--sand-200);
+  border-radius: var(--radius-md);
+  padding: var(--space-5) var(--space-6);
+  transition: all var(--t-base) var(--ease-out);
+  position: relative;
+  overflow: hidden;
+}
+.dimension-card:hover { border-color: var(--sand-300); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.dimension-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--copper-500);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform var(--t-base) var(--ease-out);
+}
+.dimension-card:hover::before { transform: scaleY(1); }
+.dimension-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+.dimension-card__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--stone-500);
+}
+.dimension-card__value {
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
+  font-weight: 500;
+  font-variation-settings: "opsz" 36;
+  color: var(--stone-900);
+  line-height: 1.1;
+}
+.dimension-card__bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--sand-200);
+  overflow: hidden;
+  margin-top: var(--space-3);
+}
+.dimension-card__progress {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--copper-500), var(--copper-300));
+  transition: width 600ms var(--ease-out);
+}
+.indicator-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.indicator-list__empty,
+.suggestion-list__empty {
+  color: var(--stone-500);
+  font-size: var(--fs-sm);
+  text-align: center;
+  padding: var(--space-8) 0;
+}
+.indicator-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--paper-100);
+  border: 1px solid transparent;
+  transition: all var(--t-fast) var(--ease-out);
+}
+.indicator-list__item:hover { background: var(--paper-50); border-color: var(--sand-200); }
+.indicator-list__name {
+  font-weight: 500;
+  color: var(--stone-800);
+}
+.indicator-list__meta {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--stone-500);
+}
+.indicator-list__score {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.indicator-list--weak .indicator-list__score { color: var(--danger); }
+.indicator-list--weak .indicator-list__item { border-left: 3px solid var(--danger); }
+.indicator-list--strong .indicator-list__score { color: var(--success); }
+.indicator-list--strong .indicator-list__item { border-left: 3px solid var(--success); }
+.suggestion-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: suggest;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.suggestion-list__item {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--paper-100);
+  color: var(--stone-700);
+  font-size: var(--fs-base);
+  line-height: 1.5;
+}
+.suggestion-list__item::before {
+  counter-increment: suggest;
+  content: counter(suggest);
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--copper-500);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+.health-score--excellent { color: var(--success); }
+.health-score--good { color: var(--copper-600); }
+.health-score--average { color: var(--warning); }
+.health-score--poor { color: var(--danger); }
 
 /* ============================================================
  * 14 · Checkbox Pills
@@ -1339,6 +1519,13 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M18 20V4M6 20v-4"/><path d="M3 21h18"/></svg>
       </span>
       <span class="tab-btn__label">竞争力指数</span>
+    </button>
+    <button class="tab-btn" type="button" role="tab" id="tab-btn-health" aria-selected="false" aria-controls="tab-health" data-tab="health" tabindex="-1">
+      <span class="tab-btn__num" aria-hidden="true">06</span>
+      <span class="tab-btn__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </span>
+      <span class="tab-btn__label">经济健康指数</span>
     </button>
 
   </nav>
@@ -1836,6 +2023,149 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
           </div>
         </article>
       </div>
+    </section>
+
+    <section id="tab-health" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-health" hidden>
+      <header class="panel-header">
+        <div class="panel-header__title">
+          <span class="eyebrow">SECTION 06 · CEHI</span>
+          <h2>城市经济发展健康水平指数</h2>
+          <p class="lede" id="healthLede">输入城市与年份，测算经济综合健康度。</p>
+        </div>
+        <div class="panel-header__meta">
+          <span>模型 <strong>CEHI</strong></span>
+          <span aria-hidden="true">·</span>
+          <span>覆盖 <strong id="healthDimensionCount">6</strong> 大维度</span>
+        </div>
+      </header>
+
+      <div class="card">
+        <div class="card-body">
+          <form class="health-form" id="healthForm" onsubmit="return false;">
+            <div class="field">
+              <label class="field__label" for="healthCity">城市名称</label>
+              <input class="input" type="text" id="healthCity" name="city" placeholder="例如：上海" value="上海" required>
+            </div>
+            <div class="field">
+              <label class="field__label" for="healthYear">年份</label>
+              <input class="input" type="number" id="healthYear" name="year" placeholder="例如：2024" value="2024" min="2000" max="2100" required>
+            </div>
+            <div class="health-form__actions">
+              <button class="btn btn--ghost" type="button" id="healthDemoBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M21.18 8.02A10 10 0 0 0 12 2v10h9.18a10 10 0 0 0 .18-1.98c0-.68-.07-1.35-.18-2z"/></svg>
+                使用演示数据
+              </button>
+              <button class="btn btn--primary" type="submit" id="healthCalcBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                计算健康指数
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <article class="card">
+          <header class="card-head">
+            <div class="card-head__title">
+              <span class="card-head__rule card-head__rule--copper" aria-hidden="true"></span>
+              <div>
+                <span class="eyebrow">TOTAL SCORE</span>
+                <h3>CEHI 综合得分</h3>
+              </div>
+            </div>
+            <span class="tag tag--ink" id="healthLevelTag">—</span>
+          </header>
+          <div class="card-body">
+            <div class="score-ring" id="healthScoreRing">
+              <svg class="score-ring__svg" viewBox="0 0 120 120">
+                <circle class="score-ring__bg" cx="60" cy="60" r="52"/>
+                <circle class="score-ring__fill" id="healthRingFill" cx="60" cy="60" r="52" stroke-dasharray="326.73" stroke-dashoffset="326.73" stroke="var(--copper-500)"/>
+              </svg>
+              <div class="score-ring__center">
+                <div class="score-ring__value" id="healthTotalScore">—</div>
+                <div class="score-ring__label">CEHI</div>
+                <div class="score-ring__rating" id="healthScoreRating">等待测算</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <div class="card-head__title">
+              <span class="card-head__rule" aria-hidden="true"></span>
+              <div>
+                <span class="eyebrow">RADAR</span>
+                <h3>六大维度雷达图</h3>
+              </div>
+            </div>
+          </header>
+          <div class="card-body">
+            <div class="chart">
+              <div class="chart-skeleton" id="chartHealthRadarSkeleton"><div class="chart-skeleton__bars" aria-hidden="true"><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div></div></div>
+              <div id="chartHealthRadar" role="img" aria-label="CEHI 六大维度雷达图"></div>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="stat-grid" id="healthDimensionGrid">
+        <!-- dimension cards rendered by JS -->
+      </div>
+
+      <div class="grid-2">
+        <article class="card">
+          <header class="card-head">
+            <div class="card-head__title">
+              <span class="card-head__rule card-head__rule--rust" aria-hidden="true"></span>
+              <div>
+                <span class="eyebrow">SHORTCOMINGS</span>
+                <h3>主要短板指标</h3>
+              </div>
+            </div>
+          </header>
+          <div class="card-body">
+            <ul class="indicator-list indicator-list--weak" id="healthWeaknessList">
+              <li class="indicator-list__empty">暂无数据</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <div class="card-head__title">
+              <span class="card-head__rule card-head__rule--moss" aria-hidden="true"></span>
+              <div>
+                <span class="eyebrow">STRENGTHS</span>
+                <h3>主要优势指标</h3>
+              </div>
+            </div>
+          </header>
+          <div class="card-body">
+            <ul class="indicator-list indicator-list--strong" id="healthStrengthList">
+              <li class="indicator-list__empty">暂无数据</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+
+      <article class="card">
+        <header class="card-head">
+          <div class="card-head__title">
+            <span class="card-head__rule card-head__rule--gold" aria-hidden="true"></span>
+            <div>
+              <span class="eyebrow">SUGGESTIONS</span>
+              <h3>改进建议</h3>
+            </div>
+          </div>
+        </header>
+        <div class="card-body">
+          <ol class="suggestion-list" id="healthSuggestionList">
+            <li class="suggestion-list__empty">暂无建议</li>
+          </ol>
+        </div>
+      </article>
     </section>
 
   </main>
@@ -3228,8 +3558,9 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
 
       // Tab 路由
       router.bind();
-      const mounted = { dashboard: false, enterprise: false, government: false, cities: false, index: false };
+      const mounted = { dashboard: false, enterprise: false, government: false, cities: false, index: false, health: false };
       let indexTab = null;
+      let healthTab = null;
       const mountIfNeeded = (name) => {
         if (mounted[name]) return;
         mounted[name] = true;
@@ -3238,7 +3569,8 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
           enterprise: () => Views.Enterprise.mount(api),
           government: () => Views.Government.mount(api),
           cities:     () => Views.Cities.mount(api, store),
-          index:      () => { indexTab = new IndexTab(api); return indexTab.load(); }
+          index:      () => { indexTab = new IndexTab(api); return indexTab.load(); },
+          health:     () => { healthTab = new HealthTab(api); return healthTab.mount(); }
         };
         Promise.resolve()
           .then(() => map[name]?.())
@@ -3250,6 +3582,7 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
       router.on("government", () => mountIfNeeded("government"));
       router.on("cities",     () => mountIfNeeded("cities"));
       router.on("index",      () => mountIfNeeded("index"));
+      router.on("health",     () => mountIfNeeded("health"));
 
       // 全局错误兜底
       window.addEventListener("error", (e) => {
@@ -3493,6 +3826,223 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
           </div>
         </div>
       `;
+    }
+  }
+
+  // ============================================================
+  // 14. CEHI Health Tab
+  // ============================================================
+  class HealthTab {
+    constructor(api) {
+      this.api = api;
+      this.abortCtl = null;
+      this.defaultDimensions = ["经济活力", "创新驱动", "协调发展", "绿色生态", "开放水平", "民生福祉"];
+    }
+
+    _getLevel(score) {
+      const s = +score;
+      if (Number.isNaN(s)) return { label: "—", cls: "", color: "var(--stone-500)", stroke: "var(--stone-300)" };
+      if (s >= 85) return { label: "卓越", cls: "health-score--excellent", color: "var(--success)", stroke: "var(--success)" };
+      if (s >= 70) return { label: "良好", cls: "health-score--good", color: "var(--copper-600)", stroke: "var(--copper-500)" };
+      if (s >= 55) return { label: "中等", cls: "health-score--average", color: "var(--warning)", stroke: "var(--warning)" };
+      return { label: "不足", cls: "health-score--poor", color: "var(--danger)", stroke: "var(--danger)" };
+    }
+
+    _setLoading(loading) {
+      const btn = $("#healthCalcBtn");
+      const demo = $("#healthDemoBtn");
+      const inputs = $$("#healthForm .input");
+      if (btn) { btn.disabled = loading; }
+      if (demo) { demo.disabled = loading; }
+      inputs.forEach((el) => { el.disabled = loading; });
+      if (loading) Skeleton.show("chartHealthRadar");
+      else Skeleton.hide("chartHealthRadar");
+    }
+
+    _renderScoreRing(score, level) {
+      const R = 52, C = 2 * Math.PI * R;
+      const ratio = Math.max(0, Math.min(100, +score || 0)) / 100;
+      const fill = $("#healthRingFill");
+      const value = $("#healthTotalScore");
+      const rating = $("#healthScoreRating");
+      const tag = $("#healthLevelTag");
+      if (fill) {
+        fill.setAttribute("stroke-dashoffset", String(C * (1 - ratio)));
+        fill.setAttribute("stroke", level.stroke);
+      }
+      if (value) {
+        value.textContent = Utils.fmtScore(score);
+        value.className = `score-ring__value ${level.cls}`;
+      }
+      if (rating) rating.textContent = `${level.label} · ${"★".repeat(level.stars || 0)}${"☆".repeat(5 - (level.stars || 0))}`;
+      if (tag) {
+        tag.textContent = level.label;
+        tag.className = `tag ${level.cls ? (level.cls.includes("excellent") ? "tag--moss" : level.cls.includes("poor") ? "tag--rust" : "tag--ink") : "tag--ink"}`;
+      }
+    }
+
+    _renderDimensions(dimensions) {
+      const grid = $("#healthDimensionGrid");
+      if (!grid) return;
+      const entries = Object.entries(dimensions || {});
+      if (entries.length === 0) {
+        grid.innerHTML = `<div class="stat-card"><div class="stat-card__label">暂无维度数据</div></div>`;
+        return;
+      }
+      grid.innerHTML = entries.map(([name, score]) => {
+        const pct = Math.max(0, Math.min(100, +score || 0));
+        return `
+          <article class="dimension-card">
+            <div class="dimension-card__head">
+              <span class="dimension-card__label">${Utils.esc(name)}</span>
+              <span class="dimension-card__value">${Utils.fmtScore(score)}</span>
+            </div>
+            <div class="dimension-card__bar">
+              <div class="dimension-card__progress" style="width:${pct}%"></div>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    _renderIndicatorList(elId, items, type) {
+      const el = $(elId);
+      if (!el) return;
+      const list = (items || []).slice(0, 8);
+      if (list.length === 0) {
+        el.innerHTML = `<li class="indicator-list__empty">暂无数据</li>`;
+        return;
+      }
+      el.innerHTML = list.map((it) => {
+        const name = it.name || it.indicator || "—";
+        const dim = it.dimension || "";
+        const score = it.score ?? it.value ?? 0;
+        return `
+          <li class="indicator-list__item">
+            <div>
+              <div class="indicator-list__name">${Utils.esc(name)}</div>
+              ${dim ? `<div class="indicator-list__meta">${Utils.esc(dim)}</div>` : ""}
+            </div>
+            <span class="indicator-list__score">${Utils.fmtScore(score)}</span>
+          </li>
+        `;
+      }).join("");
+    }
+
+    _renderSuggestions(suggestions) {
+      const el = $("#healthSuggestionList");
+      if (!el) return;
+      const list = (suggestions || []).slice(0, 10);
+      if (list.length === 0) {
+        el.innerHTML = `<li class="suggestion-list__empty">暂无建议</li>`;
+        return;
+      }
+      el.innerHTML = list.map((s) => `<li class="suggestion-list__item">${Utils.esc(typeof s === "string" ? s : s.text || s.suggestion || "")}</li>`).join("");
+    }
+
+    _renderRadar(dimensions, city) {
+      const el = $("#chartHealthRadar");
+      if (!el) return;
+      const entries = Object.entries(dimensions || {});
+      const labels = entries.length ? entries.map(([k]) => k) : this.defaultDimensions;
+      const values = entries.length ? entries.map(([, v]) => +v || 0) : labels.map(() => 0);
+      const indicators = labels.map((name) => ({ name, max: 100 }));
+      const color = Utils.cssVar("--copper-500");
+
+      window.__citylens_charts.setOption(el, {
+        tooltip: { trigger: "item" },
+        radar: {
+          indicator: indicators,
+          radius: "65%",
+          center: ["50%", "55%"],
+          splitNumber: 4,
+          splitArea: { areaStyle: { color: ["rgba(184,113,74,0.05)", "rgba(14,31,63,0.02)", "rgba(184,113,74,0.05)", "rgba(14,31,63,0.02)"] } },
+          splitLine: { lineStyle: { color: Utils.cssVar("--sand-300"), type: "dashed" } },
+          axisLine: { lineStyle: { color: Utils.cssVar("--sand-300") } },
+          axisName: { color: Utils.cssVar("--stone-700"), fontSize: 11, fontWeight: 500 }
+        },
+        series: [{
+          type: "radar",
+          name: city || "CEHI",
+          symbol: "circle",
+          symbolSize: 6,
+          data: [{ value: values, name: city || "CEHI" }],
+          areaStyle: { opacity: 0.25, color: color },
+          lineStyle: { width: 2, color: color },
+          itemStyle: { color: color }
+        }]
+      });
+    }
+
+    async _fetchAndRender(fetcher, city, year) {
+      this.abortCtl?.abort?.("reload");
+      this.abortCtl = new AbortController();
+      const { signal } = this.abortCtl;
+      this._setLoading(true);
+      clearChartError("chartHealthRadar");
+
+      try {
+        const resp = await fetcher(signal);
+        const data = resp?.data || resp || {};
+        const score = data.cehi_score ?? data.score ?? data.total_score ?? 0;
+        const level = this._getLevel(score);
+        level.stars = Utils.rating(score).stars;
+
+        this._renderScoreRing(score, level);
+        this._renderRadar(data.dimensions, data.city || city || "CEHI");
+        this._renderDimensions(data.dimensions);
+        this._renderIndicatorList("#healthWeaknessList", data.weaknesses || data.shortcomings || data.short_boards, "weak");
+        this._renderIndicatorList("#healthStrengthList", data.strengths || data.advantages, "strong");
+        this._renderSuggestions(data.suggestions || data.advice || data.recommendations);
+
+        const lede = $("#healthLede");
+        if (lede) lede.textContent = `${Utils.esc(data.city || city)} · ${data.year || year} · CEHI ${Utils.fmtScore(score)} · ${level.label}`;
+      } catch (err) {
+        Skeleton.hide("chartHealthRadar");
+        showChartError("chartHealthRadar", err.message || "加载失败", () => this._fetchAndRender(fetcher, city, year));
+        window.__citylens_toast?.error(`CEHI 加载失败: ${err.message || "未知错误"}`);
+      } finally {
+        this._setLoading(false);
+      }
+    }
+
+    async loadDemo() {
+      const cityInput = $("#healthCity");
+      const yearInput = $("#healthYear");
+      await this._fetchAndRender(
+        (signal) => this.api.get("/health/demo", { signal, cacheTTL: 0 }),
+        cityInput?.value,
+        yearInput?.value
+      );
+    }
+
+    async calculate(city, year) {
+      await this._fetchAndRender(
+        (signal) => this.api.post("/health/calculate", { city, year }, { signal }),
+        city,
+        year
+      );
+    }
+
+    mount() {
+      const form = $("#healthForm");
+      const demoBtn = $("#healthDemoBtn");
+
+      form?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const city = ($("#healthCity")?.value || "").trim();
+        const year = parseInt($("#healthYear")?.value || "0", 10);
+        if (!city || !year) {
+          window.__citylens_toast?.warn("请填写城市名称与年份");
+          return;
+        }
+        this.calculate(city, year);
+      });
+
+      demoBtn?.addEventListener("click", () => this.loadDemo());
+
+      // 初始加载演示数据,让用户一进入就看到内容
+      this.loadDemo();
     }
   }
 

@@ -157,6 +157,7 @@ from backend.api.routes import (
     data_router,
     datasets_router,
     forecast_router,
+    health_router,
     index_router,
     industries_router,
     regions_router,
@@ -169,6 +170,7 @@ app.include_router(analysis_router, prefix=settings.API_V1_STR)
 app.include_router(cities_router, prefix=settings.API_V1_STR)
 app.include_router(regions_router, prefix=settings.API_V1_STR)
 app.include_router(forecast_router, prefix=settings.API_V1_STR)
+app.include_router(health_router, prefix=settings.API_V1_STR)
 app.include_router(index_router, prefix=settings.API_V1_STR)
 app.include_router(industries_router, prefix=settings.API_V1_STR)
 app.include_router(static_router)

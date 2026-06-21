@@ -1,0 +1,476 @@
+# 城市经济发展健康水平指数（CEHI）指标体系
+# City Economic Health Index Indicator System
+#
+# 说明：
+# - direction: positive 表示值越大越好，negative 表示值越小越好
+# - thresholds 使用百分位或业务经验值，默认区间：
+#   healthy >= healthy_threshold
+#   subhealthy >= subhealthy_threshold
+#   warning >= warning_threshold
+#   risk < warning_threshold
+# - weights 采用 AHP 专家打分确定，各维度内归一化，维度间总权重为 1.0
+
+schema_version: "1.0.0"
+index_name: "城市经济发展健康水平指数"
+index_short_name: "CEHI"
+index_description: "综合评估城市经济健康状况的复合指数，覆盖经济活力、产业结构、财政健康、民生福祉、创新驱动、开放水平六大维度。"
+
+# 维度权重（AHP 法初定，后续可动态调整）
+dimensions:
+  - id: economic_vitality
+    name: 经济活力
+    weight: 0.22
+    description: 反映城市经济增长动力与市场规模
+
+  - id: industrial_structure
+    name: 产业结构
+    weight: 0.18
+    description: 反映产业升级与结构优化程度
+
+  - id: fiscal_health
+    name: 财政健康
+    weight: 0.18
+    description: 反映政府财政可持续性与债务风险
+
+  - id: livelihood_welfare
+    name: 民生福祉
+    weight: 0.16
+    description: 反映居民生活质量与社会公平
+
+  - id: innovation_driver
+    name: 创新驱动
+    weight: 0.14
+    description: 反映科技创新与人才集聚能力
+
+  - id: openness
+    name: 开放水平
+    weight: 0.12
+    description: 反映城市对外经济联系与国际化程度
+
+# 具体指标
+indicators:
+  # ---------------- 经济活力 ----------------
+  - id: gdp_growth
+    name: GDP增速
+    dimension: economic_vitality
+    unit: "%"
+    direction: positive
+    description: 地区生产总值同比增速
+    thresholds:
+      healthy: 7.0
+      subhealthy: 5.0
+      warning: 3.0
+    weight: 0.35
+    data_source: 统计年鉴
+
+  - id: gdp_per_capita
+    name: 人均GDP
+    dimension: economic_vitality
+    unit: "元/人"
+    direction: positive
+    description: 人均地区生产总值
+    thresholds:
+      healthy: 150000
+      subhealthy: 100000
+      warning: 70000
+    weight: 0.25
+    data_source: 统计年鉴
+
+  - id: tertiary_industry_ratio
+    name: 第三产业占比
+    dimension: economic_vitality
+    unit: "%"
+    direction: positive
+    description: 第三产业增加值占 GDP 比重
+    thresholds:
+      healthy: 65.0
+      subhealthy: 55.0
+      warning: 45.0
+    weight: 0.20
+    data_source: 统计年鉴
+
+  - id: retail_sales_growth
+    name: 社会消费品零售总额增速
+    dimension: economic_vitality
+    unit: "%"
+    direction: positive
+    description: 社会消费品零售总额同比增速
+    thresholds:
+      healthy: 8.0
+      subhealthy: 5.0
+      warning: 2.0
+    weight: 0.12
+    data_source: 统计年鉴
+
+  - id: fixed_asset_investment_growth
+    name: 固定资产投资增速
+    dimension: economic_vitality
+    unit: "%"
+    direction: positive
+    description: 固定资产投资同比增速
+    thresholds:
+      healthy: 7.0
+      subhealthy: 4.0
+      warning: 1.0
+    weight: 0.08
+    data_source: 统计年鉴
+
+  # ---------------- 产业结构 ----------------
+  - id: high_tech_industry_ratio
+    name: 高新技术产业占比
+    dimension: industrial_structure
+    unit: "%"
+    direction: positive
+    description: 高新技术产业增加值占规上工业比重
+    thresholds:
+      healthy: 55.0
+      subhealthy: 40.0
+      warning: 25.0
+    weight: 0.30
+    data_source: 统计年鉴
+
+  - id: strategic_emerging_ratio
+    name: 战略性新兴产业占比
+    dimension: industrial_structure
+    unit: "%"
+    direction: positive
+    description: 战略性新兴产业增加值占 GDP 比重
+    thresholds:
+      healthy: 25.0
+      subhealthy: 15.0
+      warning: 8.0
+    weight: 0.25
+    data_source: 统计年鉴
+
+  - id: enterprise_density
+    name: 市场主体密度
+    dimension: industrial_structure
+    unit: "家/万人"
+    direction: positive
+    description: 每万人拥有的市场主体数量
+    thresholds:
+      healthy: 800
+      subhealthy: 600
+      warning: 400
+    weight: 0.20
+    data_source: 市场监督管理局
+
+  - id: listed_companies
+    name: 境内上市企业数量
+    dimension: industrial_structure
+    unit: "家"
+    direction: positive
+    description: 沪深北交易所上市企业数量
+    thresholds:
+      healthy: 100
+      subhealthy: 50
+      warning: 20
+    weight: 0.15
+    data_source: 证券交易所
+
+  - id: industrial_concentration
+    name: 主导产业集聚度
+    dimension: industrial_structure
+    unit: "%"
+    direction: positive
+    description: 前三大主导产业增加值占 GDP 比重
+    thresholds:
+      healthy: 60.0
+      subhealthy: 45.0
+      warning: 30.0
+    weight: 0.10
+    data_source: 统计年鉴
+
+  # ---------------- 财政健康 ----------------
+  - id: fiscal_revenue_growth
+    name: 一般公共预算收入增速
+    dimension: fiscal_health
+    unit: "%"
+    direction: positive
+    description: 一般公共预算收入同比增速
+    thresholds:
+      healthy: 6.0
+      subhealthy: 3.0
+      warning: 0.0
+    weight: 0.25
+    data_source: 财政局
+
+  - id: fiscal_self_sufficiency
+    name: 财政自给率
+    dimension: fiscal_health
+    unit: "%"
+    direction: positive
+    description: 一般公共预算收入 / 一般公共预算支出
+    thresholds:
+      healthy: 80.0
+      subhealthy: 60.0
+      warning: 40.0
+    weight: 0.25
+    data_source: 财政局
+
+  - id: debt_ratio
+    name: 地方政府债务率
+    dimension: fiscal_health
+    unit: "%"
+    direction: negative
+    description: 债务余额 / 综合财力
+    thresholds:
+      healthy: 120.0
+      subhealthy: 200.0
+      warning: 300.0
+    weight: 0.25
+    data_source: 财政局
+
+  - id: tax_revenue_ratio
+    name: 税收收入占比
+    dimension: fiscal_health
+    unit: "%"
+    direction: positive
+    description: 税收收入 / 一般公共预算收入
+    thresholds:
+      healthy: 80.0
+      subhealthy: 70.0
+      warning: 60.0
+    weight: 0.15
+    data_source: 税务局
+
+  - id: fund_revenue_growth
+    name: 政府性基金收入增速
+    dimension: fiscal_health
+    unit: "%"
+    direction: positive
+    description: 政府性基金收入同比增速
+    thresholds:
+      healthy: 5.0
+      subhealthy: 0.0
+      warning: -10.0
+    weight: 0.10
+    data_source: 财政局
+
+  # ---------------- 民生福祉 ----------------
+  - id: disposable_income
+    name: 居民人均可支配收入
+    dimension: livelihood_welfare
+    unit: "元"
+    direction: positive
+    description: 城镇居民人均可支配收入
+    thresholds:
+      healthy: 70000
+      subhealthy: 50000
+      warning: 35000
+    weight: 0.30
+    data_source: 统计年鉴
+
+  - id: urbanization_rate
+    name: 常住人口城镇化率
+    dimension: livelihood_welfare
+    unit: "%"
+    direction: positive
+    description: 城镇常住人口 / 总人口
+    thresholds:
+      healthy: 75.0
+      subhealthy: 65.0
+      warning: 55.0
+    weight: 0.20
+    data_source: 统计年鉴
+
+  - id: registered_unemployment_rate
+    name: 城镇登记失业率
+    dimension: livelihood_welfare
+    unit: "%"
+    direction: negative
+    description: 城镇登记失业人员 / 城镇就业人员
+    thresholds:
+      healthy: 3.5
+      subhealthy: 4.5
+      warning: 5.5
+    weight: 0.20
+    data_source: 人社局
+
+  - id: education_expenditure_ratio
+    name: 教育支出占比
+    dimension: livelihood_welfare
+    unit: "%"
+    direction: positive
+    description: 教育支出 / 一般公共预算支出
+    thresholds:
+      healthy: 15.0
+      subhealthy: 12.0
+      warning: 9.0
+    weight: 0.15
+    data_source: 财政局
+
+  - id: medical_expenditure_ratio
+    name: 医疗卫生支出占比
+    dimension: livelihood_welfare
+    unit: "%"
+    direction: positive
+    description: 医疗卫生支出 / 一般公共预算支出
+    thresholds:
+      healthy: 10.0
+      subhealthy: 7.0
+      warning: 5.0
+    weight: 0.15
+    data_source: 财政局
+
+  # ---------------- 创新驱动 ----------------
+  - id: rd_intensity
+    name: R&D投入强度
+    dimension: innovation_driver
+    unit: "%"
+    direction: positive
+    description: R&D 经费支出 / GDP
+    thresholds:
+      healthy: 3.5
+      subhealthy: 2.5
+      warning: 1.5
+    weight: 0.30
+    data_source: 科技局/统计局
+
+  - id: patents_per_10000
+    name: 万人发明专利拥有量
+    dimension: innovation_driver
+    unit: "件/万人"
+    direction: positive
+    description: 每万人发明专利拥有量
+    thresholds:
+      healthy: 50
+      subhealthy: 25
+      warning: 10
+    weight: 0.25
+    data_source: 知识产权局
+
+  - id: high_tech_enterprises
+    name: 高新技术企业数量
+    dimension: innovation_driver
+    unit: "家"
+    direction: positive
+    description: 经认定的高新技术企业数量
+    thresholds:
+      healthy: 5000
+      subhealthy: 2000
+      warning: 500
+    weight: 0.20
+    data_source: 科技局
+
+  - id: university_count
+    name: 普通高等学校数量
+    dimension: innovation_driver
+    unit: "所"
+    direction: positive
+    description: 普通高等学校数量
+    thresholds:
+      healthy: 50
+      subhealthy: 30
+      warning: 10
+    weight: 0.15
+    data_source: 教育局
+
+  - id: talent_inflow_rate
+    name: 人才净流入率
+    dimension: innovation_driver
+    unit: "%"
+    direction: positive
+    description: 年度人才净流入 / 常住人口
+    thresholds:
+      healthy: 2.0
+      subhealthy: 1.0
+      warning: 0.0
+    weight: 0.10
+    data_source: 人社局
+
+  # ---------------- 开放水平 ----------------
+  - id: import_export_growth
+    name: 进出口总额增速
+    dimension: openness
+    unit: "%"
+    direction: positive
+    description: 货物进出口总额同比增速
+    thresholds:
+      healthy: 8.0
+      subhealthy: 3.0
+      warning: -2.0
+    weight: 0.30
+    data_source: 海关
+
+  - id: fdi_growth
+    name: 实际使用外资增速
+    dimension: openness
+    unit: "%"
+    direction: positive
+    description: 实际使用外资金额同比增速
+    thresholds:
+      healthy: 6.0
+      subhealthy: 2.0
+      warning: -5.0
+    weight: 0.25
+    data_source: 商务局
+
+  - id: foreign_trade_dependency
+    name: 外贸依存度
+    dimension: openness
+    unit: "%"
+    direction: positive
+    description: 进出口总额 / GDP
+    thresholds:
+      healthy: 40.0
+      subhealthy: 25.0
+      warning: 15.0
+    weight: 0.20
+    data_source: 海关/统计局
+
+  - id: free_trade_zone
+    name: 自贸区/开放平台数量
+    dimension: openness
+    unit: "个"
+    direction: positive
+    description: 自贸试验区、综合保税区等开放平台数量
+    thresholds:
+      healthy: 3
+      subhealthy: 2
+      warning: 1
+    weight: 0.15
+    data_source: 商务局
+
+  - id: international_routes
+    name: 国际航线数量
+    dimension: openness
+    unit: "条"
+    direction: positive
+    description: 机场国际及地区航线数量
+    thresholds:
+      healthy: 30
+      subhealthy: 15
+      warning: 5
+    weight: 0.10
+    data_source: 民航局
+
+# 健康等级定义
+health_levels:
+  - level: healthy
+    name: 健康
+    color: "#10B981"
+    emoji: "🟢"
+    min_score: 80
+    description: 城市经济发展整体健康，各项指标表现良好。
+
+  - level: subhealthy
+    name: 亚健康
+    color: "#84CC16"
+    emoji: "🟡"
+    min_score: 60
+    description: 城市经济发展总体平稳，但部分指标存在优化空间。
+
+  - level: warning
+    name: 预警
+    color: "#F59E0B"
+    emoji: "🟠"
+    min_score: 40
+    description: 城市经济发展面临一定压力，需要关注部分短板指标。
+
+  - level: risk
+    name: 风险
+    color: "#EF4444"
+    emoji: "🔴"
+    min_score: 0
+    description: 城市经济发展存在明显风险，建议尽快制定应对策略。
