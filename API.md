@@ -66,6 +66,37 @@ uvicorn backend.api.main:app --reload --port 8000
 
 ---
 
+## City Economic Health Index — CEHI (`/api/v1/health/…`)
+
+城市经济发展健康水平指数，覆盖 6 大维度 30 项指标：经济活力、产业结构、财政健康、民生福祉、创新驱动、开放水平。
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health/indicators` | 获取指标体系（维度、指标、阈值、权重、健康等级） |
+| GET | `/health/demo` | 获取示例城市 CEHI 计算结果 |
+| POST | `/health/calculate` | 计算指定城市 CEHI 得分、短板与建议 |
+| POST | `/health/benchmark` | 城市 CEHI 对标分析（排名、相似城市、标杆差距） |
+
+### Example: 计算 CEHI
+
+```bash
+curl -X POST http://localhost:8000/api/v1/health/calculate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "city_name": "深圳",
+    "year": 2024,
+    "indicator_values": {
+      "gdp_growth": 6.0,
+      "rd_intensity": 3.0,
+      "debt_ratio": 120.0
+    }
+  }'
+```
+
+响应包含 `total_score`、`status_name`、`dimension_scores`、`top_weaknesses`、`top_strengths`、`recommendations`，以及前端友好的别名字段 `score`、`dimensions`、`weaknesses`、`strengths`、`suggestions`。
+
+---
+
 ## Datasets (`/api/v1/datasets/…`)
 
 | Method | Path | Description |

@@ -366,10 +366,13 @@ class CEHIEngine:
                     )
                 )
 
-        # 强项与短板
+        # 强项与短板（强项按贡献度降序，短板按拖累程度升序）
         sorted_by_contribution = sorted(all_indicator_scores, key=lambda x: x.contribution, reverse=True)
-        top_strengths = [s for s in sorted_by_contribution if s.contribution > 0][:5]
-        top_weaknesses = [s for s in sorted_by_contribution if s.contribution < 0][-5:]
+        strengths = [s for s in sorted_by_contribution if s.contribution > 0]
+        weaknesses = [s for s in sorted_by_contribution if s.contribution < 0]
+        top_strengths = strengths[:5]
+        # 短板取拖累最大的 5 个，并按从差到较好排序
+        top_weaknesses = weaknesses[-5:][::-1]
 
         recommendations = self._generate_recommendations(dimension_scores, top_weaknesses)
 

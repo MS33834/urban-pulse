@@ -15,7 +15,7 @@ import logging
 from typing import Any, Literal, cast
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 from backend.core.health_index import CEHIConfig, CEHIEngine, CEHIResult, get_demo_values, health_index_demo
 
@@ -138,7 +138,12 @@ class IndicatorsResponse(BaseModel):
 class CalculateRequest(BaseModel):
     """CEHI 计算请求"""
 
-    city_name: str = Field(..., min_length=1, description="城市名称")
+    city_name: str = Field(
+        ...,
+        min_length=1,
+        description="城市名称",
+        validation_alias=AliasChoices("city_name", "city"),
+    )
     year: int = Field(..., ge=1900, le=2200, description="数据年份")
     indicator_values: dict[str, float] | None = Field(
         None, description="指标原始值 {indicator_id: value}，为空时使用演示数据"
@@ -150,9 +155,14 @@ class CalculateRequest(BaseModel):
 class BenchmarkRequest(BaseModel):
     """城市对标请求"""
 
-    target_city: str = Field(..., min_length=1, description="目标城市名称")
+    target_city: str = Field(
+        ...,
+        min_length=1,
+        description="目标城市名称",
+        validation_alias=AliasChoices("target_city", "target", "city"),
+    )
     year: int = Field(2024, ge=1900, le=2200, description="数据年份")
-    target_values: dict[str, float] = Field(..., description="目标城市指标原始值")
+    target_values: dict[str, float] | None = Field(None, description="目标城市指标原始值，为空时使用演示数据")
     peers: dict[str, dict[str, float]] = Field(..., description="对标城市集 {city_name: {indicator_id: value}}")
 
 
@@ -264,9 +274,10 @@ async def benchmark_cehi(request: BenchmarkRequest) -> BenchmarkResponse:
     """
     try:
         engine = CEHIEngine()
+        target_values = request.target_values if request.target_values else get_demo_values()
         result = engine.benchmark(
             target_city=request.target_city,
-            target_values=request.target_values,
+            target_values=target_values,
             peers=request.peers,
             year=request.year,
         )

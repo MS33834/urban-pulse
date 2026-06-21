@@ -4,12 +4,13 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688.svg)](https://fastapi.tiangolo.com)
 [![License](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 
-中国城市经济智能分析平台。基于公开统计数据，提供城市经济画像、多城市对比、产业选址分析、时序预测与竞争力指数。
+中国城市经济智能分析平台。基于公开统计数据，提供城市经济画像、多城市对比、产业选址分析、时序预测、竞争力指数与城市经济发展健康水平诊断。
 
 - 35 座主要城市
 - 2016–2024 年多指标历史数据
 - ARIMA / ETS / 线性回归集成预测
 - 熵权法竞争力指数
+- 城市经济发展健康水平指数（CEHI）：6 大维度 30 项指标，支持健康诊断、短板归因、城市对标与改进建议
 - 企业端 / 政府端 / 产业端多维度分析
 
 ---
@@ -84,6 +85,10 @@ urban-pulse/
 | `GET /api/v1/cities/{city}` | 城市详情 |
 | `GET /api/v1/forecast/gdp/{city}` | GDP 预测 |
 | `GET /api/v1/forecast/indicator/{city}` | 任意指标预测 |
+| `GET /api/v1/health/indicators` | CEHI 指标体系 |
+| `GET /api/v1/health/demo` | CEHI 示例结果 |
+| `POST /api/v1/health/calculate` | 城市 CEHI 健康诊断 |
+| `POST /api/v1/health/benchmark` | 城市 CEHI 对标分析 |
 | `POST /api/v1/analysis/enterprise` | 企业选址分析 |
 | `POST /api/v1/analysis/government` | 政府端产业分析 |
 | `POST /api/v1/industries` | 注册产业 |

@@ -246,7 +246,7 @@ class TestCEHIEngineCalculate:
             assert ds.score == 0.0
 
     def test_top_strengths_and_weaknesses_sorted(self, engine: CEHIEngine, sample_indicator_values: dict[str, float]):
-        """强项和短板已按贡献度排序。"""
+        """强项按贡献度降序，短板按拖累程度升序排列。"""
         result = engine.calculate("测试市", 2024, sample_indicator_values)
         strengths = result.top_strengths
         weaknesses = result.top_weaknesses
@@ -254,7 +254,7 @@ class TestCEHIEngineCalculate:
         if len(strengths) > 1:
             assert all(strengths[i].contribution >= strengths[i + 1].contribution for i in range(len(strengths) - 1))
         if len(weaknesses) > 1:
-            assert all(weaknesses[i].contribution >= weaknesses[i + 1].contribution for i in range(len(weaknesses) - 1))
+            assert all(weaknesses[i].contribution <= weaknesses[i + 1].contribution for i in range(len(weaknesses) - 1))
 
     def test_recommendations_generated(self, engine: CEHIEngine, sample_indicator_values: dict[str, float]):
         """诊断建议已生成。"""
