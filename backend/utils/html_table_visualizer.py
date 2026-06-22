@@ -6,12 +6,29 @@ HTML 表格可视化器（插件示例）
 """
 
 import html
+from typing import Any
 
 from backend.utils.visualizer_base import VisualizerPlugin
 
 
 class HtmlTableVisualizer(VisualizerPlugin):
     """HTML 表格可视化器插件。"""
+
+    def metadata(self) -> dict[str, Any]:
+        return {
+            "description": "将字典或列表数据渲染为简单 HTML 表格，便于嵌入静态报告。",
+            "version": "0.1.0",
+            "author": "Urban Pulse Team",
+            "tags": ["visualization", "html", "table"],
+            "parameters": [],
+            "example": {
+                "title": "城市 GDP",
+                "records": [
+                    {"city": "深圳", "gdp": 3000},
+                    {"city": "上海", "gdp": 4500},
+                ],
+            },
+        }
 
     def name(self) -> str:
         return "html_table"

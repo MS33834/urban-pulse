@@ -75,6 +75,34 @@ FALLBACK_DATA: dict[str, dict[str, dict[str, float]]] = {
 class WorldBankCollector(DataCollector):
     """世界银行数据采集器插件示例。"""
 
+    def metadata(self) -> dict[str, Any]:
+        return {
+            "description": "通过世界银行开放 API 获取国家层面宏观经济指标，并映射到主要全球城市。",
+            "version": "0.1.0",
+            "author": "Urban Pulse Team",
+            "tags": ["global", "macro", "world_bank"],
+            "parameters": [
+                {
+                    "name": "city",
+                    "type": "str",
+                    "required": False,
+                    "default": "new_york",
+                    "description": "要采集数据的城市代码",
+                },
+                {
+                    "name": "use_api",
+                    "type": "bool",
+                    "required": False,
+                    "default": True,
+                    "description": "是否调用真实 API，False 则使用本地回退数据",
+                },
+            ],
+            "example": {
+                "city": "shanghai",
+                "use_api": False,
+            },
+        }
+
     def __init__(self, use_api: bool = True, registry=None):
         super().__init__()
         self.source_name = "world_bank"

@@ -30,6 +30,35 @@ class HousingAffordabilityAnalyzer(AnalysisPlugin):
         - stress_level: 压力等级（low / moderate / high / severe）
     """
 
+    def metadata(self) -> dict[str, Any]:
+        return {
+            "description": "计算城市住房可负担性指标，包括房价收入比、可负担性指数与压力等级。",
+            "version": "0.1.0",
+            "author": "Urban Pulse Team",
+            "tags": ["housing", "affordability", "social"],
+            "parameters": [
+                {
+                    "name": "mortgage_rate",
+                    "type": "float",
+                    "required": False,
+                    "default": 4.5,
+                    "description": "房贷利率（%）",
+                },
+                {
+                    "name": "loan_term_years",
+                    "type": "int",
+                    "required": False,
+                    "default": 30,
+                    "description": "贷款年限",
+                },
+            ],
+            "example": {
+                "median_house_price": 600000,
+                "median_household_income": 80000,
+                "mortgage_rate": 4.5,
+            },
+        }
+
     def name(self) -> str:
         return "housing_affordability"
 

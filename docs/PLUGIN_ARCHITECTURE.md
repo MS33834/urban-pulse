@@ -223,6 +223,45 @@ my_collector = "my_package.my_collector:MyCollector"
 
 ---
 
+## Phase 4 — Auto-generated API Docs per Plugin
+
+Urban Pulse 内置插件文档生成器，自动扫描所有已注册插件并生成标准文档：
+
+```python
+from backend.core.plugin_docs import generate_plugin_docs
+
+# 结构化字典
+docs = generate_plugin_docs(format="dict")
+
+# JSON
+json_docs = generate_plugin_docs(format="json")
+
+# Markdown
+md_docs = generate_plugin_docs(format="markdown")
+```
+
+插件可通过 `metadata()` 方法提供丰富信息：
+
+```python
+class MyAnalyzer(AnalysisPlugin):
+    def metadata(self) -> dict:
+        return {
+            "description": "我的分析器",
+            "version": "1.0.0",
+            "author": "Your Name",
+            "tags": ["example"],
+            "parameters": [
+                {"name": "threshold", "type": "float", "required": False,
+                 "default": 0.5, "description": "判定阈值"},
+            ],
+            "example": {"indicator": "gdp", "threshold": 0.5},
+        }
+```
+
+未实现 `metadata()` 的插件，文档生成器会自动从 `__doc__` 和已有方法（如 `required_indicators`、`supported_cities`、`min_data_points`）推断基础信息。
+
+---
+
 ## Roadmap for Extensibility
 
 | Phase | Feature | What it enables |

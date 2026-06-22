@@ -6,6 +6,7 @@
 """
 
 import logging
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -18,6 +19,27 @@ logger = logging.getLogger(__name__)
 
 class LinearTrendForecaster(ForecastingPlugin):
     """线性趋势预测器插件。"""
+
+    def metadata(self) -> dict[str, Any]:
+        return {
+            "description": "基于简单线性回归对未来值进行预测，数据需求低、计算轻量，适合作为基准模型。",
+            "version": "0.1.0",
+            "author": "Urban Pulse Team",
+            "tags": ["forecast", "linear", "baseline"],
+            "parameters": [
+                {
+                    "name": "steps",
+                    "type": "int",
+                    "required": True,
+                    "default": None,
+                    "description": "需要预测的未来步数",
+                },
+            ],
+            "example": {
+                "data": [1.0, 2.0, 3.0, 4.0, 5.0],
+                "steps": 3,
+            },
+        }
 
     def name(self) -> str:
         return "linear_trend"

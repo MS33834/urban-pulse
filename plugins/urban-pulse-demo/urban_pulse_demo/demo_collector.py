@@ -16,6 +16,16 @@ from backend.data_collection.base_collector import DataCollector
 class DemoCollector(DataCollector):
     """演示用外部采集器。"""
 
+    def metadata(self) -> dict[str, Any]:
+        return {
+            "description": "Urban Pulse 外部插件包示例，返回固定演示数据。",
+            "version": "0.1.0",
+            "author": "Urban Pulse Team",
+            "tags": ["demo", "external"],
+            "parameters": [],
+            "example": {"city": "demo_city"},
+        }
+
     def __init__(self):
         super().__init__()
         self.source_name = "demo"
