@@ -65,8 +65,14 @@ class IndustryCollector(BaseCollector):
         ]
 
     def fetch_all(self, indicators: list[str] | None = None) -> dict[str, list[dict]]:
-        logger.info("产业数据采集器暂不支持按 indicators 分组返回")
-        return {}
+        """批量获取产业数据。
+
+        目前产业数据以整体产业统计形式返回，key 为 industry_output；
+        后续可按 indicators 拆分为更细分的产业指标。
+        """
+        data = self.fetch_data()
+        key = "industry_output" if not indicators else indicators[0]
+        return {key: data}
 
 
 # 单例

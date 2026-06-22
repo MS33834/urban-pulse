@@ -10,6 +10,7 @@ from typing import Any, cast
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 logger = logging.getLogger(__name__)
 
@@ -114,11 +115,13 @@ class DescriptiveAnalyzer(BaseAnalyzer):
                     }
 
         insights = []
-        for field_name, stats in summary.items():
-            if stats["std"] == 0:
+        for field_name, field_stats in summary.items():
+            if field_stats["std"] == 0:
                 insights.append(f"{field_name} 保持稳定，无显著变化")
-            elif stats["max"] > stats["mean"] * 2:
-                insights.append(f"{field_name} 存在较大波动，峰值是均值的 {stats['max'] / stats['mean']:.1f} 倍")
+            elif field_stats["max"] > field_stats["mean"] * 2:
+                insights.append(
+                    f"{field_name} 存在较大波动，峰值是均值的 {field_stats['max'] / field_stats['mean']:.1f} 倍"
+                )
 
         return AnalysisResult(
             dimension_code=self.dimension.code,
@@ -202,9 +205,9 @@ class TrendAnalyzer(BaseAnalyzer):
                     }
 
         insights = []
-        for field_name, stats in summary.items():
-            direction = "上升" if stats["trend_direction"] == "up" else "下降"
-            insights.append(f"{field_name} 呈{direction}趋势，累计变化 {stats['total_change_pct']:.1f}%")
+        for field_name, field_stats in summary.items():
+            direction = "上升" if field_stats["trend_direction"] == "up" else "下降"
+            insights.append(f"{field_name} 呈{direction}趋势，累计变化 {field_stats['total_change_pct']:.1f}%")
 
         return AnalysisResult(
             dimension_code=self.dimension.code,
@@ -268,6 +271,319 @@ class CorrelationAnalyzer(BaseAnalyzer):
         )
 
 
+class DistributionAnalyzer(BaseAnalyzer):
+    """分布分析器：描述数据分布形态、偏度、峰度与分位数。"""
+
+    def analyze(self, data: pd.DataFrame | dict[str, Any]) -> AnalysisResult:
+        df = self.preprocess(data)
+
+        summary: dict[str, Any] = {}
+        for field_name in self.dimension.data_fields:
+            if field_name not in df.columns:
+                continue
+            col_data = df[field_name].dropna()
+            if len(col_data) == 0:
+                continue
+
+            values = np.asarray(col_data, dtype=float)
+            summary[field_name] = {
+                "count": int(len(values)),
+                "mean": float(np.mean(values)),
+                "median": float(np.median(values)),
+                "std": float(np.std(values, ddof=1)) if len(values) > 1 else 0.0,
+                "min": float(np.min(values)),
+                "max": float(np.max(values)),
+                "q1": float(np.percentile(values, 25)),
+                "q3": float(np.percentile(values, 75)),
+                "iqr": float(np.percentile(values, 75) - np.percentile(values, 25)),
+                "skewness": float(stats.skew(values)) if len(values) > 2 else 0.0,
+                "kurtosis": float(stats.kurtosis(values)) if len(values) > 2 else 0.0,
+            }
+
+        insights: list[str] = []
+        for field_name, stats_dict in summary.items():
+            skew = stats_dict["skewness"]
+            if abs(skew) > 1:
+                direction = "右偏" if skew > 0 else "左偏"
+                insights.append(f"{field_name} 分布明显{direction}（偏度={skew:.2f}）")
+            elif abs(skew) > 0.5:
+                direction = "右偏" if skew > 0 else "左偏"
+                insights.append(f"{field_name} 分布轻度{direction}（偏度={skew:.2f}）")
+            else:
+                insights.append(f"{field_name} 分布基本对称（偏度={skew:.2f}）")
+
+            kurt = stats_dict["kurtosis"]
+            if kurt > 1:
+                insights.append(f"{field_name} 分布峰度较高（峰度={kurt:.2f}），尾部较厚")
+            elif kurt < -1:
+                insights.append(f"{field_name} 分布峰度较低（峰度={kurt:.2f}），尾部较薄")
+
+        return AnalysisResult(
+            dimension_code=self.dimension.code,
+            analysis_type=self.dimension.analysis_type,
+            raw_data=df,
+            summary=summary,
+            insights=insights,
+            visualizations=["histogram", "boxplot", "kde"],
+        )
+
+
+class BreakdownAnalyzer(BaseAnalyzer):
+    """分解分析器：按分组计算结构占比，或按时间计算增长贡献。"""
+
+    def analyze(self, data: pd.DataFrame | dict[str, Any]) -> AnalysisResult:
+        df = self.preprocess(data)
+
+        summary: dict[str, Any] = {}
+        group_by = self.dimension.group_by[0] if self.dimension.group_by else None
+
+        if group_by and group_by in df.columns:
+            # 结构分解：每个分组占总量的比例
+            for field_name in self.dimension.data_fields:
+                if field_name not in df.columns:
+                    continue
+                grouped = df.groupby(group_by)[field_name].sum()
+                total = grouped.sum()
+                if total == 0:
+                    continue
+                summary[field_name] = {
+                    "total": float(total),
+                    "components": {
+                        str(k): {"value": float(v), "share_pct": round(float(v) / total * 100, 2)}
+                        for k, v in grouped.items()
+                    },
+                }
+        else:
+            # 时间分解：逐期增长贡献
+            time_col = self.dimension.metadata.get("time_col", "year")
+            if time_col in df.columns:
+                df = df.sort_values(time_col)
+            for field_name in self.dimension.data_fields:
+                if field_name not in df.columns:
+                    continue
+                values = np.asarray(df[field_name].dropna(), dtype=float)
+                if len(values) < 2:
+                    continue
+                changes = np.diff(values)
+                total_change = float(values[-1] - values[0])
+                summary[field_name] = {
+                    "total_change": total_change,
+                    "total_change_pct": round(total_change / values[0] * 100, 2) if values[0] != 0 else 0.0,
+                    "period_changes": [round(float(c), 4) for c in changes],
+                    "avg_period_change": round(float(np.mean(changes)), 4),
+                }
+
+        insights: list[str] = []
+        for field_name, field_summary in summary.items():
+            if "components" in field_summary:
+                components = field_summary["components"]
+                if components:
+                    max_component = max(components.items(), key=lambda x: x[1]["share_pct"])
+                    insights.append(
+                        f"{field_name} 中 {max_component[0]} 占比最高（{max_component[1]['share_pct']:.1f}%）"
+                    )
+            elif "total_change" in field_summary:
+                direction = "增长" if field_summary["total_change"] > 0 else "下降"
+                insights.append(f"{field_name} 累计{direction} {abs(field_summary['total_change_pct']):.1f}%")
+
+        return AnalysisResult(
+            dimension_code=self.dimension.code,
+            analysis_type=self.dimension.analysis_type,
+            raw_data=df,
+            summary=summary,
+            insights=insights,
+            visualizations=["pie_chart", "stacked_bar", "waterfall"],
+        )
+
+
+class ForecastAnalyzer(BaseAnalyzer):
+    """预测分析器：基于现有预测引擎对时间序列做未来 N 年预测。"""
+
+    def analyze(self, data: pd.DataFrame | dict[str, Any]) -> AnalysisResult:
+        from backend.core.forecast_engine import (
+            arima_forecast,
+            ensemble_forecast,
+            ets_forecast,
+            linear_regression_forecast,
+        )
+
+        df = self.preprocess(data)
+        time_col = self.dimension.metadata.get("time_col", "year")
+        forecast_years = int(self.dimension.metadata.get("forecast_years", 5))
+
+        if time_col in df.columns:
+            df = df.sort_values(time_col)
+
+        summary: dict[str, Any] = {}
+        for field_name in self.dimension.data_fields:
+            if field_name not in df.columns:
+                continue
+            values = [float(v) for v in df[field_name].dropna().tolist()]
+            if len(values) < 3:
+                summary[field_name] = {"error": "数据不足，无法预测"}
+                continue
+
+            arima = arima_forecast(values, forecast_years)
+            ets = ets_forecast(values, forecast_years)
+            lr = linear_regression_forecast(values, forecast_years)
+            ensemble = ensemble_forecast(arima, ets, lr)
+
+            summary[field_name] = {
+                "historical_values": values,
+                "forecast_values": ensemble["predictions"],
+                "lower_ci": ensemble["lower_ci"],
+                "upper_ci": ensemble["upper_ci"],
+                "weights": ensemble["weights"],
+                "method": ensemble["method"],
+                "forecast_years": forecast_years,
+            }
+
+        insights: list[str] = []
+        for field_name, field_summary in summary.items():
+            if "error" in field_summary:
+                insights.append(f"{field_name}: {field_summary['error']}")
+                continue
+            hist = field_summary["historical_values"]
+            fc = field_summary["forecast_values"]
+            if not hist or not fc:
+                continue
+            change_pct = (fc[-1] - hist[-1]) / hist[-1] * 100 if hist[-1] != 0 else 0.0
+            direction = "上升" if change_pct > 0 else "下降"
+            insights.append(f"{field_name} 预测未来 {forecast_years} 年{direction} {abs(change_pct):.1f}%")
+
+        return AnalysisResult(
+            dimension_code=self.dimension.code,
+            analysis_type=self.dimension.analysis_type,
+            raw_data=df,
+            summary=summary,
+            insights=insights,
+            visualizations=["line_chart", "fan_chart", "forecast_table"],
+        )
+
+
+class BenchmarkAnalyzer(BaseAnalyzer):
+    """标杆分析器：将实际值与目标/基准值对比，计算达成率与差距。"""
+
+    def analyze(self, data: pd.DataFrame | dict[str, Any]) -> AnalysisResult:
+        df = self.preprocess(data)
+        benchmarks = self.dimension.metadata.get("benchmarks", {})
+        group_by = self.dimension.group_by[0] if self.dimension.group_by else None
+
+        summary: dict[str, Any] = {}
+
+        if group_by and group_by in df.columns:
+            # 分组标杆：找出每组中表现最好的作为标杆
+            for field_name in self.dimension.data_fields:
+                if field_name not in df.columns:
+                    continue
+                grouped = df.groupby(group_by)[field_name].mean()
+                if grouped.empty:
+                    continue
+                best_value = grouped.max()
+                best_group = grouped.idxmax()
+                summary[field_name] = {
+                    "best_group": str(best_group),
+                    "best_value": float(best_value),
+                    "groups": {
+                        str(k): {
+                            "value": float(v),
+                            "gap_to_best": round(float(best_value - v), 4),
+                            "achievement_pct": round(float(v) / best_value * 100, 2) if best_value != 0 else 0.0,
+                        }
+                        for k, v in grouped.items()
+                    },
+                }
+        else:
+            # 与预设目标对比
+            for field_name in self.dimension.data_fields:
+                if field_name not in df.columns:
+                    continue
+                target = benchmarks.get(field_name)
+                if target is None:
+                    continue
+                col_data = df[field_name].dropna()
+                if col_data.empty:
+                    continue
+                latest = float(col_data.iloc[-1])
+                summary[field_name] = {
+                    "target": float(target),
+                    "latest": latest,
+                    "gap": round(latest - float(target), 4),
+                    "achievement_pct": round(latest / float(target) * 100, 2) if target != 0 else 0.0,
+                }
+
+        insights: list[str] = []
+        for field_name, field_summary in summary.items():
+            if "best_group" in field_summary:
+                insights.append(
+                    f"{field_name} 标杆为 {field_summary['best_group']}（{field_summary['best_value']:.2f}）"
+                )
+            elif "target" in field_summary:
+                ach = field_summary["achievement_pct"]
+                if ach >= 100:
+                    insights.append(f"{field_name} 已达成目标（{ach:.1f}%）")
+                else:
+                    insights.append(f"{field_name} 距目标还差 {100 - ach:.1f}%")
+
+        return AnalysisResult(
+            dimension_code=self.dimension.code,
+            analysis_type=self.dimension.analysis_type,
+            raw_data=df,
+            summary=summary,
+            insights=insights,
+            visualizations=["bullet_chart", "gap_bar", "ranking_table"],
+        )
+
+
+class CustomAnalyzer(BaseAnalyzer):
+    """自定义分析器：按 metadata 中指定的 aggregator 执行聚合，或返回原始统计。"""
+
+    def analyze(self, data: pd.DataFrame | dict[str, Any]) -> AnalysisResult:
+        df = self.preprocess(data)
+        aggregator = self.dimension.metadata.get("aggregator", "descriptive")
+
+        summary: dict[str, Any] = {}
+        for field_name in self.dimension.data_fields:
+            if field_name not in df.columns:
+                continue
+            col_data = df[field_name].dropna()
+            if col_data.empty:
+                continue
+
+            values = np.asarray(col_data, dtype=float)
+            if aggregator == "sum":
+                result = float(np.sum(values))
+            elif aggregator == "avg":
+                result = float(np.mean(values))
+            elif aggregator == "max":
+                result = float(np.max(values))
+            elif aggregator == "min":
+                result = float(np.min(values))
+            elif aggregator == "count":
+                result = int(len(values))
+            else:
+                # 默认描述性统计
+                result = {
+                    "count": int(len(values)),
+                    "mean": float(np.mean(values)),
+                    "median": float(np.median(values)),
+                    "std": float(np.std(values, ddof=1)) if len(values) > 1 else 0.0,
+                }
+
+            summary[field_name] = {"aggregator": aggregator, "value": result}
+
+        insights: list[str] = [f"自定义分析（{aggregator}）完成，覆盖 {len(summary)} 个字段"]
+
+        return AnalysisResult(
+            dimension_code=self.dimension.code,
+            analysis_type=self.dimension.analysis_type,
+            raw_data=df,
+            summary=summary,
+            insights=insights,
+            visualizations=["custom_table"],
+        )
+
+
 class DimensionAnalyzerFactory:
     """维度分析器工厂"""
 
@@ -276,6 +592,11 @@ class DimensionAnalyzerFactory:
         AnalysisType.COMPARATIVE: ComparativeAnalyzer,
         AnalysisType.TREND: TrendAnalyzer,
         AnalysisType.CORRELATION: CorrelationAnalyzer,
+        AnalysisType.DISTRIBUTION: DistributionAnalyzer,
+        AnalysisType.BREAKDOWN: BreakdownAnalyzer,
+        AnalysisType.FORECAST: ForecastAnalyzer,
+        AnalysisType.BENCHMARK: BenchmarkAnalyzer,
+        AnalysisType.CUSTOM: CustomAnalyzer,
     }
 
     @classmethod

@@ -197,20 +197,32 @@ class CustomIndicatorEngine:
             "satisfaction": "({very_satisfied} * 100 + {satisfied} * 75 + {neutral} * 50 + {dissatisfied} * 25) / {total}",
         }
 
-        self._formulas.update(builtin_formulas)
+        for code, formula in builtin_formulas.items():
+            self.register_formula(code, formula, dependencies=[])
 
-    def register_formula(self, code: str, formula: str, dependencies: list[str], unit: str = "", description: str = ""):
+    @staticmethod
+    def _extract_dependencies(formula: str) -> list[str]:
+        """从公式占位符中提取依赖字段。"""
+        import re
+
+        return sorted({match.group(1) for match in re.finditer(r"\{([a-zA-Z_][a-zA-Z0-9_]*)\}", formula)})
+
+    def register_formula(
+        self, code: str, formula: str, dependencies: list[str] | None = None, unit: str = "", description: str = ""
+    ):
         """
         注册计算公式
 
         Args:
             code: 指标代码
             formula: 计算公式，支持 {placeholder} 格式
-            dependencies: 依赖的数据字段列表
+            dependencies: 依赖的数据字段列表，为空时自动从公式提取
             unit: 单位
             description: 描述
         """
         self._formulas[code] = formula
+        if not dependencies:
+            dependencies = self._extract_dependencies(formula)
         self._dependencies[code] = dependencies
         logger.debug(f"注册公式: {code} = {formula}")
 
@@ -301,13 +313,7 @@ class CustomIndicatorEngine:
             )
 
         try:
-            # 替换占位符
-            expr = formula
-            for key, value in values.items():
-                expr = expr.replace(f"{{{key}}}", str(value))
-
-            # 尝试解析特殊函数
-            result = self._evaluate_expression(expr)
+            result = self._evaluate_expression(formula, values)
 
             return CalculationResult(
                 indicator_code=indicator_code,
@@ -349,29 +355,59 @@ class CustomIndicatorEngine:
                 message=f"函数执行错误: {str(e)}",
             )
 
-    def _evaluate_expression(self, expr: str) -> float:
-        """评估数学表达式"""
+    def _evaluate_expression(self, expr: str, values: dict[str, Any]) -> float:
+        """评估数学表达式，支持标量替换与列表求和。"""
         expr = expr.replace("**", "**")
 
         if "Σ(" in expr:
-            expr = self._handle_sum(expr)
+            expr = self._handle_sum(expr, values)
+
+        # 替换剩余的标量占位符
+        for key, value in values.items():
+            if not isinstance(value, (list, tuple)):
+                expr = expr.replace(f"{{{key}}}", str(value))
+
+        # 若仍有未替换的列表占位符，则无法计算
+        if "{" in expr and "}" in expr:
+            raise ValueError(f"公式中包含未支持的列表占位符: {expr}")
 
         return _safe_eval_math(expr)
 
-    def _handle_sum(self, expr: str) -> str:
-        """处理求和表达式"""
+    def _handle_sum(self, expr: str, values: dict[str, Any]) -> str:
+        """处理 Σ(...) 列表求和表达式。"""
         import re
 
-        # 匹配 Σ(var ** 2) 格式
         pattern = r"Σ\(([^)]+)\)"
-        match = re.search(pattern, expr)
 
-        if match:
-            # 简化处理，假设shares是列表
-            # 实际使用中需要传入shares数据
-            expr = expr.replace(match.group(0), "100")  # 简化
+        def _eval_sum(match: re.Match) -> str:
+            inner = match.group(1)
 
-        return expr
+            # 区分标量与列表依赖
+            list_deps = {
+                k: (list(v) if isinstance(v, tuple) else v) for k, v in values.items() if isinstance(v, (list, tuple))
+            }
+            scalar_deps = {k: v for k, v in values.items() if k not in list_deps}
+
+            # 先替换标量占位符
+            for key, value in scalar_deps.items():
+                inner = inner.replace(f"{{{key}}}", str(value))
+
+            if not list_deps:
+                # 无列表依赖时，对表达式求值一次并返回
+                return str(_safe_eval_math(inner))
+
+            # 以第一个列表的长度作为迭代次数
+            list_len = len(next(iter(list_deps.values())))
+            total = 0.0
+            for i in range(list_len):
+                item_expr = inner
+                for key, lst in list_deps.items():
+                    item_expr = item_expr.replace(f"{{{key}}}", str(float(lst[i])))
+                total += _safe_eval_math(item_expr)
+
+            return str(total)
+
+        return re.sub(pattern, _eval_sum, expr)
 
     def calculate_batch(
         self, indicator_codes: list[str], data_provider: DataProvider, **kwargs

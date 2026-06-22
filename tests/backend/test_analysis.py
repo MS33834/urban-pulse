@@ -49,6 +49,29 @@ class TestCustomIndicators:
 
         assert custom_indicators is not None
 
+    def test_builtin_formula_deficit_rate(self):
+        """测试内置公式能自动提取依赖并计算。"""
+        from backend.analysis.custom_indicators import calculate_indicator
+
+        result = calculate_indicator("deficit_rate", {"revenue": 1000, "expenditure": 1200, "gdp": 30000})
+        assert result.status.value == "success"
+        assert abs(result.value - 0.6667) < 1e-4
+
+    def test_list_dependency_hhi(self):
+        """测试列表依赖的 Σ 求和（HHI 指数）。"""
+        from backend.analysis.custom_indicators import calculate_indicator
+
+        result = calculate_indicator("concentration_hhi", {"share": [0.2, 0.3, 0.5]})
+        assert result.status.value == "success"
+        assert abs(result.value - 0.38) < 1e-6
+
+    def test_formula_insufficient_data(self):
+        """测试缺少依赖时返回 INSUFFICIENT_DATA。"""
+        from backend.analysis.custom_indicators import calculate_indicator
+
+        result = calculate_indicator("deficit_rate", {"revenue": 1000})
+        assert result.status.value == "insufficient_data"
+
 
 class TestDimensionAnalysis:
     """维度分析框架测试"""
@@ -58,6 +81,130 @@ class TestDimensionAnalysis:
         from backend.analysis import dimension_analysis
 
         assert dimension_analysis is not None
+
+    def test_distribution_analyzer(self):
+        """测试分布分析器。"""
+        import pandas as pd
+
+        from backend.analysis.dimension_analysis import (
+            AnalysisType,
+            DimensionAnalyzerFactory,
+            DimensionDefinition,
+        )
+
+        dim = DimensionDefinition(
+            code="test_distribution",
+            name="测试分布",
+            data_fields=["gdp"],
+            analysis_type=AnalysisType.DISTRIBUTION,
+        )
+        analyzer = DimensionAnalyzerFactory.create(dim)
+        df = pd.DataFrame({"gdp": [100, 200, 300, 400, 500]})
+        result = analyzer.analyze(df)
+
+        assert result is not None
+        assert "gdp" in result.summary
+        assert "skewness" in result.summary["gdp"]
+        assert len(result.insights) > 0
+
+    def test_breakdown_analyzer_time(self):
+        """测试分解分析器（时间维度）。"""
+        import pandas as pd
+
+        from backend.analysis.dimension_analysis import (
+            AnalysisType,
+            DimensionAnalyzerFactory,
+            DimensionDefinition,
+        )
+
+        dim = DimensionDefinition(
+            code="test_breakdown",
+            name="测试分解",
+            data_fields=["gdp"],
+            analysis_type=AnalysisType.BREAKDOWN,
+            metadata={"time_col": "year"},
+        )
+        analyzer = DimensionAnalyzerFactory.create(dim)
+        df = pd.DataFrame({"year": [2020, 2021, 2022, 2023], "gdp": [100, 110, 125, 140]})
+        result = analyzer.analyze(df)
+
+        assert result is not None
+        assert "gdp" in result.summary
+        assert result.summary["gdp"]["total_change"] == 40.0
+
+    def test_forecast_analyzer(self):
+        """测试预测分析器。"""
+        import pandas as pd
+
+        from backend.analysis.dimension_analysis import (
+            AnalysisType,
+            DimensionAnalyzerFactory,
+            DimensionDefinition,
+        )
+
+        dim = DimensionDefinition(
+            code="test_forecast",
+            name="测试预测",
+            data_fields=["gdp"],
+            analysis_type=AnalysisType.FORECAST,
+            metadata={"time_col": "year", "forecast_years": 3},
+        )
+        analyzer = DimensionAnalyzerFactory.create(dim)
+        df = pd.DataFrame({"year": list(range(2016, 2025)), "gdp": [100 + i * 10 for i in range(9)]})
+        result = analyzer.analyze(df)
+
+        assert result is not None
+        assert "gdp" in result.summary
+        assert len(result.summary["gdp"]["forecast_values"]) == 3
+
+    def test_benchmark_analyzer_with_target(self):
+        """测试标杆分析器（目标值模式）。"""
+        import pandas as pd
+
+        from backend.analysis.dimension_analysis import (
+            AnalysisType,
+            DimensionAnalyzerFactory,
+            DimensionDefinition,
+        )
+
+        dim = DimensionDefinition(
+            code="test_benchmark",
+            name="测试标杆",
+            data_fields=["gdp"],
+            analysis_type=AnalysisType.BENCHMARK,
+            metadata={"benchmarks": {"gdp": 500}},
+        )
+        analyzer = DimensionAnalyzerFactory.create(dim)
+        df = pd.DataFrame({"year": [2022, 2023, 2024], "gdp": [300, 400, 450]})
+        result = analyzer.analyze(df)
+
+        assert result is not None
+        assert "gdp" in result.summary
+        assert result.summary["gdp"]["achievement_pct"] == 90.0
+
+    def test_custom_analyzer(self):
+        """测试自定义分析器。"""
+        import pandas as pd
+
+        from backend.analysis.dimension_analysis import (
+            AnalysisType,
+            DimensionAnalyzerFactory,
+            DimensionDefinition,
+        )
+
+        dim = DimensionDefinition(
+            code="test_custom",
+            name="测试自定义",
+            data_fields=["gdp"],
+            analysis_type=AnalysisType.CUSTOM,
+            metadata={"aggregator": "sum"},
+        )
+        analyzer = DimensionAnalyzerFactory.create(dim)
+        df = pd.DataFrame({"gdp": [100, 200, 300]})
+        result = analyzer.analyze(df)
+
+        assert result is not None
+        assert result.summary["gdp"]["value"] == 600.0
 
 
 class TestEnterpriseAnalyzer:

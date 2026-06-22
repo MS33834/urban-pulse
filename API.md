@@ -76,6 +76,9 @@ uvicorn backend.api.main:app --reload --port 8000
 | GET | `/health/demo` | 获取示例城市 CEHI 计算结果 |
 | POST | `/health/calculate` | 计算指定城市 CEHI 得分、短板与建议 |
 | POST | `/health/benchmark` | 城市 CEHI 对标分析（排名、相似城市、标杆差距） |
+| GET | `/health/template` | 下载 CEHI 指标录入模板（Excel/CSV） |
+| POST | `/health/import` | 导入 CEHI 指标数据文件 |
+| POST | `/health/report/pdf` | 导出 CEHI PDF 诊断报告 |
 
 ### Example: 计算 CEHI
 
