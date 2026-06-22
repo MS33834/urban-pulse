@@ -15,7 +15,7 @@ try:
 except ImportError:
     ak = None
 
-from backend.data_collection.base_collector import BaseCollector
+from backend.data_collection.base_collector import DataCollector
 from config import config_loader
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def _call_with_timeout(func, timeout=30, *args, **kwargs):
             raise TimeoutError(f"调用超时 ({timeout}s): {func.__name__}") from exc
 
 
-class NBSCollector(BaseCollector):
+class NBSCollector(DataCollector):
     """国家统计局数据采集器"""
 
     def __init__(self):
@@ -41,6 +41,12 @@ class NBSCollector(BaseCollector):
         self.analysis_config = config_loader.get_analysis_config()
         self.default_indicators = self.analysis_config.DATA_COLLECTION["default_indicators"]
         self.default_years = self.analysis_config.DATA_COLLECTION["years_range"]
+
+    def name(self) -> str:
+        return "nbs"
+
+    def supported_cities(self) -> list[str]:
+        return ["CN"]
 
     def fetch_data(self, **kwargs) -> list[dict[str, Any]]:
         """

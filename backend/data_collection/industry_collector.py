@@ -12,7 +12,7 @@ try:
 except ImportError:
     ak = None
 
-from backend.data_collection.base_collector import BaseCollector
+from backend.data_collection.base_collector import DataCollector
 
 logger = logging.getLogger(__name__)
 
@@ -26,12 +26,18 @@ def _call_with_timeout(func, timeout=30, *args, **kwargs):
             raise TimeoutError(f"调用超时 ({timeout}s): {func.__name__}") from exc
 
 
-class IndustryCollector(BaseCollector):
+class IndustryCollector(DataCollector):
     """产业数据采集器"""
 
     def __init__(self):
         super().__init__()
         self.source_name = "industry"
+
+    def name(self) -> str:
+        return "industry"
+
+    def supported_cities(self) -> list[str]:
+        return ["CN"]
 
     def fetch_data(self, **kwargs) -> list[dict[str, Any]]:
         try:

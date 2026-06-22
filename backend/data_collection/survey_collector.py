@@ -13,7 +13,7 @@ from typing import Any, cast
 
 import pandas as pd
 
-from backend.data_collection.base_collector import BaseCollector
+from backend.data_collection.base_collector import DataCollector
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ SUPPORTED_INDICATOR_TYPES = {
 }
 
 
-class SurveyCollector(BaseCollector):
+class SurveyCollector(DataCollector):
     """
     调查数据采集器
 
@@ -48,6 +48,12 @@ class SurveyCollector(BaseCollector):
         super().__init__()
         self.source_name = source_name
         self._records: list[dict[str, Any]] = []
+
+    def name(self) -> str:
+        return "survey"
+
+    def supported_cities(self) -> list[str]:
+        return []
 
     def load_file(self, path: Path | str) -> list[dict[str, Any]]:
         """从 CSV 或 Excel 文件加载调查数据"""

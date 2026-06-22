@@ -13,6 +13,39 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
+class AnalysisPlugin(ABC):
+    """
+    插件化分析器基类。
+
+    与 BaseAnalyzer 面向 DataFrame 工作流的接口不同，AnalysisPlugin 面向
+    city_data 字典，便于通过 drop-in 文件扩展新的城市经济分析方法。
+    """
+
+    @abstractmethod
+    def name(self) -> str:
+        """分析器名称。"""
+        ...
+
+    @abstractmethod
+    def required_indicators(self) -> list[str]:
+        """运行该分析所需的经济指标代码列表。"""
+        ...
+
+    @abstractmethod
+    def analyze(self, city_data: dict, **params) -> dict:
+        """
+        执行分析。
+
+        Args:
+            city_data: 包含城市指标数据的字典
+            **params: 分析参数
+
+        Returns:
+            分析结果字典
+        """
+        ...
+
+
 class BaseAnalyzer(ABC):
     def __init__(self):
         self.name = self.__class__.__name__
