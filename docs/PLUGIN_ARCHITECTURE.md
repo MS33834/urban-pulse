@@ -262,6 +262,41 @@ class MyAnalyzer(AnalysisPlugin):
 
 ---
 
+## Phase 5 — Community Validation Dashboard
+
+Urban Pulse 自动保存每一次预测快照，并在真实数据公布后回填，持续追踪预测准确率：
+
+```python
+from backend.core.forecast_archive import ForecastArchive, ForecastSnapshot
+from backend.core.forecast_validation import ForecastValidator
+from backend.core.validation_dashboard import generate_validation_dashboard
+
+archive = ForecastArchive()
+archive.save(ForecastSnapshot(
+    model="linear_trend",
+    city_code="shanghai",
+    indicator="gdp",
+    forecast_date="2024-01-01",
+    target_year=2025,
+    predicted_value=800.0,
+    confidence_interval=(750.0, 850.0),
+))
+
+# 真实数据公布后回填
+archive.update_actual_by_match("linear_trend", "shanghai", "gdp", 2025, 820.0)
+
+# 生成验证报告
+validator = ForecastValidator(archive=archive)
+print(validator.to_markdown())
+
+# 生成静态 HTML 仪表板
+generate_validation_dashboard("site/validation_dashboard.html")
+```
+
+支持的准确率指标：MAE、MAPE、RMSE、Bias、置信区间命中率。报告支持按模型、城市、指标维度拆分。
+
+---
+
 ## Roadmap for Extensibility
 
 | Phase | Feature | What it enables |
