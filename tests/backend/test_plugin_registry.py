@@ -6,9 +6,13 @@ import numpy as np
 import pandas as pd
 
 from backend.analysis.base_analyzer import AnalysisPlugin
+from backend.analysis.housing_affordability_analyzer import HousingAffordabilityAnalyzer
 from backend.core.forecast_base import ForecastingPlugin
+from backend.core.linear_trend_forecaster import LinearTrendForecaster
 from backend.core.plugin_registry import PluginRegistry
 from backend.data_collection.base_collector import DataCollector
+from backend.data_collection.world_bank_collector import WorldBankCollector
+from backend.utils.html_table_visualizer import HtmlTableVisualizer
 from backend.utils.visualizer_base import VisualizerPlugin
 
 
@@ -95,3 +99,47 @@ class TestPluginRegistry:
         nbs = PluginRegistry.get_collector("nbs")
         assert nbs is not None
         assert nbs.supported_cities() == ["CN"]
+
+
+class TestExamplePlugins:
+    def test_world_bank_collector_fallback(self):
+        collector = WorldBankCollector(use_api=False)
+        data = collector.fetch_data(city="new_york")
+        indicators = {record["indicator"] for record in data}
+        assert "gdp_current_usd" in indicators
+        assert "population" in indicators
+
+    def test_world_bank_collector_supported_cities(self):
+        collector = WorldBankCollector(use_api=False)
+        assert "shanghai" in collector.supported_cities()
+        assert "tokyo" in collector.supported_cities()
+
+    def test_housing_affordability_analyzer(self):
+        analyzer = HousingAffordabilityAnalyzer()
+        result = analyzer.analyze({"median_house_price": 600_000, "median_household_income": 80_000})
+        assert result["status"] == "success"
+        assert result["price_to_income_ratio"] == 7.5
+        assert result["stress_level"] == "high"
+
+    def test_linear_trend_forecaster(self):
+        forecaster = LinearTrendForecaster()
+        series = pd.Series([1.0, 2.0, 3.0, 4.0, 5.0])
+        mean, ci = forecaster.forecast(series, steps=3)
+        assert len(mean) == 3
+        assert len(ci) == 3
+        assert abs(mean[-1] - 8.0) < 1e-6
+
+    def test_html_table_visualizer(self):
+        visualizer = HtmlTableVisualizer()
+        html = visualizer.render(
+            {
+                "title": "测试表",
+                "records": [
+                    {"city": "深圳", "gdp": 3000},
+                    {"city": "上海", "gdp": 4500},
+                ],
+            }
+        )
+        assert "<table" in html
+        assert "深圳" in html
+        assert "测试表" in html
