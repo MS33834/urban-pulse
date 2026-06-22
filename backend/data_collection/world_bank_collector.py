@@ -14,27 +14,9 @@ from typing import Any
 import requests
 
 from backend.data_collection.base_collector import DataCollector
+from backend.regions.city_registry import get_global_city_registry
 
 logger = logging.getLogger(__name__)
-
-# 城市 -> 国家代码映射（用于从世界银行国家指标映射到城市）
-CITY_COUNTRY_MAP: dict[str, str] = {
-    "new_york": "US",
-    "london": "GB",
-    "tokyo": "JP",
-    "paris": "FR",
-    "singapore": "SG",
-    "hong_kong": "HK",
-    "shanghai": "CN",
-    "beijing": "CN",
-    "shenzhen": "CN",
-    "sydney": "AU",
-    "toronto": "CA",
-    "berlin": "DE",
-    "dubai": "AE",
-    "mumbai": "IN",
-    "sao_paulo": "BR",
-}
 
 # 世界银行指标代码 -> Urban Pulse 指标代码
 INDICATORS: dict[str, str] = {
@@ -93,21 +75,26 @@ FALLBACK_DATA: dict[str, dict[str, dict[str, float]]] = {
 class WorldBankCollector(DataCollector):
     """世界银行数据采集器插件示例。"""
 
-    def __init__(self, use_api: bool = True):
+    def __init__(self, use_api: bool = True, registry=None):
         super().__init__()
         self.source_name = "world_bank"
         self.use_api = use_api
+        self._registry = registry or get_global_city_registry()
 
     def name(self) -> str:
         return "world_bank"
 
     def supported_cities(self) -> list[str]:
-        return list(CITY_COUNTRY_MAP.keys())
+        return [city.code for city in self._registry.list_all()]
+
+    def _country_code_for(self, city_code: str) -> str | None:
+        city = self._registry.get(city_code)
+        return city.country_code if city else None
 
     def fetch_data(self, **kwargs) -> list[dict[str, Any]]:
         """采集指定城市的全部指标数据。"""
         city = kwargs.get("city", "new_york")
-        if city not in CITY_COUNTRY_MAP:
+        if self._registry.get(city) is None:
             logger.warning(f"World Bank 采集器不支持城市: {city}")
             return []
 
@@ -121,7 +108,10 @@ class WorldBankCollector(DataCollector):
         return records
 
     def _fetch_indicator(self, city: str, wb_code: str, indicator: str) -> list[dict[str, Any]]:
-        country_code = CITY_COUNTRY_MAP[city]
+        country_code = self._country_code_for(city)
+        if country_code is None:
+            logger.warning(f"无法获取城市对应国家代码: {city}")
+            return []
         records: list[dict[str, Any]] = []
 
         if self.use_api:
@@ -168,7 +158,7 @@ class WorldBankCollector(DataCollector):
     def fetch_all(self, indicators: list[str] | None = None) -> dict[str, list[dict]]:
         """批量采集所有支持城市的数据。"""
         all_data: dict[str, list[dict]] = {}
-        target_cities = list(CITY_COUNTRY_MAP.keys())
+        target_cities = self.supported_cities()
 
         for city in target_cities:
             records = self.fetch_data(city=city)
