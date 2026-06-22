@@ -100,6 +100,14 @@ class TestPluginRegistry:
         assert nbs is not None
         assert nbs.supported_cities() == ["CN"]
 
+    def test_discover_external_plugins_via_entry_points(self):
+        PluginRegistry.discover_all()
+        names = PluginRegistry.list_collectors()
+        assert "demo_collector" in names
+        demo = PluginRegistry.get_collector("demo_collector")
+        assert demo is not None
+        assert demo.supported_cities() == ["demo_city"]
+
 
 class TestExamplePlugins:
     def test_world_bank_collector_fallback(self):

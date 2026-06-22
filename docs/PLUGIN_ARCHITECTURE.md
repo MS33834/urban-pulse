@@ -187,6 +187,42 @@ Drop in a file → auto-detected. No config changes needed.
 
 ---
 
+## Phase 3 — External Plugin Packages (`pip install`)
+
+除了内置目录扫描，Urban Pulse 还支持通过 **Python entry points** 发现独立 pip 包中的插件：
+
+```python
+# my_package/my_collector.py
+from backend.data_collection.base_collector import DataCollector
+
+class MyCollector(DataCollector):
+    def name(self) -> str: return "my_collector"
+    def supported_cities(self) -> list[str]: return ["my_city"]
+    def fetch_data(self, **kwargs) -> list[dict]: return []
+```
+
+在第三方包的 `pyproject.toml` 中声明 entry point：
+
+```toml
+[project.entry-points."urban_pulse.collectors"]
+my_collector = "my_package.my_collector:MyCollector"
+```
+
+支持的 entry point groups：
+
+| Group | 插件类型 |
+|-------|----------|
+| `urban_pulse.collectors` | Collector |
+| `urban_pulse.analyzers` | Analyzer |
+| `urban_pulse.forecasters` | Forecaster |
+| `urban_pulse.visualizers` | Visualizer |
+
+安装后，调用 `PluginRegistry.discover_all()` 会自动加载这些外部插件，无需修改 Urban Pulse 主仓库。
+
+示例包见 [`plugins/urban-pulse-demo/`](plugins/urban-pulse-demo/)。
+
+---
+
 ## Roadmap for Extensibility
 
 | Phase | Feature | What it enables |

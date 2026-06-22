@@ -12,6 +12,7 @@ from __future__ import annotations
 import importlib.util
 import logging
 import pkgutil
+from importlib.metadata import entry_points
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -143,9 +144,60 @@ class PluginRegistry:
                     except Exception as exc:
                         logger.warning(f"实例化插件 {attr_name} 失败: {exc}")
 
+    # ------------------------------------------------------------------
+    # External plugins via entry points
+    # ------------------------------------------------------------------
+    ENTRY_POINT_GROUPS: dict[str, tuple[type, dict[str, Any]]] = {}
+
+    @classmethod
+    def _entry_point_groups(cls) -> dict[str, tuple[type, dict[str, Any]]]:
+        """返回 entry point group 到 (base_class, registry) 的映射。"""
+        if not cls.ENTRY_POINT_GROUPS:
+            from backend.analysis.base_analyzer import AnalysisPlugin
+            from backend.core.forecast_base import ForecastingPlugin
+            from backend.data_collection.base_collector import DataCollector
+            from backend.utils.visualizer_base import VisualizerPlugin
+
+            cls.ENTRY_POINT_GROUPS = {
+                "urban_pulse.collectors": (DataCollector, cls._collectors),
+                "urban_pulse.analyzers": (AnalysisPlugin, cls._analyzers),
+                "urban_pulse.forecasters": (ForecastingPlugin, cls._forecasters),
+                "urban_pulse.visualizers": (VisualizerPlugin, cls._visualizers),
+            }
+        return cls.ENTRY_POINT_GROUPS
+
+    @classmethod
+    def discover_external_plugins(cls) -> None:
+        """
+        通过 importlib.metadata.entry_points 发现外部 pip 包中的插件。
+
+        第三方包在 pyproject.toml 中声明：
+            [project.entry-points."urban_pulse.collectors"]
+            my_collector = "my_package.module:MyCollectorClass"
+        """
+        groups = cls._entry_point_groups()
+        try:
+            eps = entry_points()
+        except Exception as exc:
+            logger.warning(f"读取 entry points 失败: {exc}")
+            return
+
+        for group, (base_class, registry) in groups.items():
+            for ep in eps.select(group=group) if hasattr(eps, "select") else eps.get(group, []):
+                try:
+                    plugin_cls = ep.load()
+                    if not isinstance(plugin_cls, type) or not issubclass(plugin_cls, base_class):
+                        logger.warning(f"Entry point {ep.name} 不是有效的 {base_class.__name__} 子类")
+                        continue
+                    instance = plugin_cls()
+                    registry[instance.name()] = instance
+                    logger.debug(f"通过 entry point 注册插件 {base_class.__name__}: {instance.name()}")
+                except Exception as exc:
+                    logger.warning(f"加载外部插件 {ep.name} 失败: {exc}")
+
     @classmethod
     def discover_all(cls) -> None:
-        """一次性发现所有类型插件。"""
+        """一次性发现所有类型插件（内置 + 外部 pip 包）。"""
         from backend.analysis.base_analyzer import AnalysisPlugin
         from backend.core.forecast_base import ForecastingPlugin
         from backend.data_collection.base_collector import DataCollector
@@ -155,6 +207,7 @@ class PluginRegistry:
         cls.discover("backend.analysis", AnalysisPlugin, cls._analyzers)
         cls.discover("backend.core", ForecastingPlugin, cls._forecasters)
         cls.discover("backend.utils", VisualizerPlugin, cls._visualizers)
+        cls.discover_external_plugins()
 
     @classmethod
     def clear(cls) -> None:
