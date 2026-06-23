@@ -35,7 +35,7 @@ class NBSCollector(DataCollector):
 
     def __init__(self):
         super().__init__()
-        self.source_name = "nbs"
+        self._source_name = "nbs"
 
         # 从配置获取默认参数
         self.analysis_config = config_loader.get_analysis_config()

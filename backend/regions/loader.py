@@ -28,24 +28,44 @@ class RegionLoader:
 
         raw = self._load_raw()
         regions: list[Region] = []
+        seen_codes: set[str] = set()
 
         # 支持多级结构: countries / provinces / cities / districts
+        _plural_map = {
+            RegionLevel.COUNTRY: "countries",
+            RegionLevel.PROVINCE: "provinces",
+            RegionLevel.CITY: "cities",
+            RegionLevel.DISTRICT: "districts",
+        }
         for level in RegionLevel:
-            for item in raw.get(f"{level.value}s", []):
-                regions.append(self._parse_region(item, level))
+            for item in raw.get(_plural_map[level], []):
+                if level == RegionLevel.CITY:
+                    region = self._parse_city(item)
+                else:
+                    region = self._parse_region(item, level)
+                regions.append(region)
+                seen_codes.add(region.code)
 
-        # 兼容旧格式：顶层 cities 列表
+        # 兼容旧格式：顶层 cities 列表（跳过已在多级结构中处理的条目）
         for item in raw.get("cities", []):
-            regions.append(self._parse_city(item))
+            if str(item.get("code", "")) not in seen_codes:
+                regions.append(self._parse_city(item))
 
         # 兼容旧格式：嵌套 provinces -> cities
         for province in raw.get("provinces", []):
             province_region = self._parse_province(province)
-            regions.append(province_region)
+            if province_region.code not in seen_codes:
+                regions.append(province_region)
+                seen_codes.add(province_region.code)
             for city in province.get("cities", []):
+                city_code = str(city.get("code", ""))
+                if city_code in seen_codes:
+                    continue
                 city["parent_code"] = province_region.code
                 city["province_code"] = province_region.code
-                regions.append(self._parse_city(city))
+                parsed_city = self._parse_city(city)
+                regions.append(parsed_city)
+                seen_codes.add(parsed_city.code)
 
         return regions
 

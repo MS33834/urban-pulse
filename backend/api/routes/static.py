@@ -48,6 +48,19 @@ def safe_chart_path(filename: str) -> Path:
     return candidate
 
 
+@router.get("/charts/list")
+async def list_charts():
+    """列出所有可用图表（必须声明在 /charts/{filename} 之前，避免被路径参数吞掉）。"""
+    try:
+        charts = []
+        if CHARTS_DIR.exists():
+            for file in CHARTS_DIR.glob("*.png"):
+                charts.append({"filename": file.name, "url": f"/api/v1/static/charts/{file.name}"})
+        return {"status": "success", "charts": charts}
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error") from None
+
+
 @router.get("/charts/{filename}")
 async def get_chart(filename: str):
     """获取分析图表"""
@@ -58,16 +71,3 @@ async def get_chart(filename: str):
     if not file_path.is_file():
         raise HTTPException(status_code=404, detail="图表未找到") from None
     return FileResponse(file_path, media_type="image/png")
-
-
-@router.get("/charts/list")
-async def list_charts():
-    """列出所有可用图表"""
-    try:
-        charts = []
-        if CHARTS_DIR.exists():
-            for file in CHARTS_DIR.glob("*.png"):
-                charts.append({"filename": file.name, "url": f"/api/v1/static/charts/{file.name}"})
-        return {"status": "success", "charts": charts}
-    except Exception:
-        raise HTTPException(status_code=500, detail="Internal server error") from None

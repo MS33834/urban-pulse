@@ -244,6 +244,8 @@ async def upload_survey_data(
         stats = attach_survey_records(registry, records, overwrite=overwrite)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception("调查数据上传失败")
         raise HTTPException(status_code=500, detail=f"处理失败: {e}") from e

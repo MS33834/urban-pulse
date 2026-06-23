@@ -14,9 +14,6 @@ logger = logging.getLogger(__name__)
 class BaseCollector(ABC):
     """数据采集基类"""
 
-    def __init__(self):
-        self.source_name = ""
-
     @abstractmethod
     def fetch_data(self, **kwargs) -> list[dict[str, Any]]:
         """
@@ -55,8 +52,8 @@ class DataCollector(BaseCollector, ABC):
         ...
 
     def source_name(self) -> str:
-        """人类可读的数据源名称，默认返回 self.source_name 属性或类名。"""
-        return getattr(self, "source_name", self.__class__.__name__)
+        """人类可读的数据源名称，默认返回 self._source_name 属性或类名。"""
+        return self.__dict__.get("_source_name", self.__class__.__name__)
 
     @abstractmethod
     def supported_cities(self) -> list[str]:

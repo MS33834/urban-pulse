@@ -33,7 +33,7 @@ class FinanceCollector(DataCollector):
 
     def __init__(self):
         super().__init__()
-        self.source_name = "pbc"
+        self._source_name = "pbc"
 
     def name(self) -> str:
         return "pbc"

@@ -31,7 +31,7 @@ class IndustryCollector(DataCollector):
 
     def __init__(self):
         super().__init__()
-        self.source_name = "industry"
+        self._source_name = "industry"
 
     def name(self) -> str:
         return "industry"

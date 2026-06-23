@@ -155,9 +155,10 @@ class CSVFileDataSource(BaseDataSource):
 
     def fetch_data(self, query: str = "", **kwargs) -> pd.DataFrame:
         try:
+            value = kwargs.pop("value", None)
             df = pd.read_csv(self.file_path, **kwargs)
-            if query and query in df.columns:
-                return cast(pd.DataFrame, df[df[query].astype(str) == str(kwargs.get("value", ""))])
+            if query and query in df.columns and value is not None:
+                return cast(pd.DataFrame, df[df[query].astype(str) == str(value)])
             return cast(pd.DataFrame, df)
         except Exception as e:
             logger.error(f"读取CSV文件失败: {e}")

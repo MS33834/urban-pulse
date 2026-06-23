@@ -42,7 +42,7 @@ class DataValidator:
         elif expected is float:
             return "float" in actual or "int" in actual
         elif expected is str:
-            return "object" in actual or "string" in actual
+            return "object" in actual or "string" in actual or actual == "str"
         return False
 
     def validate_value_ranges(self, df: pd.DataFrame, value_ranges: dict[str, tuple]) -> dict[str, Any]:
