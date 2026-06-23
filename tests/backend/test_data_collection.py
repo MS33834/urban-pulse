@@ -313,7 +313,9 @@ class TestDataSources:
     def test_json_file_source(self, tmp_path):
         path = tmp_path / "data.json"
         path.write_text('{"gdp": [{"value": 1}]}', encoding="utf-8")
-        config = DataSourceConfig(name="json", source_type=DataSourceType.JSON_FILE, connection_info={"path": str(path)})
+        config = DataSourceConfig(
+            name="json", source_type=DataSourceType.JSON_FILE, connection_info={"path": str(path)}
+        )
         source = JSONFileDataSource(config)
         assert source.connect() is True
         assert source.test_connection() is True
@@ -427,12 +429,8 @@ class TestNBSCollector:
     def fake_ak(self, gdp_df):
         return SimpleNamespace(
             macro_china_gdp=lambda: gdp_df,
-            macro_china_cpi_yearly=lambda: pd.DataFrame(
-                {"日期": ["2024-01-01", "2024-02-01"], "今值": [0.5, 0.6]}
-            ),
-            macro_china_pmi_yearly=lambda: pd.DataFrame(
-                {"日期": ["2024-01-01"], "制造业-指数": [50.1]}
-            ),
+            macro_china_cpi_yearly=lambda: pd.DataFrame({"日期": ["2024-01-01", "2024-02-01"], "今值": [0.5, 0.6]}),
+            macro_china_pmi_yearly=lambda: pd.DataFrame({"日期": ["2024-01-01"], "制造业-指数": [50.1]}),
         )
 
     def test_name_and_cities(self):

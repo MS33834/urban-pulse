@@ -58,13 +58,7 @@ def chart_dir(project_root_path: Path) -> Path:
 @pytest.fixture
 def sample_csv() -> bytes:
     """生成可用于数据集上传的 CSV 字节。"""
-    return (
-        "city,year,gdp\n"
-        "深圳,2023,32000\n"
-        "深圳,2024,34606\n"
-        "上海,2023,45000\n"
-        "上海,2024,47218\n"
-    ).encode("utf-8-sig")
+    return ("city,year,gdp\n深圳,2023,32000\n深圳,2024,34606\n上海,2023,45000\n上海,2024,47218\n").encode("utf-8-sig")
 
 
 @pytest.fixture
@@ -81,9 +75,7 @@ def sample_json() -> bytes:
 def survey_csv() -> bytes:
     """生成可用于调查数据上传的 CSV 字节。"""
     return (
-        "region_code,year,indicator,value\n"
-        "CN-GD-SZ,2024,community_happiness,85\n"
-        "CN-GD-SZ,2025,community_happiness,87\n"
+        "region_code,year,indicator,value\nCN-GD-SZ,2024,community_happiness,85\nCN-GD-SZ,2025,community_happiness,87\n"
     ).encode("utf-8-sig")
 
 
@@ -255,7 +247,7 @@ class TestCitiesRoutes:
             "/api/v1/cities/aggregate",
             json={"group_by": [], "metrics": ["sum"]},
         )
-        assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert resp.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
     def test_compare_success(self, seeded_api_client: TestClient):
         resp = seeded_api_client.post(
@@ -294,7 +286,7 @@ class TestCitiesRoutes:
                 "year_end": 2020,
             },
         )
-        assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert resp.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
     def test_time_series_success(self, seeded_api_client: TestClient):
         resp = seeded_api_client.post(
@@ -358,7 +350,7 @@ class TestCitiesRoutes:
                 "year_end": 2025,
             },
         )
-        assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert resp.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
     def test_rankings_success(self, seeded_api_client: TestClient):
         resp = seeded_api_client.get("/api/v1/cities/rankings?indicator=gdp&year=2024&limit=5")
@@ -502,13 +494,7 @@ class TestDataRoutes:
 
     def test_basic_data(self, seeded_api_client: TestClient, project_root_path: Path):
         # 确保示例数据文件存在
-        basic_file = (
-            project_root_path
-            / "examples"
-            / "shenzhen_semiconductor_2025"
-            / "data"
-            / "basic_data.json"
-        )
+        basic_file = project_root_path / "examples" / "shenzhen_semiconductor_2025" / "data" / "basic_data.json"
         basic_file.parent.mkdir(parents=True, exist_ok=True)
         if not basic_file.exists():
             basic_file.write_text(json.dumps({"region": "深圳", "year": 2025}), encoding="utf-8")
@@ -585,7 +571,7 @@ class TestDatasetsRoutes:
             "/api/v1/datasets/upload",
             files={"file": ("", io.BytesIO(b"x"), "text/csv")},
         )
-        assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert resp.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
     def test_list_datasets(self, seeded_api_client: TestClient):
         resp = seeded_api_client.get("/api/v1/datasets")
@@ -825,7 +811,7 @@ class TestHealthRoutes:
 
     def test_download_template_invalid(self, seeded_api_client: TestClient):
         resp = seeded_api_client.get("/api/v1/health/template?format=pdf")
-        assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert resp.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
     def test_import_indicators_csv(self, seeded_api_client: TestClient):
         from backend.core.health_data_io import export_indicator_template
@@ -968,9 +954,7 @@ class TestRegionsRoutes:
         assert body["count"] > 0
 
     def test_forecast_region_indicator(self, seeded_api_client: TestClient):
-        resp = seeded_api_client.get(
-            f"/api/v1/regions/{CITY_CODES[0]}/forecast/gdp?forecast_years=3"
-        )
+        resp = seeded_api_client.get(f"/api/v1/regions/{CITY_CODES[0]}/forecast/gdp?forecast_years=3")
         assert resp.status_code == status.HTTP_200_OK
         body = resp.json()
         assert body["success"] is True
@@ -1024,9 +1008,7 @@ class TestRegionsRoutes:
             "/api/v1/regions/survey/upload?overwrite=true",
             files={"file": ("survey3.csv", io.BytesIO(survey_csv), "text/csv")},
         )
-        resp = seeded_api_client.get(
-            f"/api/v1/regions/{CITY_CODES[0]}/survey?indicator=community_happiness"
-        )
+        resp = seeded_api_client.get(f"/api/v1/regions/{CITY_CODES[0]}/survey?indicator=community_happiness")
         assert resp.status_code == status.HTTP_200_OK
         body = resp.json()
         assert body["success"] is True

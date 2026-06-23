@@ -92,12 +92,8 @@ class TestRegionRegistryExtended:
     def test_list_provinces_and_cities(self):
         registry = RegionRegistry()
         registry.register(Region(code="CN-GD", name="广东", level=RegionLevel.PROVINCE))
-        registry.register(
-            Region(code="CN-GD-SZ", name="深圳", level=RegionLevel.CITY, parent_code="CN-GD")
-        )
-        registry.register(
-            Region(code="CN-SH-SH", name="上海", level=RegionLevel.CITY, parent_code="CN-SH")
-        )
+        registry.register(Region(code="CN-GD-SZ", name="深圳", level=RegionLevel.CITY, parent_code="CN-GD"))
+        registry.register(Region(code="CN-SH-SH", name="上海", level=RegionLevel.CITY, parent_code="CN-SH"))
         assert len(registry.list_provinces()) == 1
         assert len(registry.list_cities()) == 2
         assert len(registry.list_cities("CN-GD")) == 1

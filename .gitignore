@@ -24,6 +24,12 @@ data/*.db-wal
 *secret*
 credentials*
 
+# Local environment
+.python-version
+
+# Generated examples / output
+examples/
+
 # Test / coverage artifacts
 .coverage
 htmlcov/

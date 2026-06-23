@@ -85,12 +85,8 @@ class TestCityDataManager:
     def test_compare_cities(self, manager, sz_config, gz_config):
         manager.register_city(sz_config)
         manager.register_city(gz_config)
-        manager.add_city_data(
-            CityData(city_code="sz", city_name="深圳", year=2024, indicators={"gdp": 35000.0})
-        )
-        manager.add_city_data(
-            CityData(city_code="gz", city_name="广州", year=2024, indicators={"gdp": 30000.0})
-        )
+        manager.add_city_data(CityData(city_code="sz", city_name="深圳", year=2024, indicators={"gdp": 35000.0}))
+        manager.add_city_data(CityData(city_code="gz", city_name="广州", year=2024, indicators={"gdp": 30000.0}))
         result = manager.compare_cities(["sz", "gz"], 2024, ["gdp"])
         assert result["sz"]["indicators"]["gdp"] == 35000.0
         assert result["gz"]["indicators"]["gdp"] == 30000.0

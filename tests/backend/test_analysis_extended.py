@@ -74,7 +74,9 @@ class TestIndicatorRegistryExtended:
         try:
             registry = IndicatorRegistry()
             registry.register(
-                IndicatorDefinition(code="file_test", name="文件测试", category=IndicatorCategory.CUSTOM, unit="%", description="x")
+                IndicatorDefinition(
+                    code="file_test", name="文件测试", category=IndicatorCategory.CUSTOM, unit="%", description="x"
+                )
             )
 
             filepath = tmp_path / "indicators.json"
@@ -202,7 +204,9 @@ class TestCustomIndicatorsExtended:
     def test_calculate_batch_and_available(self):
         from backend.analysis.custom_indicators import DictDataProvider, custom_indicator_engine
 
-        provider = DictDataProvider({"revenue": 1000, "expenditure": 1200, "gdp": 30000, "current": 110, "previous": 100})
+        provider = DictDataProvider(
+            {"revenue": 1000, "expenditure": 1200, "gdp": 30000, "current": 110, "previous": 100}
+        )
         batch = custom_indicator_engine.calculate_batch(["deficit", "growth_rate"], provider)
         assert batch["deficit"].status.value == "success"
         assert batch["growth_rate"].status.value == "success"
@@ -271,7 +275,11 @@ class TestDimensionAnalysisExtended:
         from backend.analysis.dimension_analysis import AnalysisType, DimensionAnalyzerFactory, DimensionDefinition
 
         dim = DimensionDefinition(
-            code="trend", name="趋势", data_fields=["gdp"], analysis_type=AnalysisType.TREND, metadata={"time_col": "year"}
+            code="trend",
+            name="趋势",
+            data_fields=["gdp"],
+            analysis_type=AnalysisType.TREND,
+            metadata={"time_col": "year"},
         )
         result = DimensionAnalyzerFactory.create(dim).analyze(sample_df)
         assert result.summary["gdp"]["trend_direction"] == "up"
@@ -280,7 +288,10 @@ class TestDimensionAnalysisExtended:
         from backend.analysis.dimension_analysis import AnalysisType, DimensionAnalyzerFactory, DimensionDefinition
 
         dim = DimensionDefinition(
-            code="corr", name="相关", data_fields=["gdp", "investment", "employment"], analysis_type=AnalysisType.CORRELATION
+            code="corr",
+            name="相关",
+            data_fields=["gdp", "investment", "employment"],
+            analysis_type=AnalysisType.CORRELATION,
         )
         result = DimensionAnalyzerFactory.create(dim).analyze(sample_df)
         assert result.summary["total_pairs"] == 3
@@ -943,9 +954,7 @@ class TestHousingAffordabilityExtended:
         from backend.analysis.housing_affordability_analyzer import HousingAffordabilityAnalyzer
 
         analyzer = HousingAffordabilityAnalyzer()
-        result = analyzer.analyze(
-            {"median_house_price": 240000, "median_household_income": 80000, "mortgage_rate": 0}
-        )
+        result = analyzer.analyze({"median_house_price": 240000, "median_household_income": 80000, "mortgage_rate": 0})
         assert result["status"] == "success"
         assert result["monthly_mortgage_pct_income"] > 0
 

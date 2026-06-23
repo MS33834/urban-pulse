@@ -84,7 +84,9 @@ class BaseAnalyzer(ABC):
     def calculate_growth_rates(self, df: pd.DataFrame, value_col: str, time_col: str, periods: int = 1) -> pd.DataFrame:
         df_sorted = df.sort_values(time_col).copy()
         # 用 NaN 替换 0 避免 pct_change 产生 inf
-        df_sorted[f"{value_col}_growth"] = df_sorted[value_col].replace(0, np.nan).pct_change(periods=periods) * 100
+        df_sorted[f"{value_col}_growth"] = (
+            df_sorted[value_col].replace(0, np.nan).pct_change(periods=periods, fill_method=None) * 100
+        )
         return df_sorted
 
     def calculate_moving_average(self, df: pd.DataFrame, value_col: str, window: int = 4) -> pd.DataFrame:

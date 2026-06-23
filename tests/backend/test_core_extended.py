@@ -155,9 +155,9 @@ class TestForecastEngineExtended:
         monkeypatch.setattr(fe, "statsforecast_available", lambda: True)
 
         fake_model = MagicMock()
-        fake_model.order = (1, 0, 1)
-        fake_model.aic = 100.0
-        fake_model.bic = 110.0
+        fake_model.fit.side_effect = lambda _y: setattr(
+            fake_model, "model_", {"arma": (1, 0, 0, 0, 1, 0, 0), "aic": 100.0, "bic": 110.0}
+        )
 
         fake_sf = MagicMock()
         fake_sf.models = [fake_model]
@@ -174,6 +174,7 @@ class TestForecastEngineExtended:
         out = fe.auto_arima_native(list(range(10)))
 
         assert out["backend"] == "statsforecast"
+        assert out["order"] == (1, 0, 0)
 
     def test_arima_forecast_model_none(self):
         out = fe.arima_forecast([], years=3)
@@ -182,20 +183,16 @@ class TestForecastEngineExtended:
 
     def test_arima_forecast_statsforecast_failure(self, monkeypatch, clear_statsforecast_module):
         # Provide a fake fit that claims statsforecast backend; predict path should fail gracefully.
+        fake_sf = MagicMock()
+        fake_sf.predict.side_effect = RuntimeError("boom")
         fit = {
-            "model": MagicMock(),
+            "model": fake_sf,
             "order": (1, 0, 0),
             "aic": 10.0,
             "bic": 12.0,
             "backend": "statsforecast",
         }
         monkeypatch.setattr(fe, "auto_arima_native", lambda _values, **kwargs: fit)
-
-        fake_sf = MagicMock()
-        fake_sf.StatsForecast.return_value.predict.side_effect = RuntimeError("boom")
-        fake_models = MagicMock()
-        sys.modules["statsforecast"] = fake_sf
-        sys.modules["statsforecast.models"] = fake_models
 
         out = fe.arima_forecast([1.0, 2.0, 3.0, 4.0, 5.0], years=2)
         assert "failed" in out["method"].lower()
@@ -219,8 +216,9 @@ class TestForecastEngineExtended:
         assert "insufficient" in out["method"].lower()
 
     def test_ets_forecast_failure_fallback(self):
-        with patch("statsmodels.tsa.holtwinters.ExponentialSmoothing", side_effect=RuntimeError("boom")), patch(
-            "statsmodels.tsa.holtwinters.SimpleExpSmoothing", side_effect=RuntimeError("boom")
+        with (
+            patch("statsmodels.tsa.holtwinters.ExponentialSmoothing", side_effect=RuntimeError("boom")),
+            patch("statsmodels.tsa.holtwinters.SimpleExpSmoothing", side_effect=RuntimeError("boom")),
         ):
             out = fe.ets_forecast(list(range(10)), years=2)
         assert "failed" in out["method"].lower()

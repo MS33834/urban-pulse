@@ -61,12 +61,7 @@ class TestStorageInit:
 
     def test_init_db_creates_tables(self):
         conn = storage_mod.get_connection()
-        tables = {
-            row["name"]
-            for row in conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table'"
-            ).fetchall()
-        }
+        tables = {row["name"] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
         assert "datasets" in tables
         assert "dataset_columns" in tables
         assert "records" in tables

@@ -140,7 +140,8 @@ def auto_arima_native(values: list[float], max_p: int = 5, max_d: int = 2, max_q
             from statsforecast.models import AutoARIMA as SF_AutoARIMA
 
             logger.debug("ARIMA: using statsforecast.AutoARIMA")
-            sf = StatsForecast(models=[SF_AutoARIMA(season_length=1)], freq="YS", n_jobs=1)
+            sf_model = SF_AutoARIMA(season_length=1)
+            sf = StatsForecast(models=[sf_model], freq="YS", n_jobs=1)
             df = pd.DataFrame(
                 {
                     "unique_id": ["y"] * n,
@@ -149,14 +150,19 @@ def auto_arima_native(values: list[float], max_p: int = 5, max_d: int = 2, max_q
                 }
             )
             sf.fit(df)
-            sf_model = sf.models[0]
-            order = tuple(sf_model.order) if hasattr(sf_model, "order") and sf_model.order else None
-            aic = float(getattr(sf_model, "aic", float("inf"))) if order else float("inf")
-            bic = float(getattr(sf_model, "bic", float("inf"))) if order else float("inf")
-            if order is None:
+            # StatsForecast.fit 不会填充 model_ 等属性;需要再调用一次 fit 才能读取 order/aic
+            sf_model.fit(y)
+            arma = sf_model.model_.get("arma") if sf_model.model_ else None
+            if not arma or len(arma) < 7:
                 raise RuntimeError("statsforecast did not return an order")
+            p, q, P, Q, m, d, D = arma
+            order = (int(p), int(d), int(q))
+            aic = float(sf_model.model_.get("aic", float("inf")))
+            bic = float(sf_model.model_.get("bic", float("inf")))
+            if not np.isfinite(aic):
+                raise RuntimeError("statsforecast returned non-finite AIC")
             return {
-                "model": sf_model,
+                "model": sf,
                 "order": order,
                 "aic": aic,
                 "bic": bic,
@@ -207,10 +213,11 @@ def arima_forecast(values: list[float], years: int, confidence: float = 0.95) ->
     """
     fit = auto_arima_native(values)
     if fit["model"] is None:
+        fallback_preds = [float(v) for v in values[-years:]] if values else [0.0] * years
         return {
-            "predictions": [float(v) for v in values[-years:]] if values else [0.0] * years,
-            "lower_ci": [0.0] * years,
-            "upper_ci": [0.0] * years,
+            "predictions": fallback_preds,
+            "lower_ci": [p * 0.95 for p in fallback_preds],
+            "upper_ci": [p * 1.05 for p in fallback_preds],
             "method": "ARIMA failed",
             "order": None,
             "aic": None,
@@ -225,31 +232,19 @@ def arima_forecast(values: list[float], years: int, confidence: float = 0.95) ->
 
     try:
         if backend == "statsforecast":
-            # 重新 fit (单 series) 然后 predict h=years
-            import pandas as pd
-            from statsforecast import StatsForecast
-            from statsforecast.models import AutoARIMA as SF_AutoARIMA
-
-            sf = StatsForecast(models=[SF_AutoARIMA(season_length=1)], freq="YS", n_jobs=1)
-            df = pd.DataFrame(
-                {
-                    "unique_id": ["y"] * n,
-                    "ds": pd.date_range("2010-01-01", periods=n, freq="YS"),
-                    "y": y_arr,
-                }
-            )
-            sf.fit(df)
+            # model 是已 fit 的 StatsForecast 对象,直接 predict
+            sf = model
             fc_df = sf.predict(h=years)
             col = "AutoARIMA" if "AutoARIMA" in fc_df.columns else fc_df.columns[-1]
             preds = [float(x) for x in fc_df[col].tolist()]
             # statsforecast 不带 conf_int → 用 in-sample 残差 std 算近似
             try:
                 sf_model = sf.models[0]
-                fitted = sf_model.fitted_values if hasattr(sf_model, "fitted_values") else None
-                if fitted is not None and len(fitted) == n:
-                    resid = y_arr - np.asarray(fitted)
-                else:
-                    raise RuntimeError("no fitted_values")
+                # 重新 fit 以获取 model_ 与 residuals(轻量,仅一次)
+                sf_model.fit(y_arr)
+                resid = np.asarray(sf_model.model_.get("residuals", []))
+                if len(resid) != n:
+                    raise RuntimeError("residuals length mismatch")
             except Exception:
                 resid = np.diff(y_arr, prepend=y_arr[0])
             sigma = float(np.std(resid, ddof=1)) or 1.0
@@ -718,8 +713,8 @@ def backtest_forecast(
     # 2. RMSE
     rmse = float(np.sqrt(np.mean((a - f) ** 2)))
     # 3. MASE (mean(|actual - pred|) / mean(|actual_t - actual_{t-1}|))
-    naive_err = np.mean(np.abs(np.diff(a)))
-    mase = float(np.mean(np.abs(a - f)) / naive_err) if naive_err > 0 else float("inf")
+    naive_err = float(np.mean(np.abs(np.diff(a)))) if len(a) > 1 else float("nan")
+    mase = float(np.mean(np.abs(a - f)) / naive_err) if naive_err and naive_err > 0 else float("nan")
     # 4. sMAPE
     smape = float(np.mean(2 * np.abs(a - f) / (np.abs(a) + np.abs(f) + 1e-9)) * 100)
     # 5. Coverage
