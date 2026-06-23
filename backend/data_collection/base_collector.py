@@ -84,11 +84,12 @@ class DataCollector(BaseCollector, ABC):
             if city_col not in df.columns:
                 df[city_col] = "unknown"
             for city, group in df.groupby(city_col):
+                city_key = str(city)
                 group = group.copy()
                 group["indicator"] = indicator
-                if city not in result:
-                    result[city] = group
+                if city_key not in result:
+                    result[city_key] = group
                 else:
-                    result[city] = pd.concat([result[city], group], ignore_index=True)
+                    result[city_key] = pd.concat([result[city_key], group], ignore_index=True)
 
         return result

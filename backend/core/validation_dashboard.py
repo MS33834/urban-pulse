@@ -62,7 +62,7 @@ h1 {{ border-bottom: 2px solid #1a73e8; padding-bottom: .5rem; }}
 </head>
 <body>
 <h1>Urban Pulse 预测准确率验证仪表板</h1>
-<p>生成时间: {html.escape(str(report['generated_at']))}</p>
+<p>生成时间: {html.escape(str(report["generated_at"]))}</p>
 {summary_html}
 {by_model_html}
 {by_city_html}

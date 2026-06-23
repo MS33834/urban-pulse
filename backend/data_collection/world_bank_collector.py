@@ -30,7 +30,7 @@ INDICATORS: dict[str, str] = {
 FALLBACK_YEARS = [2021, 2022, 2023, 2024]
 
 # 当世界银行 API 不可用时使用的回退数据（近似值，仅用于演示）
-FALLBACK_DATA: dict[str, dict[str, dict[str, float]]] = {
+FALLBACK_DATA: dict[str, dict[str, dict[int, float]]] = {
     "new_york": {
         "gdp_current_usd": {
             2021: 1_700_000_000_000,
@@ -105,9 +105,11 @@ class WorldBankCollector(DataCollector):
 
     def __init__(self, use_api: bool = True, registry=None):
         super().__init__()
-        self.source_name = "world_bank"
         self.use_api = use_api
         self._registry = registry or get_global_city_registry()
+
+    def source_name(self) -> str:
+        return "world_bank"
 
     def name(self) -> str:
         return "world_bank"

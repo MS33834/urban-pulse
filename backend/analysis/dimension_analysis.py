@@ -551,6 +551,7 @@ class CustomAnalyzer(BaseAnalyzer):
                 continue
 
             values = np.asarray(col_data, dtype=float)
+            result: float | dict[str, Any]
             if aggregator == "sum":
                 result = float(np.sum(values))
             elif aggregator == "avg":

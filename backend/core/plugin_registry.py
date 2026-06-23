@@ -14,9 +14,16 @@ import logging
 import pkgutil
 from importlib.metadata import entry_points
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any, Protocol, TypeVar, cast
 
 T = TypeVar("T")
+
+
+class _NamedPlugin(Protocol):
+    """拥有 name() 方法的插件协议，用于类型检查。"""
+
+    def name(self) -> str: ...
+
 
 logger = logging.getLogger(__name__)
 
@@ -139,8 +146,9 @@ class PluginRegistry:
                 ):
                     try:
                         instance = attr()
-                        registry[instance.name()] = instance
-                        logger.debug(f"自动发现插件 {base_class.__name__}: {instance.name()}")
+                        named = cast(_NamedPlugin, instance)
+                        registry[named.name()] = instance
+                        logger.debug(f"自动发现插件 {base_class.__name__}: {named.name()}")
                     except Exception as exc:
                         logger.warning(f"实例化插件 {attr_name} 失败: {exc}")
 
@@ -183,15 +191,18 @@ class PluginRegistry:
             return
 
         for group, (base_class, registry) in groups.items():
-            for ep in eps.select(group=group) if hasattr(eps, "select") else eps.get(group, []):
+            group_eps = eps.select(group=group) if hasattr(eps, "select") else []
+            for ep in group_eps:
                 try:
-                    plugin_cls = ep.load()
+                    loaded = ep.load()
+                    plugin_cls = cast(type[Any], loaded)
                     if not isinstance(plugin_cls, type) or not issubclass(plugin_cls, base_class):
                         logger.warning(f"Entry point {ep.name} 不是有效的 {base_class.__name__} 子类")
                         continue
                     instance = plugin_cls()
-                    registry[instance.name()] = instance
-                    logger.debug(f"通过 entry point 注册插件 {base_class.__name__}: {instance.name()}")
+                    named = cast(_NamedPlugin, instance)
+                    registry[named.name()] = instance
+                    logger.debug(f"通过 entry point 注册插件 {base_class.__name__}: {named.name()}")
                 except Exception as exc:
                     logger.warning(f"加载外部插件 {ep.name} 失败: {exc}")
 

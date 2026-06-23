@@ -91,10 +91,8 @@ class ForecastValidator:
         if df.empty:
             return result
         for model, group in df.groupby("model"):
-            result[str(model)] = self.compute_metrics(
-                group["actual_value"].tolist(), group["predicted_value"].tolist()
-            )
-        return dict(sorted(result.items(), key=lambda x: (x[1].mae if x[1].mae is not None else float("inf"))))
+            result[str(model)] = self.compute_metrics(group["actual_value"].tolist(), group["predicted_value"].tolist())
+        return dict(sorted(result.items(), key=lambda x: x[1].mae if x[1].mae is not None else float("inf")))
 
     def by_city(self) -> dict[str, ValidationMetrics]:
         """按城市分组的验证指标。"""
@@ -103,9 +101,7 @@ class ForecastValidator:
         if df.empty:
             return result
         for city, group in df.groupby("city_code"):
-            result[str(city)] = self.compute_metrics(
-                group["actual_value"].tolist(), group["predicted_value"].tolist()
-            )
+            result[str(city)] = self.compute_metrics(group["actual_value"].tolist(), group["predicted_value"].tolist())
         return result
 
     def by_indicator(self) -> dict[str, ValidationMetrics]:

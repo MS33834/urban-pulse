@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 from backend.core.plugin_registry import PluginRegistry
 
@@ -102,8 +103,8 @@ class PluginDocsGenerator:
     def _collect_type(
         self,
         plugin_type: str,
-        list_fn: callable,
-        get_fn: callable,
+        list_fn: Callable[[], list[str]],
+        get_fn: Callable[[str], Any],
     ) -> list[PluginInfo]:
         infos: list[PluginInfo] = []
         for name in list_fn():
@@ -146,7 +147,7 @@ class PluginDocsGenerator:
                 pass
         if plugin_type == "analyzer" and hasattr(plugin, "required_indicators"):
             try:
-                return plugin.required_indicators()
+                return cast(list[str], plugin.required_indicators())
             except Exception:
                 pass
         if plugin_type == "forecaster" and hasattr(plugin, "min_data_points"):
@@ -156,7 +157,7 @@ class PluginDocsGenerator:
                 pass
         if plugin_type == "visualizer" and hasattr(plugin, "supported_data_types"):
             try:
-                return plugin.supported_data_types()
+                return cast(list[str], plugin.supported_data_types())
             except Exception:
                 pass
         return []

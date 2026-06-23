@@ -46,8 +46,11 @@ class SurveyCollector(DataCollector):
 
     def __init__(self, source_name: str = "survey") -> None:
         super().__init__()
-        self.source_name = source_name
+        self._source_name = source_name
         self._records: list[dict[str, Any]] = []
+
+    def source_name(self) -> str:
+        return self._source_name
 
     def name(self) -> str:
         return "survey"
