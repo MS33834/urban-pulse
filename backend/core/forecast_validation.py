@@ -123,23 +123,7 @@ class ForecastValidator:
         返回按模型聚合的命中率。
         """
         df = self._load_validated()
-        result: dict[str, float] = {}
-        if df.empty:
-            return result
-
-        for model, group in df.groupby("model"):
-            total = 0
-            hits = 0
-            for _, row in group.iterrows():
-                ci = row.get("confidence_interval")
-                if not isinstance(ci, (list, tuple)) or len(ci) != 2:
-                    continue
-                total += 1
-                if ci[0] <= row["actual_value"] <= ci[1]:
-                    hits += 1
-            if total > 0:
-                result[str(model)] = round(hits / total, 4)
-        return result
+        return self._hit_rate_from_df(df)
 
     def report(self) -> dict[str, Any]:
         """生成完整验证报告（dict 形式）。"""
@@ -173,17 +157,20 @@ class ForecastValidator:
         if df.empty:
             return result
         for model, group in df.groupby("model"):
-            total = 0
-            hits = 0
-            for _, row in group.iterrows():
-                ci = row.get("confidence_interval")
-                if not isinstance(ci, (list, tuple)) or len(ci) != 2:
-                    continue
-                total += 1
-                if ci[0] <= row["actual_value"] <= ci[1]:
-                    hits += 1
-            if total > 0:
-                result[str(model)] = round(hits / total, 4)
+            # 向量化计算命中率,避免逐行 iterrows。
+            ci = group["confidence_interval"]
+            valid = ci.apply(lambda x: isinstance(x, (list, tuple)) and len(x) == 2)
+            if not valid.any():
+                continue
+            sub = group[valid]
+            actual = sub["actual_value"].to_numpy(dtype=float)
+            lower = sub["confidence_interval"].apply(lambda x: x[0]).to_numpy(dtype=float)
+            upper = sub["confidence_interval"].apply(lambda x: x[1]).to_numpy(dtype=float)
+            total = len(sub)
+            if total == 0:
+                continue
+            hits = int(np.count_nonzero((actual >= lower) & (actual <= upper)))
+            result[str(model)] = round(hits / total, 4)
         return result
 
     def to_json(self, indent: int = 2) -> str:

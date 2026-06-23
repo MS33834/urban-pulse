@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from backend.analysis.enterprise_analyzer_v3 import EnterpriseAnalyzer, EnterpriseAnalyzerV3, enterprise_analyzer
 from backend.analysis.government_analyzer import GovernmentAnalyzer
@@ -26,7 +26,7 @@ class AnalysisRequest(BaseModel):
 
     region: str = AnalysisConfig.DEFAULT_REGION
     industry: str = AnalysisConfig.DEFAULT_INDUSTRY
-    year: int = AnalysisConfig.DEFAULT_YEAR
+    year: int = Field(AnalysisConfig.DEFAULT_YEAR, ge=1900, le=2200, description="分析年份")
     data: dict[str, Any] | None = None
 
 
@@ -136,6 +136,8 @@ async def analyze_enterprise_location(city_name: str) -> dict[str, Any]:
 @router.post("/enterprise/compare", summary="多城市企业选址对比")
 def compare_enterprises(city_names: list[str]) -> dict[str, Any]:
     """对比多个城市的企业选址友好度。"""
+    if len(city_names) > 20:
+        raise HTTPException(status_code=422, detail="城市数量不能超过 20 个") from None
     valid_cities = [city for city in city_names if city in get_all_cities()]
     if not valid_cities:
         raise HTTPException(status_code=400, detail="未提供有效的城市名称") from None

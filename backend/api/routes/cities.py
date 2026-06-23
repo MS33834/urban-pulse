@@ -472,27 +472,32 @@ async def get_city_dashboard(city_code: str = Query(..., min_length=1, descripti
                 trends.append({"indicator": indicator, "trend": direction, "change_rate": change_rate})
 
         # 排名:在城市子集内按指标均值倒排
+        # 优化:一次性对所有指标调用 compare_cities,避免 N+1 查询(原每个指标一次)。
         rankings_payload: dict[str, int] = {}
-        for indicator in sorted(indicator_codes):
+        all_city_codes = list(city_manager.cities.keys())
+        sorted_indicators = sorted(indicator_codes)
+        if sorted_indicators and all_city_codes:
             cities_compare = city_manager.compare_cities(
-                [c for c in city_manager.cities.keys()],
+                all_city_codes,
                 year=years[-1] if years else 0,
-                indicators=[indicator],
+                indicators=sorted_indicators,
             )
-            scored: list[tuple[str, float]] = []
-            for code, payload in cities_compare.items():
-                value = payload.get("indicators", {}).get(indicator)
-                if value is None:
-                    continue
-                try:
-                    scored.append((code, float(value)))
-                except (TypeError, ValueError):
-                    continue
-            scored.sort(key=lambda pair: pair[1], reverse=True)
-            for rank_index, (code, _) in enumerate(scored, start=1):
-                if code == city_code:
-                    rankings_payload[indicator] = rank_index
-                    break
+            # 按指标分组排序,得到每个城市在每个指标上的排名
+            for indicator in sorted_indicators:
+                scored: list[tuple[str, float]] = []
+                for code, payload in cities_compare.items():
+                    value = payload.get("indicators", {}).get(indicator)
+                    if value is None:
+                        continue
+                    try:
+                        scored.append((code, float(value)))
+                    except (TypeError, ValueError):
+                        continue
+                scored.sort(key=lambda pair: pair[1], reverse=True)
+                for rank_index, (code, _) in enumerate(scored, start=1):
+                    if code == city_code:
+                        rankings_payload[indicator] = rank_index
+                        break
 
         dashboard = {
             "city_info": {

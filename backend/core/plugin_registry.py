@@ -12,6 +12,7 @@ from __future__ import annotations
 import importlib.util
 import logging
 import pkgutil
+import threading
 from importlib.metadata import entry_points
 from pathlib import Path
 from typing import Any, Protocol, TypeVar, cast
@@ -26,6 +27,9 @@ class _NamedPlugin(Protocol):
 
 
 logger = logging.getLogger(__name__)
+
+# 全局锁,保护类级注册字典的并发读写(多 worker / 多线程发现插件时)。
+_REGISTRY_LOCK = threading.RLock()
 
 
 class PluginRegistry:
@@ -42,16 +46,19 @@ class PluginRegistry:
     @classmethod
     def register_collector(cls, plugin: Any, name: str | None = None) -> None:
         name = name or plugin.name()
-        cls._collectors[name] = plugin
+        with _REGISTRY_LOCK:
+            cls._collectors[name] = plugin
         logger.debug(f"注册采集器插件: {name}")
 
     @classmethod
     def get_collector(cls, name: str) -> Any | None:
-        return cls._collectors.get(name)
+        with _REGISTRY_LOCK:
+            return cls._collectors.get(name)
 
     @classmethod
     def list_collectors(cls) -> list[str]:
-        return list(cls._collectors.keys())
+        with _REGISTRY_LOCK:
+            return list(cls._collectors.keys())
 
     # ------------------------------------------------------------------
     # Analyzer
@@ -59,16 +66,19 @@ class PluginRegistry:
     @classmethod
     def register_analyzer(cls, plugin: Any, name: str | None = None) -> None:
         name = name or plugin.name()
-        cls._analyzers[name] = plugin
+        with _REGISTRY_LOCK:
+            cls._analyzers[name] = plugin
         logger.debug(f"注册分析器插件: {name}")
 
     @classmethod
     def get_analyzer(cls, name: str) -> Any | None:
-        return cls._analyzers.get(name)
+        with _REGISTRY_LOCK:
+            return cls._analyzers.get(name)
 
     @classmethod
     def list_analyzers(cls) -> list[str]:
-        return list(cls._analyzers.keys())
+        with _REGISTRY_LOCK:
+            return list(cls._analyzers.keys())
 
     # ------------------------------------------------------------------
     # Forecaster
@@ -76,16 +86,19 @@ class PluginRegistry:
     @classmethod
     def register_forecaster(cls, plugin: Any, name: str | None = None) -> None:
         name = name or plugin.name()
-        cls._forecasters[name] = plugin
+        with _REGISTRY_LOCK:
+            cls._forecasters[name] = plugin
         logger.debug(f"注册预测器插件: {name}")
 
     @classmethod
     def get_forecaster(cls, name: str) -> Any | None:
-        return cls._forecasters.get(name)
+        with _REGISTRY_LOCK:
+            return cls._forecasters.get(name)
 
     @classmethod
     def list_forecasters(cls) -> list[str]:
-        return list(cls._forecasters.keys())
+        with _REGISTRY_LOCK:
+            return list(cls._forecasters.keys())
 
     # ------------------------------------------------------------------
     # Visualizer
@@ -93,16 +106,19 @@ class PluginRegistry:
     @classmethod
     def register_visualizer(cls, plugin: Any, name: str | None = None) -> None:
         name = name or plugin.name()
-        cls._visualizers[name] = plugin
+        with _REGISTRY_LOCK:
+            cls._visualizers[name] = plugin
         logger.debug(f"注册可视化器插件: {name}")
 
     @classmethod
     def get_visualizer(cls, name: str) -> Any | None:
-        return cls._visualizers.get(name)
+        with _REGISTRY_LOCK:
+            return cls._visualizers.get(name)
 
     @classmethod
     def list_visualizers(cls) -> list[str]:
-        return list(cls._visualizers.keys())
+        with _REGISTRY_LOCK:
+            return list(cls._visualizers.keys())
 
     # ------------------------------------------------------------------
     # Discovery
@@ -147,7 +163,8 @@ class PluginRegistry:
                     try:
                         instance = attr()
                         named = cast(_NamedPlugin, instance)
-                        registry[named.name()] = instance
+                        with _REGISTRY_LOCK:
+                            registry[named.name()] = instance
                         logger.debug(f"自动发现插件 {base_class.__name__}: {named.name()}")
                     except Exception as exc:
                         logger.warning(f"实例化插件 {attr_name} 失败: {exc}")
@@ -201,7 +218,8 @@ class PluginRegistry:
                         continue
                     instance = plugin_cls()
                     named = cast(_NamedPlugin, instance)
-                    registry[named.name()] = instance
+                    with _REGISTRY_LOCK:
+                        registry[named.name()] = instance
                     logger.debug(f"通过 entry point 注册插件 {base_class.__name__}: {named.name()}")
                 except Exception as exc:
                     logger.warning(f"加载外部插件 {ep.name} 失败: {exc}")
@@ -223,7 +241,8 @@ class PluginRegistry:
     @classmethod
     def clear(cls) -> None:
         """清空注册表，主要用于测试。"""
-        cls._collectors.clear()
-        cls._analyzers.clear()
-        cls._forecasters.clear()
-        cls._visualizers.clear()
+        with _REGISTRY_LOCK:
+            cls._collectors.clear()
+            cls._analyzers.clear()
+            cls._forecasters.clear()
+            cls._visualizers.clear()

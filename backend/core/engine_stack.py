@@ -23,9 +23,13 @@ Engine stack 探测 — runtime 检查可选库是否可用。
 from __future__ import annotations
 
 import logging
+import threading
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+# 保护模块级缓存变量的并发初始化(双重检查锁模式)。
+_PROBE_LOCK = threading.Lock()
 
 
 def _try_import(module_name: str, min_version: str | None = None) -> bool:
@@ -60,7 +64,9 @@ def statsforecast_available() -> bool:
     """nixtla/statsforecast — 高速 AutoARIMA + 多季节 + 节假日"""
     global _STATSFORECAST_OK
     if _STATSFORECAST_OK is None:
-        _STATSFORECAST_OK = _try_import("statsforecast", min_version="1.0.0")
+        with _PROBE_LOCK:
+            if _STATSFORECAST_OK is None:
+                _STATSFORECAST_OK = _try_import("statsforecast", min_version="1.0.0")
     return _STATSFORECAST_OK
 
 
@@ -68,7 +74,9 @@ def arch_available() -> bool:
     """bashtage/arch — GARCH / EGARCH / GJR 波动率建模"""
     global _ARCH_OK
     if _ARCH_OK is None:
-        _ARCH_OK = _try_import("arch", min_version="5.0.0")
+        with _PROBE_LOCK:
+            if _ARCH_OK is None:
+                _ARCH_OK = _try_import("arch", min_version="5.0.0")
     return _ARCH_OK
 
 
@@ -76,7 +84,9 @@ def pmdarima_available() -> bool:
     """alkaline-ml/pmdarima — auto_arima + 季节性 + 平稳检验"""
     global _PMDARIMA_OK
     if _PMDARIMA_OK is None:
-        _PMDARIMA_OK = _try_import("pmdarima", min_version="2.0.0")
+        with _PROBE_LOCK:
+            if _PMDARIMA_OK is None:
+                _PMDARIMA_OK = _try_import("pmdarima", min_version="2.0.0")
     return _PMDARIMA_OK
 
 
@@ -84,7 +94,9 @@ def prophet_available() -> bool:
     """facebook/prophet — 自动节假日 + 季节性(可选)"""
     global _PROPHET_OK
     if _PROPHET_OK is None:
-        _PROPHET_OK = _try_import("prophet", min_version="1.0.0")
+        with _PROBE_LOCK:
+            if _PROPHET_OK is None:
+                _PROPHET_OK = _try_import("prophet", min_version="1.0.0")
     return _PROPHET_OK
 
 

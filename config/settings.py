@@ -89,6 +89,16 @@ class Settings(BaseSettings):
             )
         return self
 
+    @model_validator(mode="after")
+    def _enforce_cors_whitelist_in_production(self):
+        """production 环境禁止使用通配符 '*' 作为 CORS 源,避免任意站点跨域访问。"""
+        if self.APP_ENV == "production" and "*" in self.CORS_ORIGINS:
+            raise ValueError(
+                "CORS_ORIGINS must not contain '*' in production. "
+                "Explicitly list the allowed origins via the CORS_ORIGINS environment variable."
+            )
+        return self
+
 
 def setup_logging(settings: Settings):
     """Configure the application-wide logging system."""

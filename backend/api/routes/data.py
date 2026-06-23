@@ -144,8 +144,8 @@ def get_basic_data():
 def get_trend_data(
     region: str = Query("深圳"),
     industry: str = Query("半导体"),
-    start_year: int = Query(2020),
-    end_year: int = Query(2025),
+    start_year: int = Query(2020, ge=1900, le=2200),
+    end_year: int = Query(2025, ge=1900, le=2200),
 ):
     """获取产业趋势数据(示例数据)"""
     if start_year > end_year:
@@ -167,7 +167,7 @@ def get_trend_data(
 
 
 @router.get("/map", summary="获取地图数据")
-def get_map_data(indicator: str = Query("output"), year: int = Query(2025)):
+def get_map_data(indicator: str = Query("output"), year: int = Query(2025, ge=1900, le=2200)):
     """获取产业地图数据(示例数据)"""
     return {
         "indicator": indicator,
