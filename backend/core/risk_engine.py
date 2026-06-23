@@ -103,7 +103,10 @@ def garch_volatility(values: list[float], horizon: int = 1, p: int = 1, q: int =
 
         y = np.array(values, dtype=float)
         # 算 YoY 收益率(%)
-        returns = 100.0 * np.diff(y) / y[:-1]
+        y_prev = y[:-1]
+        safe_prev = np.where(y_prev == 0, np.nan, y_prev)
+        returns = 100.0 * np.diff(y) / safe_prev
+        returns = returns[np.isfinite(returns)]
 
         am = arch_model(returns, mean="Constant", vol="GARCH", p=p, q=q, dist="normal")
         with warnings.catch_warnings():
@@ -167,7 +170,10 @@ def var_cvar(values: list[float], confidence: float = 0.95, lookback: int = 5) -
 
     y = np.array(values, dtype=float)
     # YoY 收益
-    returns = (y[1:] - y[:-1]) / y[:-1]
+    y_prev = y[:-1]
+    safe_prev = np.where(y_prev == 0, np.nan, y_prev)
+    returns = (y[1:] - y[:-1]) / safe_prev
+    returns = returns[np.isfinite(returns)]
     returns = returns[-lookback:]
 
     sorted_returns = np.sort(returns)  # 升序

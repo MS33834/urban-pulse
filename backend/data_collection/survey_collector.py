@@ -150,7 +150,7 @@ class SurveyCollector(DataCollector):
             "year": year,
             "indicator": indicator,
             "value": value,
-            "source": self.source_name,
+            "source": self.source_name(),
             "survey_type": "survey",
         }
 

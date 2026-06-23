@@ -216,7 +216,7 @@ def government_analysis(request: AnalysisRequest):
         }
 
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
+        raise HTTPException(status_code=404, detail="指定的城市或区域不存在") from e
     except Exception as e:
         logger.exception("政府端分析失败: %s", e)
         raise HTTPException(status_code=500, detail="政府端分析失败，请稍后重试") from None

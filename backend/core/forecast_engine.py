@@ -620,8 +620,14 @@ def chow_test(values: list[float], breakpoint_idx: int) -> dict[str, Any]:
     """单点 Chow test。原假设:无结构突变。"""
     y = np.array(values)
     n = len(y)
-    if breakpoint_idx < 2 or breakpoint_idx > n - 2:
-        return {"f_stat": None, "pvalue": None, "structural_break": False, "reason": "invalid breakpoint"}
+    k = 2
+    if breakpoint_idx < 2 or breakpoint_idx > n - 2 or n - 2 * k <= 0:
+        return {
+            "f_stat": None,
+            "pvalue": None,
+            "structural_break": False,
+            "reason": "invalid breakpoint or insufficient data",
+        }
     x = np.arange(n)
     rss_full = _rss(x, y)
     rss1 = _rss(x[:breakpoint_idx], y[:breakpoint_idx])

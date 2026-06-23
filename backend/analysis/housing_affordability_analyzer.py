@@ -90,12 +90,13 @@ class HousingAffordabilityAnalyzer(AnalysisPlugin):
         # 月供 = P * (r/12) * (1 + r/12)^(12*n) / ((1 + r/12)^(12*n) - 1)
         monthly_rate = rate / 12
         n_months = term * 12
-        if monthly_rate == 0:
+        if n_months <= 0:
+            monthly_payment = 0.0
+        elif monthly_rate == 0:
             monthly_payment = price / n_months
         else:
-            monthly_payment = (price * monthly_rate * (1 + monthly_rate) ** n_months) / (
-                (1 + monthly_rate) ** n_months - 1
-            )
+            factor = (1 + monthly_rate) ** n_months
+            monthly_payment = (price * monthly_rate * factor) / (factor - 1)
 
         monthly_income = income / 12
         mortgage_pct_income = (monthly_payment / monthly_income) * 100

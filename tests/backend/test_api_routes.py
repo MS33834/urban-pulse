@@ -36,8 +36,10 @@ def _clear_sample_data():
     from backend.api.routes import data as data_module
 
     data_module._sample_data.clear()
+    data_module._next_id = 0
     yield
     data_module._sample_data.clear()
+    data_module._next_id = 0
 
 
 @pytest.fixture

@@ -143,23 +143,23 @@ class PluginDocsGenerator:
                 cities = plugin.supported_cities()
                 if isinstance(cities, list):
                     return cities[:10]
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug("提取 %s supported_cities 失败: %s", plugin.name(), exc)
         if plugin_type == "analyzer" and hasattr(plugin, "required_indicators"):
             try:
                 return cast(list[str], plugin.required_indicators())
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug("提取 %s required_indicators 失败: %s", plugin.name(), exc)
         if plugin_type == "forecaster" and hasattr(plugin, "min_data_points"):
             try:
                 return [f"min_data_points:{plugin.min_data_points()}"]
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug("提取 %s min_data_points 失败: %s", plugin.name(), exc)
         if plugin_type == "visualizer" and hasattr(plugin, "supported_data_types"):
             try:
                 return cast(list[str], plugin.supported_data_types())
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug("提取 %s supported_data_types 失败: %s", plugin.name(), exc)
         return []
 
     def _extract_extra(self, plugin: Any, plugin_type: str) -> dict[str, Any]:
@@ -167,8 +167,8 @@ class PluginDocsGenerator:
         if plugin_type == "collector" and hasattr(plugin, "source_name"):
             try:
                 extra["source_name"] = plugin.source_name() if callable(plugin.source_name) else plugin.source_name
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug("提取 %s source_name 失败: %s", plugin.name(), exc)
         return extra
 
     def generate(self) -> list[dict[str, Any]]:

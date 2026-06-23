@@ -250,8 +250,10 @@ async def forecast_province_endpoint(
     result = forecast_province_indicator(province_name, request.indicator, request.forecast_years)
     if "error" in result:
         # 404: 省份不在; 503: 数据缺失
-        status = 404 if "not in registry" in result["error"] else 503
-        raise HTTPException(status_code=status, detail=result["error"])
+        is_not_found = "not in registry" in result["error"]
+        status_code = 404 if is_not_found else 503
+        detail = f"省份 '{province_name}' 不在区域注册表中" if is_not_found else "预测数据不足，无法完成预测"
+        raise HTTPException(status_code=status_code, detail=detail)
     return result
 
 

@@ -21,8 +21,9 @@ from backend.regions import RegionLevel, get_registry
 from backend.regions.survey_integration import attach_survey_records, get_survey_indicators
 
 logger = logging.getLogger(__name__)
-
 router = APIRouter(prefix="/regions", tags=["区域"])
+
+MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB
 
 
 class RegionForecastRequest(BaseModel):
@@ -233,6 +234,8 @@ async def upload_survey_data(
 
     try:
         content = await file.read()
+        if len(content) > MAX_UPLOAD_SIZE:
+            raise HTTPException(status_code=413, detail="文件过大，最大支持 50 MB")
         if file.filename and file.filename.lower().endswith(".csv"):
             df = pd.read_csv(io.BytesIO(content), dtype={"region_code": str})
         elif file.filename and file.filename.lower().endswith((".xlsx", ".xls")):
@@ -246,9 +249,9 @@ async def upload_survey_data(
         raise HTTPException(status_code=400, detail=str(e)) from e
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         logger.exception("调查数据上传失败")
-        raise HTTPException(status_code=500, detail=f"处理失败: {e}") from e
+        raise HTTPException(status_code=500, detail="调查数据处理失败，请检查文件格式") from None
 
     return {
         "success": True,

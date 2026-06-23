@@ -258,8 +258,8 @@ class TestForecastEngineExtended:
 
     def test_chow_test_invalid_breakpoints(self):
         y = list(range(10))
-        assert fe.chow_test(y, 0)["reason"] == "invalid breakpoint"
-        assert fe.chow_test(y, len(y) - 1)["reason"] == "invalid breakpoint"
+        assert "invalid breakpoint" in fe.chow_test(y, 0)["reason"]
+        assert "invalid breakpoint" in fe.chow_test(y, len(y) - 1)["reason"]
 
     def test_chow_test_no_variance(self):
         # Perfect split with zero residuals → special-case return.

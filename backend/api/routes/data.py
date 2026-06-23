@@ -22,6 +22,7 @@ router = APIRouter(prefix="/data", tags=["数据"])
 _SAMPLE_DATA_MAX = 10000
 _sample_data: deque["Indicator"] = deque(maxlen=_SAMPLE_DATA_MAX)
 _sample_lock = threading.Lock()
+_next_id = 0
 
 
 class IndicatorCreate(BaseModel):
@@ -50,7 +51,9 @@ class Indicator(IndicatorCreate):
 def create_indicator(indicator: IndicatorCreate):
     """创建单条经济指标记录(示例内存存储,生产环境应替换为持久化层)"""
     with _sample_lock:
-        new_id = len(_sample_data) + 1
+        global _next_id
+        _next_id += 1
+        new_id = _next_id
         new_indicator = Indicator(
             id=new_id,
             timestamp=datetime.now().isoformat(),

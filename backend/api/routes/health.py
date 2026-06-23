@@ -354,6 +354,8 @@ async def import_indicators(
         file_bytes = await file.read()
         if not file_bytes:
             raise HTTPException(status_code=400, detail="上传文件为空")
+        if len(file_bytes) > 50 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="文件过大，最大支持 50 MB")
 
         indicator_values = parse_indicator_data(file_bytes, filename)
     except ValueError as e:

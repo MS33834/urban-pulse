@@ -2,6 +2,7 @@
 静态文件和图表服务API
 """
 
+import logging
 import re
 from pathlib import Path
 
@@ -9,6 +10,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
 router = APIRouter(prefix="/api/v1/static", tags=["静态"])
+logger = logging.getLogger(__name__)
 
 # 获取项目根目录
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
@@ -58,6 +60,7 @@ async def list_charts():
                 charts.append({"filename": file.name, "url": f"/api/v1/static/charts/{file.name}"})
         return {"status": "success", "charts": charts}
     except Exception:
+        logger.exception("list_charts failed")
         raise HTTPException(status_code=500, detail="Internal server error") from None
 
 

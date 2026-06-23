@@ -345,6 +345,8 @@ class RealDataAnalyzer:
 
         if latest_data is not None:
             total = latest_data["gdp_primary"] + latest_data["gdp_secondary"] + latest_data["gdp_tertiary"]
+            if total == 0:
+                return {}
             return {
                 "year": int(latest_data["year"]),
                 "primary": float(latest_data["gdp_primary"] / total * 100),

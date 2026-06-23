@@ -143,14 +143,48 @@ class ForecastValidator:
 
     def report(self) -> dict[str, Any]:
         """生成完整验证报告（dict 形式）。"""
+        df = self._load_validated()
         return {
             "generated_at": pd.Timestamp.now().isoformat(),
-            "summary": self.summary().to_dict(),
-            "by_model": {k: v.to_dict() for k, v in self.by_model().items()},
-            "by_city": {k: v.to_dict() for k, v in self.by_city().items()},
-            "by_indicator": {k: v.to_dict() for k, v in self.by_indicator().items()},
-            "hit_rate_by_model": self.hit_rate(),
+            "summary": self._summary_from_df(df).to_dict(),
+            "by_model": {k: v.to_dict() for k, v in self._by_group_from_df(df, "model").items()},
+            "by_city": {k: v.to_dict() for k, v in self._by_group_from_df(df, "city_code").items()},
+            "by_indicator": {k: v.to_dict() for k, v in self._by_group_from_df(df, "indicator").items()},
+            "hit_rate_by_model": self._hit_rate_from_df(df),
         }
+
+    def _summary_from_df(self, df: pd.DataFrame) -> ValidationMetrics:
+        if df.empty:
+            return ValidationMetrics(count=0, mae=None, mape=None, rmse=None, bias=None, hit_rate=None)
+        return self.compute_metrics(df["actual_value"].tolist(), df["predicted_value"].tolist())
+
+    def _by_group_from_df(self, df: pd.DataFrame, col: str) -> dict[str, ValidationMetrics]:
+        result: dict[str, ValidationMetrics] = {}
+        if df.empty:
+            return result
+        for key, group in df.groupby(col):
+            result[str(key)] = self.compute_metrics(group["actual_value"].tolist(), group["predicted_value"].tolist())
+        if col == "model":
+            result = dict(sorted(result.items(), key=lambda x: x[1].mae if x[1].mae is not None else float("inf")))
+        return result
+
+    def _hit_rate_from_df(self, df: pd.DataFrame) -> dict[str, float]:
+        result: dict[str, float] = {}
+        if df.empty:
+            return result
+        for model, group in df.groupby("model"):
+            total = 0
+            hits = 0
+            for _, row in group.iterrows():
+                ci = row.get("confidence_interval")
+                if not isinstance(ci, (list, tuple)) or len(ci) != 2:
+                    continue
+                total += 1
+                if ci[0] <= row["actual_value"] <= ci[1]:
+                    hits += 1
+            if total > 0:
+                result[str(model)] = round(hits / total, 4)
+        return result
 
     def to_json(self, indent: int = 2) -> str:
         """导出为 JSON 字符串。"""

@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import logging
+from functools import lru_cache
 from typing import Any
 
 import pandas as pd
@@ -50,6 +51,8 @@ def refresh() -> None:
     """刷新缓存（当动态加载新城市后调用）"""
     global CITY_DATA, HISTORICAL_DATA
     CITY_DATA, HISTORICAL_DATA = _refresh_cache()
+    get_score_benchmarks.cache_clear()
+    get_score_weights.cache_clear()
     logger.info(f"城市数据缓存已刷新: {len(CITY_DATA)} 个城市")
 
 
@@ -91,6 +94,7 @@ def compare_cities(city_names: list[str] | None = None) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+@lru_cache(maxsize=1)
 def get_score_benchmarks() -> dict[str, dict[str, float]]:
     """获取评分基准（基于当前城市数据分位数）"""
 
@@ -117,12 +121,14 @@ def get_score_benchmarks() -> dict[str, dict[str, float]]:
         "policy_coverage",
         "avg_approval_time",
     ]
-    return {
-        key: {"low": _q(_values(key), 0.25), "medium": _q(_values(key), 0.5), "high": _q(_values(key), 0.75)}
-        for key in keys
-    }
+    result: dict[str, dict[str, float]] = {}
+    for key in keys:
+        vals = _values(key)
+        result[key] = {"low": _q(vals, 0.25), "medium": _q(vals, 0.5), "high": _q(vals, 0.75)}
+    return result
 
 
+@lru_cache(maxsize=1)
 def get_score_weights() -> dict[str, float]:
     """获取评分权重（基于专家调研，已归一化到 1.0）"""
     _raw = {
