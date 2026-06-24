@@ -119,7 +119,8 @@ app = FastAPI(
         {"name": "企业端", "description": "企业选址、成本、供应链与政策环境分析。"},
         {"name": "政府端", "description": "财政杠杆、产业带动与产业链完整性分析。"},
         {"name": "产业端", "description": "产业注册、预测与因素调整。"},
-        {"name": "预测", "description": "时序预测与风险诊断。"},
+        {"name": "预测", "description": "时序预测。"},
+        {"name": "风险分析", "description": "波动率、VaR/CVaR、情景分析与蒙特卡洛模拟。"},
         {"name": "指数", "description": "竞争力指数计算与排名。"},
         {"name": "数据管理", "description": "数据集上传、查询、导入与导出。"},
         {"name": "系统", "description": "健康检查、元数据与静态资源。"},
@@ -163,6 +164,7 @@ from backend.api.routes import (
     index_router,
     industries_router,
     regions_router,
+    risk_router,
     static_router,
 )
 
@@ -173,6 +175,7 @@ app.include_router(cities_router, prefix=settings.API_V1_STR)
 app.include_router(regions_router, prefix=settings.API_V1_STR)
 app.include_router(forecast_router, prefix=settings.API_V1_STR)
 app.include_router(health_router, prefix=settings.API_V1_STR)
+app.include_router(risk_router, prefix=settings.API_V1_STR)
 app.include_router(index_router, prefix=settings.API_V1_STR)
 app.include_router(industries_router, prefix=settings.API_V1_STR)
 app.include_router(static_router)

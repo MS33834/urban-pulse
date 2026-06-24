@@ -287,7 +287,7 @@ def monte_carlo_simulation(
     假设:残差独立同分布(实际时序有自相关,会低估尾部风险 — 已在文档中说明)
     """
     n = len(values)
-    if n < 6:
+    if n < 5:
         return {"error": f"n={n} too small for MC"}
 
     # 使用局部 Generator,避免污染全局 NumPy RNG 状态(影响其他并发模块)

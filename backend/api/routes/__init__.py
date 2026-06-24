@@ -11,6 +11,7 @@ from backend.api.routes.health import router as health_router
 from backend.api.routes.index import router as index_router
 from backend.api.routes.industries import router as industries_router
 from backend.api.routes.regions import router as regions_router
+from backend.api.routes.risk import router as risk_router
 from backend.api.routes.static import router as static_router
 
 __all__ = [
@@ -23,5 +24,6 @@ __all__ = [
     "index_router",
     "industries_router",
     "regions_router",
+    "risk_router",
     "static_router",
 ]

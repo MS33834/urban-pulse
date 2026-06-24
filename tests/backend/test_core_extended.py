@@ -93,7 +93,7 @@ class TestRiskEngineExtended:
             assert s["max_drawdown_pct"] == 0.0
 
     def test_monte_carlo_n_small(self):
-        out = re.monte_carlo_simulation([1.0, 2.0, 3.0, 4.0, 5.0], years=3)
+        out = re.monte_carlo_simulation([1.0, 2.0, 3.0, 4.0], years=3)
         assert "error" in out
 
     def test_monte_carlo_perfect_linear(self):

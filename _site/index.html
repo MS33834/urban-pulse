@@ -1523,11 +1523,17 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
     <button class="tab-btn" type="button" role="tab" id="tab-btn-health" aria-selected="false" aria-controls="tab-health" data-tab="health" tabindex="-1">
       <span class="tab-btn__num" aria-hidden="true">06</span>
       <span class="tab-btn__icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       </span>
       <span class="tab-btn__label">经济健康指数</span>
     </button>
-
+    <button class="tab-btn" type="button" role="tab" id="tab-btn-risk" aria-selected="false" aria-controls="tab-risk" data-tab="risk" tabindex="-1">
+      <span class="tab-btn__num" aria-hidden="true">07</span>
+      <span class="tab-btn__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      </span>
+      <span class="tab-btn__label">风险与情景</span>
+    </button>
   </nav>
 
   <main id="main-content" class="app-main" role="main" aria-busy="true">
@@ -2187,6 +2193,132 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
       </article>
     </section>
 
+    <section id="tab-risk" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-risk" hidden>
+      <header class="panel-header">
+        <div class="panel-header__title">
+          <span class="eyebrow">SECTION 07 · RISK</span>
+          <h2>风险与情景分析</h2>
+          <p class="lede" id="riskLede">基于历史波动率、VaR/CVaR、情景冲击与蒙特卡洛模拟，评估城市经济指标的不确定性。</p>
+        </div>
+        <div class="panel-header__meta">
+          <span>覆盖 <strong>4</strong> 档情景</span>
+          <span aria-hidden="true">·</span>
+          <span>含置信区间</span>
+        </div>
+      </header>
+
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <h3 class="card-head__title">分析参数</h3>
+            <div class="card-head__meta">选择城市与指标，生成投资决策级风险诊断</div>
+          </div>
+        </div>
+        <div class="card__body">
+          <form class="health-form" id="riskForm" onsubmit="return false;" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+            <div class="form-field">
+              <label class="form-field__label" for="riskCity">城市</label>
+              <select id="riskCity" class="select" aria-label="风险分析目标城市"></select>
+            </div>
+            <div class="form-field">
+              <label class="form-field__label" for="riskIndicator">指标</label>
+              <select id="riskIndicator" class="select" aria-label="风险分析指标">
+                <option value="gdp">GDP</option>
+                <option value="population">常住人口</option>
+                <option value="fiscal_revenue">财政收入</option>
+                <option value="land_price">土地价格</option>
+                <option value="salary_level">工资水平</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-field__label" for="riskYears">预测年数</label>
+              <select id="riskYears" class="select" aria-label="预测年数">
+                <option value="3">3 年</option>
+                <option value="5" selected>5 年</option>
+                <option value="10">10 年</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-field__label" for="riskSims">模拟次数</label>
+              <select id="riskSims" class="select" aria-label="蒙特卡洛模拟次数">
+                <option value="500">500 次</option>
+                <option value="1000" selected>1000 次</option>
+                <option value="5000">5000 次</option>
+              </select>
+            </div>
+            <div class="form-field" style="display:flex;align-items:flex-end;">
+              <button class="btn btn--primary btn--block" type="submit" id="riskAnalyzeBtn">开始分析</button>
+            </div>
+          </form>
+        </div>
+      </article>
+
+      <div id="riskResults" hidden>
+        <div class="stat-grid" id="riskStatGrid">
+          <article class="stat-card">
+            <div class="stat-card__label">年化波动率</div>
+            <div class="stat-card__value" id="riskVolValue">--</div>
+            <div class="stat-card__trend stat-card__trend--neutral" id="riskVolTrend">--</div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-card__label">VaR 95% (1年最大损失)</div>
+            <div class="stat-card__value" id="riskVar95Value">--</div>
+            <div class="stat-card__trend stat-card__trend--down" id="riskVar95Trend">--</div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-card__label">CVaR 95% (平均尾部损失)</div>
+            <div class="stat-card__value" id="riskCvar95Value">--</div>
+            <div class="stat-card__trend stat-card__trend--down" id="riskCvar95Trend">--</div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-card__label">低于衰退情景概率</div>
+            <div class="stat-card__value" id="riskRecessionProb">--</div>
+            <div class="stat-card__trend stat-card__trend--neutral" id="riskRecessionTrend">基于 MC 模拟</div>
+          </article>
+        </div>
+
+        <div class="card-grid">
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <h3 class="card-head__title">情景预测对比</h3>
+                <div class="card-head__meta">基线 / 乐观 / 悲观 / 衰退</div>
+              </div>
+            </div>
+            <div class="chart-wrap">
+              <div class="chart-skeleton" id="chartRiskScenarioSkeleton"><div class="chart-skeleton__bars" aria-hidden="true"><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div></div></div>
+              <div id="chartRiskScenario" role="img" aria-label="四档情景预测折线图"></div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <h3 class="card-head__title">蒙特卡洛模拟区间</h3>
+                <div class="card-head__meta">P5 / P50 / P95 分位与 baseline</div>
+              </div>
+            </div>
+            <div class="chart-wrap">
+              <div class="chart-skeleton" id="chartRiskMonteCarloSkeleton"><div class="chart-skeleton__bars" aria-hidden="true"><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div><div class="chart-skeleton__bar"></div></div></div>
+              <div id="chartRiskMonteCarlo" role="img" aria-label="蒙特卡洛模拟 P5-P95 区间图"></div>
+            </div>
+          </article>
+        </div>
+
+        <article class="card" id="riskInterpretationCard">
+          <div class="card-head">
+            <div>
+              <h3 class="card-head__title">诊断解读</h3>
+              <div class="card-head__meta">波动率、风险价值与情景分析结论</div>
+            </div>
+          </div>
+          <div class="card__body" id="riskInterpretationBody" style="font-size:var(--fs-sm);color:var(--stone-700);line-height:1.7;">
+            等待分析…
+          </div>
+        </article>
+      </div>
+    </section>
+
   </main>
 
   <footer class="app-footer">
@@ -2825,7 +2957,7 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
         t.tabIndex = active ? 0 : -1;
       });
       this.panels.forEach((p) => {
-        const active = p.dataset.panel === name;
+        const active = p.id === ("tab-" + name);
         p.hidden = !active;
         p.setAttribute("aria-hidden", active ? "false" : "true");
       });
@@ -3472,6 +3604,198 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
     }
   };
 
+  // ---- Risk ----
+  Views.Risk = {
+    abortCtl: null,
+    async _runAnalysis(api) {
+      const city = document.getElementById("riskCity")?.value;
+      const indicator = document.getElementById("riskIndicator")?.value;
+      const years = parseInt(document.getElementById("riskYears")?.value || "5", 10);
+      const nSims = parseInt(document.getElementById("riskSims")?.value || "1000", 10);
+      if (!city) {
+        window.__citylens_toast?.warn("请选择城市");
+        return;
+      }
+
+      this.abortCtl?.abort?.("reload");
+      this.abortCtl = new AbortController();
+      const { signal } = this.abortCtl;
+
+      const btn = document.getElementById("riskAnalyzeBtn");
+      const results = document.getElementById("riskResults");
+      const origText = btn?.textContent;
+      if (btn) { btn.disabled = true; btn.textContent = "分析中…"; }
+      results.hidden = false;
+
+      Skeleton.show("chartRiskScenario");
+      Skeleton.show("chartRiskMonteCarlo");
+      clearChartError("chartRiskScenario");
+      clearChartError("chartRiskMonteCarlo");
+
+      try {
+        const data = await api.post("/risk/analyze", {
+          city_name: city,
+          indicator: indicator,
+          forecast_years: years,
+          n_sims: nSims,
+        }, { signal, cacheTTL: 0 });
+
+        this._renderStats(data);
+        this._renderScenarioChart(data);
+        this._renderMonteCarloChart(data);
+        this._renderInterpretation(data);
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          window.__citylens_toast?.error("风险分析失败:" + (err.message || "未知错误"));
+          showChartError("chartRiskScenario", err.message || "分析失败", () => this._runAnalysis(api));
+          showChartError("chartRiskMonteCarlo", err.message || "分析失败", () => this._runAnalysis(api));
+        }
+      } finally {
+        Skeleton.hide("chartRiskScenario");
+        Skeleton.hide("chartRiskMonteCarlo");
+        if (btn) { btn.disabled = false; btn.textContent = origText; }
+      }
+    },
+
+    _renderStats(data) {
+      const vol = data.volatility || {};
+      const var95 = data.var_95 || {};
+      const cvar95 = data.var_95 || {};
+      const mc = data.monte_carlo || {};
+      const finalStats = mc.final_value_stats || {};
+
+      const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+      set("riskVolValue", ((vol.annualized_volatility || 0) * 100).toFixed(2) + "%");
+      set("riskVolTrend", vol.interpretation?.split("。")[0] || "--");
+      set("riskVar95Value", ((var95.var_pct || 0) * 100).toFixed(2) + "%");
+      set("riskVar95Trend", var95.var_amount != null ? `≈ ${Utils.fmtCompact(var95.var_amount)}` : "--");
+      set("riskCvar95Value", ((cvar95.cvar_pct || 0) * 100).toFixed(2) + "%");
+      set("riskCvar95Trend", cvar95.cvar_amount != null ? `≈ ${Utils.fmtCompact(cvar95.cvar_amount)}` : "--");
+      set("riskRecessionProb", ((finalStats.prob_below_recession || 0) * 100).toFixed(1) + "%");
+      set("riskRecessionTrend", `均值 ${Utils.fmtCompact(finalStats.mean || 0)}`);
+    },
+
+    _renderScenarioChart(data) {
+      const scenarios = data.scenarios?.scenarios || {};
+      const colors = { baseline: "#0E1F3F", optimistic: "#22C55E", pessimistic: "#D08560", recession: "#DC2626" };
+      const years = data.forecast_years || 5;
+      const startYear = Math.max(...(data.historical_years || [2024])) + 1;
+      const x = Array.from({ length: years }, (_, i) => startYear + i);
+
+      const series = Object.entries(scenarios).map(([key, s]) => ({
+        name: s.name || key,
+        type: "line",
+        smooth: true,
+        data: s.predictions || [],
+        itemStyle: { color: colors[key] || "#4B6B8C" },
+        lineStyle: { width: key === "baseline" ? 3 : 2 },
+        symbol: "circle",
+        symbolSize: 6,
+      }));
+
+      Skeleton.hide("chartRiskScenario");
+      window.__citylens_charts.setOption(document.getElementById("chartRiskScenario"), {
+        grid: { left: 16, right: 16, top: 40, bottom: 32, containLabel: true },
+        tooltip: { trigger: "axis", valueFormatter: (v) => v == null ? "—" : Utils.fmtCompact(v) },
+        legend: { top: 0, data: series.map((s) => s.name) },
+        xAxis: { type: "category", data: x, boundaryGap: false },
+        yAxis: { type: "value", axisLabel: { formatter: (v) => Utils.fmtCompact(v) } },
+        series,
+      });
+    },
+
+    _renderMonteCarloChart(data) {
+      const mc = data.monte_carlo || {};
+      const years = mc.years || [];
+      const baseline = mc.baseline || [];
+      const q05 = (mc.quantiles?.p05 || []);
+      const q50 = (mc.quantiles?.p50 || []);
+      const q95 = (mc.quantiles?.p95 || []);
+
+      Skeleton.hide("chartRiskMonteCarlo");
+      window.__citylens_charts.setOption(document.getElementById("chartRiskMonteCarlo"), {
+        grid: { left: 16, right: 16, top: 40, bottom: 32, containLabel: true },
+        tooltip: { trigger: "axis", valueFormatter: (v) => v == null ? "—" : Utils.fmtCompact(v) },
+        legend: { top: 0, data: ["Baseline", "P50", "P5-P95 区间"] },
+        xAxis: { type: "category", data: years, boundaryGap: false },
+        yAxis: { type: "value", axisLabel: { formatter: (v) => Utils.fmtCompact(v) } },
+        series: [
+          {
+            name: "P5-P95 区间",
+            type: "line",
+            data: q95,
+            lineStyle: { opacity: 0 },
+            areaStyle: { color: "rgba(14,31,63,0.12)" },
+            symbol: "none",
+            stack: "conf",
+          },
+          {
+            name: "P5-P95 区间",
+            type: "line",
+            data: q05.map((v, i) => (q95[i] || 0) - (v || 0)),
+            lineStyle: { opacity: 0 },
+            areaStyle: { color: "#FAF8F3" },
+            symbol: "none",
+            stack: "conf",
+          },
+          {
+            name: "P50",
+            type: "line",
+            data: q50,
+            itemStyle: { color: "#B8714A" },
+            lineStyle: { width: 2, type: "dashed" },
+            symbol: "circle",
+            symbolSize: 5,
+          },
+          {
+            name: "Baseline",
+            type: "line",
+            data: baseline,
+            itemStyle: { color: "#0E1F3F" },
+            lineStyle: { width: 2 },
+            symbol: "circle",
+            symbolSize: 5,
+          },
+        ],
+      });
+    },
+
+    _renderInterpretation(data) {
+      const vol = data.volatility || {};
+      const var95 = data.var_95 || {};
+      const mc = data.monte_carlo || {};
+      const scenarios = data.scenarios?.scenarios || {};
+      const recession = scenarios.recession;
+      const baseline = scenarios.baseline;
+
+      const lines = [];
+      lines.push(`<strong>波动率：</strong>${vol.interpretation || "--"}`);
+      lines.push(`<strong>风险价值：</strong>在最坏的 5% 历史情景下，未来 1 年最多损失 ${((var95.var_pct || 0) * 100).toFixed(2)}%；平均尾部损失 ${((var95.cvar_pct || 0) * 100).toFixed(2)}%。`);
+      if (baseline && recession) {
+        lines.push(`<strong>情景对比：</strong>5 年后基线预测 ${Utils.fmtCompact(baseline.final_value || 0)}，衰退情景下为 ${Utils.fmtCompact(recession.final_value || 0)}，相对当前分别 ${(baseline.final_change_pct || 0).toFixed(1)}% / ${(recession.final_change_pct || 0).toFixed(1)}%。`);
+      }
+      lines.push(`<strong>蒙特卡洛：</strong>${mc.interpretation || "--"}`);
+      if (data.garch?.method?.includes("GARCH")) {
+        lines.push(`<strong>GARCH：</strong>${data.garch.method}，条件波动率 ${data.garch.conditional_vol_pct || "--"}%，持续性 ${data.garch.persistence || "--"}。`);
+      }
+      document.getElementById("riskInterpretationBody").innerHTML = lines.map((l) => `<p style="margin:0 0 8px;">${l}</p>`).join("");
+    },
+
+    async mount(api) {
+      const citySel = document.getElementById("riskCity");
+      const form = document.getElementById("riskForm");
+      if (!citySel || !form) return;
+
+      const cities = await api.get("/cities/list", { cacheTTL: CONFIG.CACHE_TTL_MS }).then((r) => r.cities || []).catch(() => []);
+      const forecastCities = await api.get("/forecast/indicators", { cacheTTL: CONFIG.CACHE_TTL_MS }).then(() => cities).catch(() => cities);
+      const usable = cities.length ? cities : CONFIG.DEFAULT_CITIES;
+      citySel.innerHTML = usable.map((c) => `<option value="${Utils.esc(c)}">${Utils.esc(c)}</option>`).join("");
+      if (usable.includes("深圳")) citySel.value = "深圳";
+
+      form.addEventListener("submit", (e) => { e.preventDefault(); this._runAnalysis(api); });
+    }
+  };
+
   // ============================================================
   // 14. App boot
   // ============================================================
@@ -3588,7 +3912,7 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
 
       // Tab 路由
       router.bind();
-      const mounted = { dashboard: false, enterprise: false, government: false, cities: false, index: false, health: false };
+      const mounted = { dashboard: false, enterprise: false, government: false, cities: false, index: false, health: false, risk: false };
       let indexTab = null;
       let healthTab = null;
       const mountIfNeeded = (name) => {
@@ -3600,7 +3924,8 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
           government: () => Views.Government.mount(api),
           cities:     () => Views.Cities.mount(api, store),
           index:      () => { indexTab = new IndexTab(api); return indexTab.load(); },
-          health:     () => { healthTab = new HealthTab(api); return healthTab.mount(); }
+          health:     () => { healthTab = new HealthTab(api); return healthTab.mount(); },
+          risk:       () => Views.Risk.mount(api)
         };
         Promise.resolve()
           .then(() => map[name]?.())
@@ -3613,6 +3938,7 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
       router.on("cities",     () => mountIfNeeded("cities"));
       router.on("index",      () => mountIfNeeded("index"));
       router.on("health",     () => mountIfNeeded("health"));
+      router.on("risk",       () => mountIfNeeded("risk"));
 
       // 全局错误兜底
       window.addEventListener("error", (e) => {
