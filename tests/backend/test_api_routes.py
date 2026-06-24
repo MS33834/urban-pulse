@@ -15,6 +15,9 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
+from backend.core.forecast_archive import ForecastArchive, ForecastSnapshot
+from backend.core.forecast_validation import ForecastValidator
+
 # --------------------------------------------------------------------------- #
 # 共享常量
 # --------------------------------------------------------------------------- #
@@ -1147,3 +1150,174 @@ class TestIndustriesRoutes:
         )
         assert resp.status_code == status.HTTP_200_OK
         assert "forecast" in resp.json() or "forecast_values" in resp.json()
+
+
+# --------------------------------------------------------------------------- #
+# forecast_archive.py
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.unit
+class TestArchiveRoutes:
+    """测试预测存档相关端点。"""
+
+    @pytest.fixture(autouse=True)
+    def _isolate_archive(self, monkeypatch, tmp_path):
+        """每个测试使用独立的临时存档目录。"""
+        from backend.api.routes import forecast_archive as archive_module
+
+        monkeypatch.setattr(archive_module, "_get_archive", lambda: ForecastArchive(archive_dir=tmp_path))
+        yield
+
+    def test_create_archive_success(self, seeded_api_client: TestClient):
+        resp = seeded_api_client.post(
+            "/api/v1/forecast/archives",
+            json={"city_name": "深圳", "indicator": "gdp", "forecast_years": 3, "model": "ensemble"},
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        body = resp.json()
+        assert len(body) == 3
+        assert body[0]["city_code"] == "深圳"
+        assert body[0]["indicator"] == "gdp"
+
+    def test_create_archive_unknown_city(self, seeded_api_client: TestClient):
+        resp = seeded_api_client.post(
+            "/api/v1/forecast/archives",
+            json={"city_name": "不存在的城市", "indicator": "gdp", "forecast_years": 3},
+        )
+        assert resp.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_create_archive_unsupported_indicator(self, seeded_api_client: TestClient):
+        resp = seeded_api_client.post(
+            "/api/v1/forecast/archives",
+            json={"city_name": "深圳", "indicator": "not_a_metric", "forecast_years": 3},
+        )
+        assert resp.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+    def test_list_archives(self, seeded_api_client: TestClient):
+        seeded_api_client.post(
+            "/api/v1/forecast/archives",
+            json={"city_name": "深圳", "indicator": "gdp", "forecast_years": 2, "model": "test_model"},
+        )
+        resp = seeded_api_client.get("/api/v1/forecast/archives?city_code=深圳")
+        assert resp.status_code == status.HTTP_200_OK
+        body = resp.json()
+        assert body["total"] == 2
+        assert all(s["city_code"] == "深圳" for s in body["snapshots"])
+
+    def test_get_archive(self, seeded_api_client: TestClient):
+        create_resp = seeded_api_client.post(
+            "/api/v1/forecast/archives",
+            json={"city_name": "深圳", "indicator": "gdp", "forecast_years": 1},
+        )
+        forecast_id = create_resp.json()[0]["forecast_id"]
+        resp = seeded_api_client.get(f"/api/v1/forecast/archives/{forecast_id}")
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.json()["forecast_id"] == forecast_id
+
+    def test_get_archive_not_found(self, seeded_api_client: TestClient):
+        resp = seeded_api_client.get("/api/v1/forecast/archives/__missing__")
+        assert resp.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_backfill_archive(self, seeded_api_client: TestClient):
+        create_resp = seeded_api_client.post(
+            "/api/v1/forecast/archives",
+            json={"city_name": "深圳", "indicator": "gdp", "forecast_years": 1},
+        )
+        forecast_id = create_resp.json()[0]["forecast_id"]
+        resp = seeded_api_client.post(
+            f"/api/v1/forecast/archives/{forecast_id}/backfill",
+            json={"actual_value": 12345.0},
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.json()["actual_value"] == pytest.approx(12345.0)
+
+    def test_backfill_by_match(self, seeded_api_client: TestClient):
+        seeded_api_client.post(
+            "/api/v1/forecast/archives",
+            json={"city_name": "深圳", "indicator": "gdp", "forecast_years": 1, "model": "match_model"},
+        )
+        snapshot = seeded_api_client.get("/api/v1/forecast/archives").json()["snapshots"][0]
+        resp = seeded_api_client.post(
+            "/api/v1/forecast/archives/backfill-by-match",
+            json={
+                "model": "match_model",
+                "city_code": "深圳",
+                "indicator": "gdp",
+                "target_year": snapshot["target_year"],
+                "actual_value": 9999.0,
+            },
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.json()["updated"] == 1
+
+    def test_delete_archive(self, seeded_api_client: TestClient):
+        create_resp = seeded_api_client.post(
+            "/api/v1/forecast/archives",
+            json={"city_name": "深圳", "indicator": "gdp", "forecast_years": 1},
+        )
+        forecast_id = create_resp.json()[0]["forecast_id"]
+        resp = seeded_api_client.delete(f"/api/v1/forecast/archives/{forecast_id}")
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.json()["deleted"] == forecast_id
+        get_resp = seeded_api_client.get(f"/api/v1/forecast/archives/{forecast_id}")
+        assert get_resp.status_code == status.HTTP_404_NOT_FOUND
+
+
+# --------------------------------------------------------------------------- #
+# validation.py
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.unit
+class TestValidationRoutes:
+    """测试预测验证相关端点。"""
+
+    @pytest.fixture(autouse=True)
+    def _seed_and_isolate_archive(self, monkeypatch, tmp_path):
+        """准备已回填的预测快照并隔离存档目录。"""
+        from backend.api.routes import forecast_archive as archive_module
+        from backend.api.routes import validation as validation_module
+
+        archive = ForecastArchive(archive_dir=tmp_path)
+        monkeypatch.setattr(archive_module, "_get_archive", lambda: archive)
+        monkeypatch.setattr(validation_module, "_get_validator", lambda: ForecastValidator(archive=archive))
+
+        archive.save(
+            ForecastSnapshot(
+                model="linear_trend",
+                city_code="深圳",
+                indicator="gdp",
+                forecast_date="2024-01-01",
+                target_year=2025,
+                predicted_value=100.0,
+                actual_value=102.0,
+            )
+        )
+        yield
+        archive.clear()
+
+    def test_validation_metrics(self, seeded_api_client: TestClient):
+        resp = seeded_api_client.get("/api/v1/validation/metrics")
+        assert resp.status_code == status.HTTP_200_OK
+        body = resp.json()
+        assert body["count"] == 1
+        assert body["mae"] is not None
+
+    def test_validation_report(self, seeded_api_client: TestClient):
+        resp = seeded_api_client.get("/api/v1/validation/report")
+        assert resp.status_code == status.HTTP_200_OK
+        body = resp.json()
+        assert "summary" in body
+        assert "by_model" in body
+
+    def test_validation_dashboard(self, seeded_api_client: TestClient):
+        resp = seeded_api_client.get("/api/v1/validation/dashboard")
+        assert resp.status_code == status.HTTP_200_OK
+        assert "Urban Pulse 预测准确率验证仪表板" in resp.text
+
+    def test_validation_dashboard_download(self, seeded_api_client: TestClient):
+        resp = seeded_api_client.get("/api/v1/validation/dashboard-download")
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.headers["content-disposition"].startswith("attachment")
+        assert "Urban Pulse 预测准确率验证仪表板" in resp.text

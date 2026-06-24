@@ -120,6 +120,8 @@ app = FastAPI(
         {"name": "政府端", "description": "财政杠杆、产业带动与产业链完整性分析。"},
         {"name": "产业端", "description": "产业注册、预测与因素调整。"},
         {"name": "预测", "description": "时序预测。"},
+        {"name": "预测存档", "description": "预测快照存档、查询与真实值回填。"},
+        {"name": "预测验证", "description": "预测准确率验证报告与 HTML 仪表板。"},
         {"name": "风险分析", "description": "波动率、VaR/CVaR、情景分析与蒙特卡洛模拟。"},
         {"name": "指数", "description": "竞争力指数计算与排名。"},
         {"name": "数据管理", "description": "数据集上传、查询、导入与导出。"},
@@ -156,6 +158,7 @@ app.add_middleware(SecurityHeadersMiddleware, hsts=ENABLE_HSTS)
 # ----- Routes -----
 from backend.api.routes import (
     analysis_router,
+    archive_router,
     cities_router,
     data_router,
     datasets_router,
@@ -166,6 +169,7 @@ from backend.api.routes import (
     regions_router,
     risk_router,
     static_router,
+    validation_router,
 )
 
 app.include_router(data_router, prefix=settings.API_V1_STR)
@@ -174,8 +178,10 @@ app.include_router(analysis_router, prefix=settings.API_V1_STR)
 app.include_router(cities_router, prefix=settings.API_V1_STR)
 app.include_router(regions_router, prefix=settings.API_V1_STR)
 app.include_router(forecast_router, prefix=settings.API_V1_STR)
+app.include_router(archive_router, prefix=settings.API_V1_STR)
 app.include_router(health_router, prefix=settings.API_V1_STR)
 app.include_router(risk_router, prefix=settings.API_V1_STR)
+app.include_router(validation_router, prefix=settings.API_V1_STR)
 app.include_router(index_router, prefix=settings.API_V1_STR)
 app.include_router(industries_router, prefix=settings.API_V1_STR)
 app.include_router(static_router)
