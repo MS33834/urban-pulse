@@ -290,7 +290,8 @@ def monte_carlo_simulation(
     if n < 6:
         return {"error": f"n={n} too small for MC"}
 
-    np.random.seed(seed)
+    # 使用局部 Generator,避免污染全局 NumPy RNG 状态(影响其他并发模块)
+    rng = np.random.default_rng(seed)
     y = np.array(values, dtype=float)
     # 用 LR 算 baseline 残差(快、稳)
     x = np.arange(n).reshape(-1, 1).astype(float)
@@ -310,7 +311,7 @@ def monte_carlo_simulation(
     sims = np.zeros((n_sims, years))
     for s in range(n_sims):
         # 对残差有放回抽样
-        sampled_resid = np.random.choice(resid, size=years, replace=True)
+        sampled_resid = rng.choice(resid, size=years, replace=True)
         # 可选:加白噪声 ~ N(0, sigma^2) 增强探索
         sims[s, :] = baseline_fc + sampled_resid
 

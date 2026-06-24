@@ -36,7 +36,8 @@ def enterprise_analysis(request: AnalysisRequest):
     try:
         logger.info("企业端分析请求: %s - %s - %s", request.region, request.industry, request.year)
 
-        data = request.data or {}
+        # 复制入参字典,避免直接修改 request.data 造成副作用
+        data = dict(request.data or {})
         data.update(
             {
                 "region": request.region,

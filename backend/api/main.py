@@ -126,8 +126,10 @@ app = FastAPI(
         {"name": "页面", "description": "仪表盘与静态页面入口。"},
     ],
     lifespan=lifespan,
-    docs_url="/docs",
-    redoc_url="/redoc",
+    # 生产环境关闭交互式文档,避免泄露 API 结构
+    docs_url=None if settings.APP_ENV == "production" else "/docs",
+    redoc_url=None if settings.APP_ENV == "production" else "/redoc",
+    openapi_url=None if settings.APP_ENV == "production" else "/openapi.json",
 )
 
 # ----- Middleware -----

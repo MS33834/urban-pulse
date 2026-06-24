@@ -53,23 +53,39 @@ class GovernmentAnalyzer(BaseAnalyzer):
         if not bench:
             return 60.0
 
+        # 预计算分母,避免基准分位数相等时除零(数据高度同质时常见)
+        span_high_med = bench["high"] - bench["medium"]
+        span_med_low = bench["medium"] - bench["low"]
+
         if higher_is_better:
             if value >= bench["high"]:
                 return 95.0
             elif value >= bench["medium"]:
-                return float(75.0 + (value - bench["medium"]) / (bench["high"] - bench["medium"]) * 20)
+                if span_high_med == 0:
+                    return 75.0
+                return float(75.0 + (value - bench["medium"]) / span_high_med * 20)
             elif value >= bench["low"]:
-                return float(50.0 + (value - bench["low"]) / (bench["medium"] - bench["low"]) * 25)
+                if span_med_low == 0:
+                    return 50.0
+                return float(50.0 + (value - bench["low"]) / span_med_low * 25)
             else:
+                if bench["low"] == 0:
+                    return 30.0
                 return float(30.0 + (value / bench["low"]) * 20)
         else:
             if value <= bench["low"]:
                 return 95.0
             elif value <= bench["medium"]:
-                return float(75.0 - (value - bench["low"]) / (bench["medium"] - bench["low"]) * 20)
+                if span_med_low == 0:
+                    return 75.0
+                return float(75.0 - (value - bench["low"]) / span_med_low * 20)
             elif value <= bench["high"]:
-                return float(50.0 - (value - bench["medium"]) / (bench["high"] - bench["medium"]) * 25)
+                if span_high_med == 0:
+                    return 50.0
+                return float(50.0 - (value - bench["medium"]) / span_high_med * 25)
             else:
+                if bench["high"] == 0:
+                    return 30.0
                 return float(max(10.0, 30.0 - ((value - bench["high"]) / bench["high"]) * 30))
 
     def analyze_fiscal_leverage(self, data: dict[str, Any]) -> dict[str, Any]:

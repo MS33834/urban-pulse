@@ -299,7 +299,12 @@ class CEHIEngine:
         for level in self.config.health_levels:
             if score >= level.min_score:
                 return level
-        return self.config.health_levels[-1]
+        # health_levels 为空(配置异常)时返回兜底等级,避免 IndexError
+        if self.config.health_levels:
+            return self.config.health_levels[-1]
+        return HealthLevel(
+            level="risk", name="风险", color="#dc2626", emoji="🔴", min_score=0.0, description="默认风险等级"
+        )
 
     def calculate(
         self,

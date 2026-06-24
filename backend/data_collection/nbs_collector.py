@@ -41,12 +41,20 @@ class NBSCollector(DataCollector):
         self.analysis_config = config_loader.get_analysis_config()
         self.default_indicators = self.analysis_config.DATA_COLLECTION["default_indicators"]
         self.default_years = self.analysis_config.DATA_COLLECTION["years_range"]
+        # GDP DataFrame 缓存:同一次 fetch_all 调用内复用,避免重复请求 ak.macro_china_gdp
+        self._gdp_df_cache: pd.DataFrame | None = None
 
     def name(self) -> str:
         return "nbs"
 
     def supported_cities(self) -> list[str]:
         return ["CN"]
+
+    def _get_gdp_df(self) -> pd.DataFrame:
+        """获取 GDP DataFrame,同一次 fetch_all 调用内复用缓存避免重复网络请求。"""
+        if self._gdp_df_cache is None:
+            self._gdp_df_cache = _call_with_timeout(ak.macro_china_gdp, timeout=30)
+        return self._gdp_df_cache
 
     def fetch_data(self, **kwargs) -> list[dict[str, Any]]:
         """
@@ -77,7 +85,7 @@ class NBSCollector(DataCollector):
     def get_gdp(self) -> list[dict[str, Any]]:
         """获取 GDP 数据"""
         try:
-            df = _call_with_timeout(ak.macro_china_gdp, timeout=30)
+            df = self._get_gdp_df()
             results = []
 
             for _, row in df.iterrows():
@@ -252,7 +260,7 @@ class NBSCollector(DataCollector):
 
     def _fetch_fiscal_revenue_from_akshare(self) -> list[dict[str, Any]]:
         try:
-            df = _call_with_timeout(ak.macro_china_gdp, timeout=30)
+            df = self._get_gdp_df()
             results = []
             region_config = config_loader.get_region_config()
             region_name = region_config.name if region_config else "深圳"
@@ -342,7 +350,7 @@ class NBSCollector(DataCollector):
 
     def _fetch_industrial_output_from_akshare(self) -> list[dict[str, Any]]:
         try:
-            df = _call_with_timeout(ak.macro_china_gdp, timeout=30)
+            df = self._get_gdp_df()
             results = []
             industry_config = config_loader.get_industry_config()
             industry_name = industry_config.name if industry_config else "半导体"
@@ -423,6 +431,8 @@ class NBSCollector(DataCollector):
     def fetch_all(self, indicators: list[str] | None = None) -> dict[str, list[dict]]:
         """批量获取所有数据"""
         all_data = {}
+        # 重置 GDP 缓存,本次 fetch_all 内复用,避免 gdp/fiscal_revenue/industrial_output 重复请求
+        self._gdp_df_cache = None
 
         fetchers = {
             "gdp": self.get_gdp,
@@ -445,6 +455,8 @@ class NBSCollector(DataCollector):
                     logger.error(f"获取 {indicator} 数据失败: {e}")
                     all_data[indicator] = []
 
+        # 清理缓存,避免长期持有大 DataFrame
+        self._gdp_df_cache = None
         return all_data
 
 

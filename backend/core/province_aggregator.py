@@ -147,22 +147,34 @@ def get_province_timeseries(
     # 向量化提取所有年份（避免 to_dict 转换）
     years = sorted(set().union(*[set(df["year"].astype(int)) for df in city_dfs.values()])) if city_dfs else []
 
+    # 预构建 {year: row} 索引,将内层 O(n) 全列扫描降为 O(1) 查找
+    # 同时预取 population 列,避免重复 .iloc[0] 调用
+    city_year_index: dict[str, dict[int, pd.Series]] = {}
+    for city, df in city_dfs.items():
+        if indicator not in df.columns:
+            continue
+        idx: dict[int, pd.Series] = {}
+        for _, row in df.iterrows():
+            try:
+                idx[int(row["year"])] = row
+            except (KeyError, TypeError, ValueError):
+                continue
+        city_year_index[city] = idx
+
     rows: list[dict[str, Any]] = []
     for year in years:
         city_values: list[tuple[float, float]] = []  # (value, weight)
         city_names: list[str] = []
-        for city, df in city_dfs.items():
-            if indicator not in df.columns:
+        for city, idx in city_year_index.items():
+            row = idx.get(year)
+            if row is None:
                 continue
-            row = df[df["year"] == year]
-            if row.empty:
-                continue
-            v = row[indicator].iloc[0]
+            v = row[indicator]
             if pd.isna(v):
                 continue
             # 权重:率指标用 population 加权,绝对量用 1
             if aggregation == "weighted_avg":
-                pop = row["population"].iloc[0] if "population" in df.columns else 1.0
+                pop = row["population"] if "population" in row.index else 1.0
                 if pd.isna(pop) or pop <= 0:
                     pop = 1.0
                 weight = float(pop)

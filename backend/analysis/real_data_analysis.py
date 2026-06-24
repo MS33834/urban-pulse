@@ -339,9 +339,9 @@ class RealDataAnalyzer:
 
     def _prepare_industry_structure_data(self, df: pd.DataFrame) -> dict[str, Any]:
         """准备产业结构数据"""
-        latest_data = (
-            df.dropna(subset=["gdp_primary", "gdp_secondary", "gdp_tertiary"]).iloc[-1] if len(df) > 0 else None
-        )
+        # 先 dropna 再判空,避免 df 非空但三列全 NaN 时 iloc[-1] 越界
+        cleaned = df.dropna(subset=["gdp_primary", "gdp_secondary", "gdp_tertiary"]) if not df.empty else df
+        latest_data = cleaned.iloc[-1] if not cleaned.empty else None
 
         if latest_data is not None:
             total = latest_data["gdp_primary"] + latest_data["gdp_secondary"] + latest_data["gdp_tertiary"]

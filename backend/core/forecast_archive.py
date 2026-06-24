@@ -76,12 +76,18 @@ class ForecastArchive:
         self.archive_dir = Path(archive_dir) if archive_dir else DEFAULT_ARCHIVE_DIR
         self.archive_dir.mkdir(parents=True, exist_ok=True)
         self._archive_file = self.archive_dir / "forecast_archive.jsonl"
+        # 内存缓存:按文件 mtime 失效,避免每次查询全量解析 JSONL
+        self._cache: list[ForecastSnapshot] | None = None
+        self._cache_mtime: float | None = None
 
     def save(self, snapshot: ForecastSnapshot) -> str:
         """保存预测快照，返回 forecast_id。"""
         with self._write_lock:
             with self._archive_file.open("a", encoding="utf-8") as f:
                 f.write(json.dumps(snapshot.to_dict(), ensure_ascii=False) + "\n")
+            # 追加写后使缓存失效,下次读取重新加载
+            self._cache = None
+            self._cache_mtime = None
         logger.debug(f"预测已存档: {snapshot.forecast_id}")
         return snapshot.forecast_id
 
@@ -89,6 +95,13 @@ class ForecastArchive:
         """列出所有存档预测。"""
         if not self._archive_file.exists():
             return []
+        # 检查 mtime 是否变化,命中缓存则直接返回
+        try:
+            current_mtime = self._archive_file.stat().st_mtime
+        except OSError:
+            current_mtime = None
+        if self._cache is not None and self._cache_mtime == current_mtime:
+            return self._cache
         snapshots: list[ForecastSnapshot] = []
         with self._write_lock:
             with self._archive_file.open(encoding="utf-8") as f:
@@ -100,6 +113,8 @@ class ForecastArchive:
                         snapshots.append(ForecastSnapshot.from_dict(json.loads(line)))
                     except Exception as exc:
                         logger.warning(f"解析预测存档行失败: {exc}")
+        self._cache = snapshots
+        self._cache_mtime = current_mtime
         return snapshots
 
     def find_pending(self) -> list[ForecastSnapshot]:
@@ -126,6 +141,8 @@ class ForecastArchive:
             if not updated:
                 return False
             self._rewrite_locked(snapshots)
+            self._cache = None
+            self._cache_mtime = None
         logger.debug(f"预测已回填真实值: {forecast_id} = {actual_value}")
         return True
 
@@ -157,6 +174,8 @@ class ForecastArchive:
                     count += 1
             if count > 0:
                 self._rewrite_locked(snapshots)
+                self._cache = None
+                self._cache_mtime = None
                 logger.debug(f"按匹配条件回填 {count} 条预测真实值")
         return count
 
@@ -192,3 +211,5 @@ class ForecastArchive:
         with self._write_lock:
             if self._archive_file.exists():
                 self._archive_file.unlink()
+            self._cache = None
+            self._cache_mtime = None

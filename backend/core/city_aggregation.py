@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import Any
 
 import numpy as np
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -336,33 +337,40 @@ class CityDataAggregator:
             if indicator in indicators:
                 matrix[(city, year)][indicator] = value
 
-        # 计算相关系数矩阵
+        # 向量化计算相关系数矩阵:将 matrix 转为 DataFrame 后用 df.corr()
+        # 避免原 O(k²×m) 三重嵌套循环,改为单次 pandas 向量化
+        rows_list: list[dict[str, float]] = []
+        for indicators_dict in matrix.values():
+            row = {ind: indicators_dict[ind] for ind in indicators if ind in indicators_dict}
+            if row:
+                rows_list.append(row)
+        df = pd.DataFrame(rows_list, columns=indicators)
+
         correlation_matrix: dict[str, dict[str, float]] = {}
-
-        for i, ind1 in enumerate(indicators):
-            correlation_matrix[ind1] = {}
-
-            for j, ind2 in enumerate(indicators):
-                if i == j:
-                    correlation_matrix[ind1][ind2] = 1.0
-                    continue
-
-                # 收集两个指标的所有配对值
-                values1 = []
-                values2 = []
-
-                for key, indicators_dict in matrix.items():
-                    if ind1 in indicators_dict and ind2 in indicators_dict:
-                        values1.append(indicators_dict[ind1])
-                        values2.append(indicators_dict[ind2])
-
-                # 计算皮尔逊相关系数
-                if len(values1) > 1:
-                    corr = self._pearson_correlation(values1, values2)
-                    correlation_matrix[ind1][ind2] = corr
-                else:
-                    # 数据不足无法计算，用 NaN 区别于"无相关"
-                    correlation_matrix[ind1][ind2] = float("nan")
+        if df.empty or len(df) < 2:
+            # 数据不足,所有非对角线返回 NaN
+            for ind1 in indicators:
+                correlation_matrix[ind1] = {}
+                for ind2 in indicators:
+                    correlation_matrix[ind1][ind2] = 1.0 if ind1 == ind2 else float("nan")
+        else:
+            corr_df = df.corr()
+            for ind1 in indicators:
+                correlation_matrix[ind1] = {}
+                for ind2 in indicators:
+                    if ind1 == ind2:
+                        correlation_matrix[ind1][ind2] = 1.0
+                    else:
+                        val = (
+                            corr_df.loc[ind1, ind2]
+                            if ind1 in corr_df.index and ind2 in corr_df.columns
+                            else float("nan")
+                        )
+                        # pandas corr 对常数列返回 NaN,原实现返回 0.0,保持一致
+                        if pd.isna(val) and ind1 in df.columns and ind2 in df.columns:
+                            if df[ind1].std() == 0 or df[ind2].std() == 0:
+                                val = 0.0
+                        correlation_matrix[ind1][ind2] = float(val) if not pd.isna(val) else float("nan")
 
         return {
             "correlation_matrix": correlation_matrix,

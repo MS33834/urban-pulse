@@ -276,7 +276,12 @@ async def get_region_survey_indicators(
         data = []
         for row in sorted(region.historical_data, key=lambda r: r.get("year", 0)):
             if indicator in row:
-                data.append({"year": row["year"], "value": float(row[indicator])})
+                # 单行脏数据不应中断整个返回,跳过非法值
+                try:
+                    data.append({"year": row["year"], "value": float(row[indicator])})
+                except (TypeError, ValueError):
+                    logger.warning("区域 %s 指标 %s 跳过非法值: %r", code, indicator, row[indicator])
+                    continue
         return {
             "success": True,
             "code": code,

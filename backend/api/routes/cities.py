@@ -467,7 +467,11 @@ async def get_city_dashboard(city_code: str = Query(..., min_length=1, descripti
             if len(series) >= 2:
                 first_value = series[0][1]
                 last_value = series[-1][1]
-                change_rate = round((last_value - first_value) / first_value * 100, 2) if first_value else 0.0
+                # 显式判断非零,避免合法的 0.0 初值被当作 falsy 误吞
+                if first_value != 0:
+                    change_rate = round((last_value - first_value) / first_value * 100, 2)
+                else:
+                    change_rate = 0.0
                 direction = "increasing" if change_rate > 0.5 else "decreasing" if change_rate < -0.5 else "stable"
                 trends.append({"indicator": indicator, "trend": direction, "change_rate": change_rate})
 
@@ -476,10 +480,11 @@ async def get_city_dashboard(city_code: str = Query(..., min_length=1, descripti
         rankings_payload: dict[str, int] = {}
         all_city_codes = list(city_manager.cities.keys())
         sorted_indicators = sorted(indicator_codes)
-        if sorted_indicators and all_city_codes:
+        # 年份为空时跳过排名(原代码传入哨兵 0 会导致查询不存在的年份)
+        if sorted_indicators and all_city_codes and years:
             cities_compare = city_manager.compare_cities(
                 all_city_codes,
-                year=years[-1] if years else 0,
+                year=years[-1],
                 indicators=sorted_indicators,
             )
             # 按指标分组排序,得到每个城市在每个指标上的排名
