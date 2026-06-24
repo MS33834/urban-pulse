@@ -19,3 +19,4 @@ reportlab>=4.0
 python-multipart>=0.0.9
 requests>=2.31
 packaging>=24.0
+slowapi>=0.1.9

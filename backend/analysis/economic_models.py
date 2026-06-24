@@ -390,8 +390,8 @@ class EconomicModels:
         output = technology * (capital**alpha) * (labor ** (1 - alpha))
 
         # 边际产出
-        mpk = alpha * output / capital  # 资本边际产出
-        mpl = (1 - alpha) * output / labor  # 劳动边际产出
+        mpk = alpha * output / capital if capital != 0 else 0.0
+        mpl = (1 - alpha) * output / labor if labor != 0 else 0.0
 
         return {
             "model": "Cobb-Douglas Production Function",
@@ -422,18 +422,10 @@ class EconomicModels:
         """
         # 稳态人均资本（除零与负底数保护）
         denom = population_growth + depreciation
+        if alpha >= 1 or alpha <= 0:
+            return {"error": "alpha 必须在 0 和 1 之间"}
         if denom <= 0:
-            return {
-                "model": "Solow Growth Model",
-                "error": "population_growth + depreciation 必须为正",
-                "inputs": {
-                    "savings_rate": savings_rate,
-                    "population_growth": population_growth,
-                    "depreciation": depreciation,
-                    "alpha": alpha,
-                    "technology": technology,
-                },
-            }
+            return {"error": "分母必须为正"}
         k_star = (savings_rate / denom) ** (1 / (1 - alpha))
 
         # 稳态人均产出

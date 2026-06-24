@@ -48,16 +48,24 @@ class DataValidator:
     def validate_value_ranges(self, df: pd.DataFrame, value_ranges: dict[str, tuple]) -> dict[str, Any]:
         """验证值范围"""
         range_violations = {}
+        issues = []
         for col, (min_val, max_val) in value_ranges.items():
             if col in df.columns:
                 out_of_range = df[(df[col] < min_val) | (df[col] > max_val)]
+                nan_count = df[col].isna().sum()
                 if len(out_of_range) > 0:
                     range_violations[col] = {
                         "min_expected": min_val,
                         "max_expected": max_val,
                         "count": len(out_of_range),
                     }
-        return {"valid": len(range_violations) == 0, "violations": range_violations}
+                if nan_count > 0:
+                    issues.append({"column": col, "issue": "contains_nan", "count": int(nan_count)})
+        return {
+            "valid": len(range_violations) == 0 and len(issues) == 0,
+            "violations": range_violations,
+            "issues": issues,
+        }
 
     def validate_unique_values(self, df: pd.DataFrame, unique_columns: list[str]) -> dict[str, Any]:
         """验证唯一性"""

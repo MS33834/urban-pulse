@@ -66,6 +66,10 @@ def get_connection() -> sqlite3.Connection:
                 conn.execute("PRAGMA synchronous=NORMAL")
                 _connection = conn
                 logger.info("SQLite database opened: %s", db_path)
+                # 创建数据库文件后设置权限
+                db_path = Path(db_path)
+                if db_path.exists():
+                    os.chmod(db_path, 0o600)
     return _connection
 
 

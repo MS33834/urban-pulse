@@ -269,6 +269,8 @@ class CityDataManager:
 
             with open(config_path, encoding="utf-8") as f:
                 configs = yaml.safe_load(f)
+            if not isinstance(configs, dict):
+                raise ValueError(f"配置文件格式错误：期望字典，得到 {type(configs).__name__}")
 
             count = 0
             for city_data in configs.get("cities", []):

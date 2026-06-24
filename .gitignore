@@ -25,6 +25,50 @@ data/forecasts/*.jsonl
 *secret*
 credentials*
 
+# 密钥/证书文件
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+*.jks
+id_rsa
+id_dsa
+id_ecdsa
+*.ppk
+*.keystore
+
+# 云凭证目录
+.aws/
+.gcloud/
+.azure/
+.kube/
+.docker/
+
+# 日志文件
+*.log
+logs/
+
+# 数据库文件（全局）
+*.sqlite
+*.sqlite3
+*.db
+
+# 模型文件（全局）
+*.pkl
+*.joblib
+*.h5
+*.pickle
+
+# 系统文件
+.DS_Store
+Thumbs.db
+*.swp
+
+# 保留 .env.example
+!.env.example
+
 # Local environment
 .python-version
 

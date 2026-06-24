@@ -153,21 +153,27 @@ class PluginRegistry:
                 continue
 
             for attr_name in dir(module):
-                attr = getattr(module, attr_name)
-                if (
-                    isinstance(attr, type)
-                    and issubclass(attr, base_class)
-                    and attr is not base_class
-                    and not getattr(attr, "__abstractmethods__", None)
-                ):
-                    try:
-                        instance = attr()
-                        named = cast(_NamedPlugin, instance)
-                        with _REGISTRY_LOCK:
-                            registry[named.name()] = instance
-                        logger.debug(f"自动发现插件 {base_class.__name__}: {named.name()}")
-                    except Exception as exc:
-                        logger.warning(f"实例化插件 {attr_name} 失败: {exc}")
+                # 对每个属性的检查与实例化单独 try/except,
+                # 单个插件加载失败不影响其他插件继续发现。
+                try:
+                    attr = getattr(module, attr_name)
+                    if (
+                        isinstance(attr, type)
+                        and issubclass(attr, base_class)
+                        and attr is not base_class
+                        and not getattr(attr, "__abstractmethods__", None)
+                    ):
+                        try:
+                            instance = attr()
+                            named = cast(_NamedPlugin, instance)
+                            with _REGISTRY_LOCK:
+                                registry[named.name()] = instance
+                            logger.debug(f"自动发现插件 {base_class.__name__}: {named.name()}")
+                        except Exception as exc:
+                            logger.warning(f"实例化插件 {attr_name} 失败: {exc}")
+                except Exception as exc:
+                    logger.warning(f"检查插件属性 {attr_name} 失败: {exc}")
+                    continue
 
     # ------------------------------------------------------------------
     # External plugins via entry points
@@ -199,7 +205,20 @@ class PluginRegistry:
         第三方包在 pyproject.toml 中声明：
             [project.entry-points."urban_pulse.collectors"]
             my_collector = "my_package.module:MyCollectorClass"
+
+        安全策略:仅加载 settings.ALLOWED_PLUGINS 白名单中声明的插件。
+        白名单为空时跳过外部插件发现,避免自动加载任意 pip 包中声明的插件。
         """
+        from config.settings import settings
+
+        allowed = settings.ALLOWED_PLUGINS
+        if not allowed:
+            logger.warning(
+                "ALLOWED_PLUGINS 白名单为空,跳过外部插件发现。"
+                "如需加载外部插件,请在环境变量 ALLOWED_PLUGINS 中显式声明(逗号分隔)。"
+            )
+            return
+
         groups = cls._entry_point_groups()
         try:
             eps = entry_points()
@@ -207,9 +226,13 @@ class PluginRegistry:
             logger.warning(f"读取 entry points 失败: {exc}")
             return
 
+        allowed_set = set(allowed)
         for group, (base_class, registry) in groups.items():
             group_eps = eps.select(group=group) if hasattr(eps, "select") else []
             for ep in group_eps:
+                if ep.name not in allowed_set:
+                    logger.debug(f"外部插件 {ep.name} 不在白名单中,跳过")
+                    continue
                 try:
                     loaded = ep.load()
                     plugin_cls = cast(type[Any], loaded)
@@ -218,11 +241,38 @@ class PluginRegistry:
                         continue
                     instance = plugin_cls()
                     named = cast(_NamedPlugin, instance)
+                    version = cls._plugin_version(ep)
+                    dist_name = cls._plugin_source(ep)
                     with _REGISTRY_LOCK:
                         registry[named.name()] = instance
-                    logger.debug(f"通过 entry point 注册插件 {base_class.__name__}: {named.name()}")
+                    logger.info(
+                        f"已加载外部插件: name={named.name()}, entry_point={ep.name}, "
+                        f"version={version}, source={dist_name}, group={group}"
+                    )
                 except Exception as exc:
                     logger.warning(f"加载外部插件 {ep.name} 失败: {exc}")
+
+    @staticmethod
+    def _plugin_version(ep: Any) -> str:
+        """从 entry point 的 dist 元数据获取插件版本。"""
+        try:
+            dist = getattr(ep, "dist", None)
+            if dist is not None:
+                return getattr(dist, "version", "unknown") or "unknown"
+        except Exception:
+            pass
+        return "unknown"
+
+    @staticmethod
+    def _plugin_source(ep: Any) -> str:
+        """从 entry point 的 dist 元数据获取插件来源(发行包名称)。"""
+        try:
+            dist = getattr(ep, "dist", None)
+            if dist is not None:
+                return getattr(dist, "name", None) or "unknown"
+        except Exception:
+            pass
+        return "unknown"
 
     @classmethod
     def discover_all(cls) -> None:

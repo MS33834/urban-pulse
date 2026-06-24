@@ -41,14 +41,15 @@ _SAFE_FUNCS = {
 
 
 def _safe_eval_math(expr: str) -> float:
+    # 始终先用 AST 验证表达式安全性
+    tree = ast.parse(expr, mode="eval")
+    _eval_node_math(tree.body)  # 验证但不计算
     try:
         import numexpr
 
         return float(numexpr.evaluate(expr))
     except ImportError:
-        pass
-    tree = ast.parse(expr, mode="eval")
-    return float(_eval_node_math(tree.body))
+        return float(_eval_node_math(tree.body))
 
 
 def _eval_node_math(node):
@@ -398,6 +399,8 @@ class CustomIndicatorEngine:
 
             # 以第一个列表的长度作为迭代次数
             list_len = len(next(iter(list_deps.values())))
+            if not all(len(lst) == list_len for lst in list_deps.values()):
+                raise ValueError("列表依赖长度不一致")
             total = 0.0
             for i in range(list_len):
                 item_expr = inner

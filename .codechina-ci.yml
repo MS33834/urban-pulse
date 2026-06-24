@@ -1,6 +1,6 @@
 pages:
   stage: deploy
-  image: alpine:latest
+  image: alpine:3.20
   script:
     - echo "Deploying static site to GitCode Pages..."
     - test -f public/index.html

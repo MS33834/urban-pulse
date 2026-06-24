@@ -14,6 +14,9 @@ from typing import Any, cast
 
 import pandas as pd
 
+from backend.utils.file_utils import _atomic_write
+from backend.utils.path_security import validate_path_in_allowed_dirs
+
 logger = logging.getLogger(__name__)
 
 
@@ -375,6 +378,7 @@ class DataSourceManager:
     def load_sources_from_config(self, config_path: str):
         """从配置文件加载数据源"""
         try:
+            validate_path_in_allowed_dirs(config_path)
             with open(config_path, encoding="utf-8") as f:
                 config = json.load(f)
 
@@ -393,7 +397,8 @@ class DataSourceManager:
             logger.error(f"加载数据源配置失败: {e}")
 
     def save_sources_config(self, config_path: str):
-        """保存数据源配置"""
+        """保存数据源配置（原子写入）"""
+        validate_path_in_allowed_dirs(config_path)
         config: dict[str, Any] = {"sources": []}
 
         for name, source_config in self._configs.items():
@@ -408,8 +413,11 @@ class DataSourceManager:
                 }
             )
 
-        with open(config_path, "w", encoding="utf-8") as f:
-            json.dump(config, f, ensure_ascii=False, indent=2)
+        def _write(tmp: Path) -> None:
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(config, f, ensure_ascii=False, indent=2)
+
+        _atomic_write(config_path, _write)
 
         logger.info(f"数据源配置已保存到 {config_path}")
 

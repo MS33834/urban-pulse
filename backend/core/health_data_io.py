@@ -83,6 +83,8 @@ def _read_dataframe(file_bytes: bytes, filename: str) -> pd.DataFrame:
                 continue
             except pd.errors.EmptyDataError as exc:
                 raise ValueError("CSV 文件为空或没有数据行") from exc
+            except pd.errors.ParserError:
+                continue  # 尝试下一个编码
             except Exception as exc:
                 raise ValueError(f"无法解析 CSV 文件: {exc}") from exc
         raise ValueError("CSV 文件编码无法识别，请使用 UTF-8 或 GBK 编码")

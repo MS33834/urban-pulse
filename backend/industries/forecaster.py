@@ -81,10 +81,16 @@ def forecast_industry(
             "method", "factors"
         }
     """
-    series = industry.get_time_series(indicator)
-    years = sorted(
-        int(year) for row in industry.historical_data if indicator in row and (year := row.get("year")) is not None
-    )
+    valid_rows = [
+        (int(row["year"]), float(row[indicator]))
+        for row in industry.historical_data
+        if indicator in row and row[indicator] is not None and row.get("year") is not None
+    ]
+    if not valid_rows:
+        raise ValueError(f"指标 {indicator} 无有效历史数据")
+    valid_rows.sort(key=lambda x: x[0])
+    years = [r[0] for r in valid_rows]
+    series = [r[1] for r in valid_rows]
 
     if len(series) < 3:
         return {
@@ -143,7 +149,7 @@ def forecast_industry(
 
 def _cagr(start: float, end: float, years: int) -> float:
     """计算复合年化增长率（%）"""
-    if start <= 0 or years <= 0:
+    if start <= 0 or years <= 0 or end <= 0:
         return 0.0
     return (math.pow(end / start, 1.0 / years) - 1.0) * 100
 

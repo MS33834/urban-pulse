@@ -78,7 +78,7 @@ class EnterpriseAnalyzer(BaseAnalyzer):
         基准值：low (25%), medium (50%), high (75%) 分位数。
         """
         bench = self.benchmarks.get(metric)
-        if not bench or pd.isna(value):
+        if not bench or pd.isna(value) or not isinstance(value, (int, float)):
             return 60.0  # 默认分
 
         # 预计算分母,避免基准分位数相等时除零(数据高度同质时常见)
@@ -179,18 +179,34 @@ class EnterpriseAnalyzer(BaseAnalyzer):
 
     def _calculate_business_cost(self, data: dict) -> tuple[float, dict[str, float]]:
         """计算营商成本维度得分（越低越好）。"""
-        land_score = self._calculate_score(data["land_price"], "land_price", higher_is_better=False)
-        salary_score = self._calculate_score(data["salary_level"], "salary_level", higher_is_better=False)
-        energy_score = self._calculate_score(data["energy_cost"], "energy_cost", higher_is_better=False)
-        financing_score = self._calculate_score(data["financing_cost"], "financing_cost", higher_is_better=False)
+        land_price = data.get("land_price")
+        if land_price is not None:
+            land_score = self._calculate_score(land_price, "land_price", higher_is_better=False)
+        else:
+            land_score = 60.0
+        salary_level = data.get("salary_level")
+        if salary_level is not None:
+            salary_score = self._calculate_score(salary_level, "salary_level", higher_is_better=False)
+        else:
+            salary_score = 60.0
+        energy_cost = data.get("energy_cost")
+        if energy_cost is not None:
+            energy_score = self._calculate_score(energy_cost, "energy_cost", higher_is_better=False)
+        else:
+            energy_score = 60.0
+        financing_cost = data.get("financing_cost")
+        if financing_cost is not None:
+            financing_score = self._calculate_score(financing_cost, "financing_cost", higher_is_better=False)
+        else:
+            financing_score = 60.0
 
         total = land_score * 0.35 + salary_score * 0.40 + energy_score * 0.15 + financing_score * 0.10
 
         details = {
-            "土地价格": data["land_price"],
-            "平均工资": data["salary_level"],
-            "能源成本": data["energy_cost"],
-            "融资成本": data["financing_cost"],
+            "土地价格": land_price,
+            "平均工资": salary_level,
+            "能源成本": energy_cost,
+            "融资成本": financing_cost,
             "土地价格得分": land_score,
             "平均工资得分": salary_score,
             "能源成本得分": energy_score,
@@ -200,16 +216,28 @@ class EnterpriseAnalyzer(BaseAnalyzer):
 
     def _calculate_supply_chain(self, data: dict) -> tuple[float, dict[str, float]]:
         """计算供应链配套维度得分。"""
-        support_score = self._calculate_score(data["local_support_rate"], "local_support_rate", higher_is_better=True)
-        delivery_score = self._calculate_score(data["avg_delivery_time"], "avg_delivery_time", higher_is_better=False)
-        location_score = self._calculate_score(data["location_quotient"], "location_quotient", higher_is_better=True)
+        local_support_rate = data.get("local_support_rate")
+        if local_support_rate is not None:
+            support_score = self._calculate_score(local_support_rate, "local_support_rate", higher_is_better=True)
+        else:
+            support_score = 60.0
+        avg_delivery_time = data.get("avg_delivery_time")
+        if avg_delivery_time is not None:
+            delivery_score = self._calculate_score(avg_delivery_time, "avg_delivery_time", higher_is_better=False)
+        else:
+            delivery_score = 60.0
+        location_quotient = data.get("location_quotient")
+        if location_quotient is not None:
+            location_score = self._calculate_score(location_quotient, "location_quotient", higher_is_better=True)
+        else:
+            location_score = 60.0
 
         total = support_score * 0.45 + delivery_score * 0.25 + location_score * 0.30
 
         details = {
-            "本地配套率": data["local_support_rate"],
-            "平均交付周期": data["avg_delivery_time"],
-            "区位熵": data["location_quotient"],
+            "本地配套率": local_support_rate,
+            "平均交付周期": avg_delivery_time,
+            "区位熵": location_quotient,
             "供应商数量": data.get("supplier_count", 0),
             "本地配套率得分": support_score,
             "交付周期得分": delivery_score,
@@ -219,18 +247,34 @@ class EnterpriseAnalyzer(BaseAnalyzer):
 
     def _calculate_policy_benefit(self, data: dict) -> tuple[float, dict[str, float]]:
         """计算政策红利维度得分。"""
-        tax_red_score = self._calculate_score(data["tax_reduction"], "tax_reduction", higher_is_better=True)
-        tax_cov_score = self._calculate_score(data["tax_coverage"], "tax_coverage", higher_is_better=True)
-        rd_score = self._calculate_score(data["rd_subsidy"], "rd_subsidy", higher_is_better=True)
-        approval_score = self._calculate_score(data["avg_approval_time"], "avg_approval_time", higher_is_better=False)
+        tax_reduction = data.get("tax_reduction")
+        if tax_reduction is not None:
+            tax_red_score = self._calculate_score(tax_reduction, "tax_reduction", higher_is_better=True)
+        else:
+            tax_red_score = 60.0
+        tax_coverage = data.get("tax_coverage")
+        if tax_coverage is not None:
+            tax_cov_score = self._calculate_score(tax_coverage, "tax_coverage", higher_is_better=True)
+        else:
+            tax_cov_score = 60.0
+        rd_subsidy = data.get("rd_subsidy")
+        if rd_subsidy is not None:
+            rd_score = self._calculate_score(rd_subsidy, "rd_subsidy", higher_is_better=True)
+        else:
+            rd_score = 60.0
+        avg_approval_time = data.get("avg_approval_time")
+        if avg_approval_time is not None:
+            approval_score = self._calculate_score(avg_approval_time, "avg_approval_time", higher_is_better=False)
+        else:
+            approval_score = 60.0
 
         total = tax_red_score * 0.30 + tax_cov_score * 0.20 + rd_score * 0.35 + approval_score * 0.15
 
         details = {
-            "减税降费": data["tax_reduction"],
-            "政策覆盖率": data["tax_coverage"],
-            "研发补贴": data["rd_subsidy"],
-            "平均审批时间": data["avg_approval_time"],
+            "减税降费": tax_reduction,
+            "政策覆盖率": tax_coverage,
+            "研发补贴": rd_subsidy,
+            "平均审批时间": avg_approval_time,
             "减税降费得分": tax_red_score,
             "政策覆盖率得分": tax_cov_score,
             "研发补贴得分": rd_score,

@@ -118,7 +118,7 @@ class DescriptiveAnalyzer(BaseAnalyzer):
         for field_name, field_stats in summary.items():
             if field_stats["std"] == 0:
                 insights.append(f"{field_name} 保持稳定，无显著变化")
-            elif field_stats["max"] > field_stats["mean"] * 2:
+            elif field_stats["mean"] != 0 and field_stats["max"] > field_stats["mean"] * 2:
                 insights.append(
                     f"{field_name} 存在较大波动，峰值是均值的 {field_stats['max'] / field_stats['mean']:.1f} 倍"
                 )

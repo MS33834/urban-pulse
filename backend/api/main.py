@@ -11,15 +11,25 @@ from datetime import datetime
 from pathlib import Path
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, Response
+from fastapi.routing import APIRoute
 
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
+
+from backend.api.auth import get_current_user
 from backend.api.security_headers import SecurityHeadersMiddleware
 from config import settings
 
 logger = logging.getLogger(__name__)
+
+# 速率限制器实例 — 在路由文件中通过 @limiter.limit("5/minute") 使用
+limiter = Limiter(key_func=get_remote_address)
 
 
 # ── helper: seed city_manager from region registry ─────────────────────────
@@ -144,16 +154,25 @@ app.add_middleware(
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=allow_credentials,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With", "X-API-Key"],
 )
 
 _trusted_hosts_env = os.getenv("TRUSTED_HOSTS")
 if _trusted_hosts_env:
     _allowed_hosts = [h.strip() for h in _trusted_hosts_env.split(",") if h.strip()]
 else:
-    _allowed_hosts = ["localhost", "127.0.0.1", "*.local", "testserver", "testclient"]
+    # 默认仅允许本地回环地址,移除 *.local/testserver/testclient 等宽松主机
+    _allowed_hosts = ["localhost", "127.0.0.1"]
+    # 测试/开发环境兼容 TestClient(Host: testserver),生产环境严格限制
+    if settings.APP_ENV in {"test", "dev"}:
+        _allowed_hosts.extend(["testserver", "testclient"])
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=_allowed_hosts)
 app.add_middleware(SecurityHeadersMiddleware, hsts=ENABLE_HSTS)
+
+# 速率限制中间件 — 必须在路由注册前将 limiter 挂载到 app.state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # ----- Routes -----
 from backend.api.routes import (
@@ -185,6 +204,44 @@ app.include_router(validation_router, prefix=settings.API_V1_STR)
 app.include_router(index_router, prefix=settings.API_V1_STR)
 app.include_router(industries_router, prefix=settings.API_V1_STR)
 app.include_router(static_router)
+
+
+# ----- 对所有写操作端点(POST/PUT/DELETE)添加 API Key 认证依赖 -----
+def _apply_auth_to_write_routes() -> None:
+    """
+    遍历 app 中已注册的路由,对 POST/PUT/DELETE 方法追加 ``Depends(get_current_user)``。
+
+    - 通过 ``include_router`` 注册的路由:修改原始 router 中 APIRoute 的 ``dependencies``
+    - 直接挂在 ``app`` 上的 APIRoute:直接追加到 ``dependant.dependencies`` 并重建 flat_dependant
+    """
+    from fastapi.dependencies.utils import get_dependant, get_flat_dependant
+
+    try:
+        from fastapi.routing import _IncludedRouter
+    except ImportError:  # pragma: no cover - 兼容旧版 FastAPI
+        _IncludedRouter = None  # type: ignore[assignment]
+
+    write_methods = {"POST", "PUT", "DELETE"}
+    auth_dep = Depends(get_current_user)
+
+    for route in list(app.routes):
+        # 通过 include_router 注册的路由(FastAPI 0.115+ 使用 _IncludedRouter 懒加载)
+        if _IncludedRouter is not None and isinstance(route, _IncludedRouter):
+            for orig_route in route.original_router.routes:
+                if isinstance(orig_route, APIRoute) and orig_route.methods & write_methods:
+                    orig_route.dependencies = list(orig_route.dependencies) + [auth_dep]
+            continue
+
+        # 直接挂在 app 上的 APIRoute
+        if isinstance(route, APIRoute) and route.methods & write_methods:
+            route.dependencies = list(route.dependencies) + [auth_dep]
+            # 直接定义的路由 dependant 已构建,需要追加并重建 flat_dependant
+            sub_dependant = get_dependant(path=route.path, call=get_current_user)
+            route.dependant.dependencies.append(sub_dependant)
+            route.flat_dependant = get_flat_dependant(route.dependant)
+
+
+_apply_auth_to_write_routes()
 
 frontend_index = Path(__file__).parent.parent.parent / "frontend" / "index.html"
 
@@ -240,6 +297,10 @@ def run() -> None:
     port = int(os.getenv("APP_PORT", "8000"))
     workers = int(os.getenv("WORKERS", "1"))
     reload = os.getenv("APP_RELOAD", "false").lower() in {"1", "true", "yes"}
+    # 生产环境强制禁用 reload,避免文件监听带来的安全与稳定性风险
+    if settings.APP_ENV == "production" and reload:
+        logger.warning("APP_ENV=production 下强制禁用 reload,忽略 APP_RELOAD 设置")
+        reload = False
     uvicorn.run(
         "backend.api.main:app",
         host=host,

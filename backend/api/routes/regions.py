@@ -12,7 +12,7 @@ import logging
 from typing import Any
 
 import pandas as pd
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, File, HTTPException, Query, Request, UploadFile
 from pydantic import BaseModel, Field
 
 from backend.core.province_aggregator import SUPPORTED_INDICATORS, forecast_city_indicator
@@ -22,6 +22,9 @@ from backend.regions.survey_integration import attach_survey_records, get_survey
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/regions", tags=["区域"])
+
+# 延迟导入 limiter 以避免与 backend.api.main 的循环依赖
+from backend.api.main import limiter  # noqa: E402
 
 MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB
 
@@ -167,25 +170,26 @@ async def forecast_region_indicator(
 
 
 @router.post("/batch/forecast", summary="批量区域预测")
-async def batch_forecast_regions(request: BatchForecastRequest) -> dict[str, Any]:
+@limiter.limit("10/minute")
+async def batch_forecast_regions(request: Request, body: BatchForecastRequest) -> dict[str, Any]:
     """对多个城市/省份批量预测同一指标，并给出排名。"""
     registry = get_registry()
     results: dict[str, Any] = {}
     errors: dict[str, str] = {}
     comparison: list[dict[str, Any]] = []
 
-    for code in request.codes:
+    for code in body.codes:
         region = registry.get(code)
         if region is None:
             errors[code] = "区域不存在"
             continue
 
         if region.level == RegionLevel.CITY:
-            result = forecast_city_indicator(region.name, request.indicator, request.forecast_years)
+            result = forecast_city_indicator(region.name, body.indicator, body.forecast_years)
         else:
             from backend.core.province_aggregator import forecast_province_indicator
 
-            result = forecast_province_indicator(region.name, request.indicator, request.forecast_years)
+            result = forecast_province_indicator(region.name, body.indicator, body.forecast_years)
 
         if "error" in result:
             errors[code] = result["error"]
@@ -207,8 +211,8 @@ async def batch_forecast_regions(request: BatchForecastRequest) -> dict[str, Any
     comparison.sort(key=lambda r: r["forecast_value"] or 0, reverse=True)
     return {
         "success": True,
-        "indicator": request.indicator,
-        "forecast_years": request.forecast_years,
+        "indicator": body.indicator,
+        "forecast_years": body.forecast_years,
         "results": results,
         "errors": errors,
         "comparison": comparison,
@@ -221,7 +225,9 @@ async def batch_forecast_regions(request: BatchForecastRequest) -> dict[str, Any
 
 
 @router.post("/survey/upload", summary="上传调查数据")
+@limiter.limit("10/minute")
 async def upload_survey_data(
+    request: Request,
     file: UploadFile = File(..., description="CSV/Excel 调查数据文件"),
     overwrite: bool = Query(False, description="是否覆盖已有同名调查指标"),
 ) -> dict[str, Any]:

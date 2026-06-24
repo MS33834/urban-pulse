@@ -15,7 +15,7 @@ import logging
 from typing import Any, Literal, cast
 from urllib.parse import quote
 
-from fastapi import APIRouter, File, HTTPException, Query, Response, UploadFile
+from fastapi import APIRouter, File, HTTPException, Query, Request, Response, UploadFile
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 from backend.core.health_data_io import export_indicator_template, parse_indicator_data
@@ -25,6 +25,9 @@ from backend.core.health_report import generate_cehi_pdf
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/health", tags=["健康指数"])
+
+# 延迟导入 limiter 以避免与 backend.api.main 的循环依赖
+from backend.api.main import limiter  # noqa: E402
 
 
 # --------------------------------------------------------------------------- #
@@ -343,7 +346,9 @@ async def download_template(
 
 
 @router.post("/import", response_model=ImportResponse, summary="导入 CEHI 指标数据")
+@limiter.limit("10/minute")
 async def import_indicators(
+    request: Request,
     file: UploadFile = File(..., description="要上传的 Excel 或 CSV 文件"),
 ) -> ImportResponse:
     """

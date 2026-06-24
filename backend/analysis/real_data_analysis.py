@@ -152,6 +152,8 @@ class RealDataAnalyzer:
 
     def perform_eda(self, df: pd.DataFrame) -> dict[str, Any]:
         """执行探索性数据分析"""
+        if df.empty:
+            return {"error": "DataFrame 为空", "data_period": None}
 
         eda_results = {
             "summary_stats": df.describe().to_dict(),

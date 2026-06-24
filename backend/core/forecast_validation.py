@@ -21,6 +21,16 @@ from backend.core.forecast_archive import ForecastArchive
 logger = logging.getLogger(__name__)
 
 
+def _safe_ci_bound(ci_val: Any, idx: int) -> float:
+    """安全提取置信区间边界,非 list/tuple 或越界时返回 NaN。"""
+    try:
+        if isinstance(ci_val, (list, tuple)) and len(ci_val) > idx:
+            return float(ci_val[idx])
+        return float("nan")
+    except (TypeError, ValueError):
+        return float("nan")
+
+
 @dataclass
 class ValidationMetrics:
     """单组验证指标。"""
@@ -72,7 +82,9 @@ class ForecastValidator:
         p = np.asarray(predicted, dtype=float)
         errors = p - a
         mae = float(np.mean(np.abs(errors)))
-        mape = float(np.mean(np.abs(errors / np.where(a == 0, np.nan, a)))) * 100
+        # actual=0 时该样本贡献 NaN,用 nanmean 跳过;全为 NaN(所有 actual 都是 0)时返回 inf
+        mape_val = np.nanmean(np.abs(errors / np.where(a == 0, np.nan, a)))
+        mape = float(mape_val) * 100 if np.isfinite(mape_val) else float("inf")
         rmse = float(np.sqrt(np.mean(errors**2)))
         bias = float(np.mean(errors))
         return ValidationMetrics(count=len(actual), mae=mae, mape=mape, rmse=rmse, bias=bias, hit_rate=None)
@@ -164,8 +176,8 @@ class ForecastValidator:
                 continue
             sub = group[valid]
             actual = sub["actual_value"].to_numpy(dtype=float)
-            lower = sub["confidence_interval"].apply(lambda x: x[0]).to_numpy(dtype=float)
-            upper = sub["confidence_interval"].apply(lambda x: x[1]).to_numpy(dtype=float)
+            lower = sub["confidence_interval"].apply(lambda x: _safe_ci_bound(x, 0)).to_numpy(dtype=float)
+            upper = sub["confidence_interval"].apply(lambda x: _safe_ci_bound(x, 1)).to_numpy(dtype=float)
             total = len(sub)
             if total == 0:
                 continue

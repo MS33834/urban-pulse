@@ -144,8 +144,8 @@ def get_province_timeseries(
         if not df.empty:
             city_dfs[city] = df
 
-    # 向量化提取所有年份（避免 to_dict 转换）
-    years = sorted(set().union(*[set(df["year"].astype(int)) for df in city_dfs.values()])) if city_dfs else []
+    # 向量化提取所有年份（避免 to_dict 转换）,先 dropna 防止 NaN 导致 astype(int) 崩溃
+    years = sorted(set().union(*[set(df["year"].dropna().astype(int)) for df in city_dfs.values()])) if city_dfs else []
 
     # 预构建 {year: row} 索引,将内层 O(n) 全列扫描降为 O(1) 查找
     # 同时预取 population 列,避免重复 .iloc[0] 调用
@@ -455,7 +455,7 @@ def forecast_province_indicator(
         "province": province,
         "indicator": indicator,
         "aggregation": aggregate_indicator(indicator),
-        "included_cities": df["cities"].iloc[-1] if not df.empty else [],
+        "included_cities": sorted(set().union(*[set(c) if isinstance(c, list) else set() for c in df["cities"].dropna()])) if not df.empty else [],
         "historical_years": df["year"].astype(int).tolist(),
         "historical_values": [round(v, 4) for v in values],
         "forecast_years": forecast["years"],

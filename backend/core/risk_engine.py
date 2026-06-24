@@ -45,8 +45,17 @@ def rolling_volatility(values: list[float], window: int = 3, annualize: bool = T
             "backend": "rolling-std",
         }
     y = np.array(values, dtype=float)
-    # 对数收益
-    log_rets = np.diff(np.log(y))
+    # 对数收益仅对正值有定义,先过滤非正值避免 NaN/inf 污染
+    y_valid = y[y > 0]
+    if len(y_valid) < 3:
+        return {
+            "volatility": 0.0,
+            "annualized_volatility": 0.0,
+            "window": window,
+            "reason": "insufficient positive values",
+            "backend": "rolling-std",
+        }
+    log_rets = np.diff(np.log(y_valid))
     if len(log_rets) < window:
         window = len(log_rets)
     # 滚动 std(取最后 window 个)
@@ -259,8 +268,8 @@ def scenario_analysis(
             "color": meta["color"],
             "predictions": [round(x, 2) for x in shocked],
             "final_value": round(shocked[-1], 2) if shocked else 0.0,
-            "max_drawdown_pct": round((min(shocked) - starting_value) / starting_value * 100, 2) if shocked else 0.0,
-            "final_change_pct": round((shocked[-1] - starting_value) / starting_value * 100, 2) if shocked else 0.0,
+            "max_drawdown_pct": round((min(shocked) - starting_value) / starting_value * 100, 2) if shocked and starting_value != 0 else 0.0,
+            "final_change_pct": round((shocked[-1] - starting_value) / starting_value * 100, 2) if shocked and starting_value != 0 else 0.0,
         }
     return out
 
@@ -312,8 +321,8 @@ def monte_carlo_simulation(
     for s in range(n_sims):
         # 对残差有放回抽样
         sampled_resid = rng.choice(resid, size=years, replace=True)
-        # 可选:加白噪声 ~ N(0, sigma^2) 增强探索
-        sims[s, :] = baseline_fc + sampled_resid
+        # 加白噪声 ~ N(0, sigma^2) 增强探索(使用上面计算的 sigma)
+        sims[s, :] = baseline_fc + sampled_resid + rng.normal(0, sigma, years)
 
     # 分位
     quantiles: dict[str, list[float]] = {}
@@ -337,7 +346,7 @@ def monte_carlo_simulation(
         },
         "interpretation": (
             f"基于 {n_sims} 次 bootstrap 残差模拟,"
-            f"末年值 {quantiles['p05'][0]:.0f} ~ {quantiles['p95'][0]:.0f} 亿元 (P5-P95);"
+            f"末年值 {quantiles['p05'][-1]:.0f} ~ {quantiles['p95'][-1]:.0f} 亿元 (P5-P95);"
             f"高于 baseline 概率 {float(np.mean(final_values > baseline_fc[-1])) * 100:.1f}%;"
             f"低于衰退情景 (baseline×0.75) 概率 {float(np.mean(final_values < baseline_fc[-1] * 0.75)) * 100:.1f}%"
         ),

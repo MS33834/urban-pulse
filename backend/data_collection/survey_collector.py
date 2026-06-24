@@ -14,6 +14,7 @@ from typing import Any, cast
 import pandas as pd
 
 from backend.data_collection.base_collector import DataCollector
+from backend.utils.path_security import validate_path_in_allowed_dirs
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +62,7 @@ class SurveyCollector(DataCollector):
     def load_file(self, path: Path | str) -> list[dict[str, Any]]:
         """从 CSV 或 Excel 文件加载调查数据"""
         path = Path(path)
+        validate_path_in_allowed_dirs(path)
         if not path.exists():
             raise FileNotFoundError(f"调查数据文件不存在: {path}")
 

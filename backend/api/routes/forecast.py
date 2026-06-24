@@ -11,7 +11,7 @@
 import logging
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from backend.core.province_aggregator import (
@@ -25,6 +25,9 @@ from backend.data.city_data import get_all_cities, get_all_forecast_cities
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/forecast", tags=["预测"])
+
+# 延迟导入 limiter 以避免与 backend.api.main 的循环依赖
+from backend.api.main import limiter  # noqa: E402
 
 
 # --------------------------------------------------------------------------- #
@@ -208,7 +211,9 @@ def compare_city_forecasts(request: CompareRequest) -> dict[str, Any]:
 
 
 @router.get("/province/all", summary="全 7 省 × 单指标 批量预测报告")
+@limiter.limit("10/minute")
 async def forecast_all_provinces_endpoint(
+    request: Request,
     indicator: str = Query("gdp", description="要预测的指标"),
     forecast_years: int = Query(5, ge=1, le=20, description="预测年数"),
 ) -> dict[str, Any]:
@@ -258,7 +263,9 @@ async def forecast_province_endpoint(
 
 
 @router.get("/report/full", summary="完整预测报告(8 城 × 1 指标)")
+@limiter.limit("10/minute")
 def get_full_forecast_report(
+    request: Request,
     indicator: str = Query("gdp", description="默认 gdp"),
     forecast_years: int = Query(5, ge=1, le=20),
 ) -> dict[str, Any]:

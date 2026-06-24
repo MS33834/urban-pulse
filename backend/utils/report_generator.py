@@ -3,6 +3,7 @@
 支持多种输出格式和自定义模板
 """
 
+import html
 import json
 import logging
 from abc import ABC, abstractmethod
@@ -11,6 +12,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any, cast
+
+from backend.utils.path_security import validate_path_in_allowed_dirs
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +98,7 @@ class JSONReportGenerator(BaseReportGenerator):
         return json.dumps(report_data, ensure_ascii=False, indent=2)
 
     def save(self, content: str, filepath: str) -> bool:
+        validate_path_in_allowed_dirs(filepath)
         try:
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write(content)
@@ -169,6 +173,7 @@ class MarkdownReportGenerator(BaseReportGenerator):
         return "\n".join(lines)
 
     def save(self, content: str, filepath: str) -> bool:
+        validate_path_in_allowed_dirs(filepath)
         try:
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write(content)
@@ -209,30 +214,32 @@ class HTMLReportGenerator(BaseReportGenerator):
             "<!DOCTYPE html>",
             "<html lang='zh-CN'>",
             "<head>",
-            f"<title>{self.config.title}</title>",
+            f"<title>{html.escape(self.config.title)}</title>",
             "<meta charset='UTF-8'>",
             "<meta name='viewport' content='width=device-width, initial-scale=1.0'>",
             self._css,
             "</head>",
             "<body>",
-            f"<h1>{self.config.title}</h1>",
+            f"<h1>{html.escape(self.config.title)}</h1>",
         ]
 
         if self.config.subtitle:
-            html_parts.append(f"<p class='subtitle'><em>{self.config.subtitle}</em></p>")
+            html_parts.append(f"<p class='subtitle'><em>{html.escape(self.config.subtitle)}</em></p>")
 
         if self.config.include_metadata:
             html_parts.extend(
                 [
                     "<div class='metadata'>",
-                    f"<p><strong>作者</strong>: {self.config.author} | "
+                    f"<p><strong>作者</strong>: {html.escape(self.config.author)} | "
                     f"<strong>生成时间</strong>: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>",
                     "</div>",
                 ]
             )
 
         for section in sorted(sections, key=lambda s: s.order):
-            html_parts.extend([f"<h2>{section.title}</h2>", self._format_content(section.content)])
+            html_parts.extend(
+                [f"<h2>{html.escape(section.title)}</h2>", self._format_content(section.content)]
+            )
 
         html_parts.extend(["</body>", "</html>"])
         return "\n".join(html_parts)
@@ -244,9 +251,9 @@ class HTMLReportGenerator(BaseReportGenerator):
         elif isinstance(content, list):
             return self._format_list(content)
         elif isinstance(content, str):
-            return f"<p>{content}</p>"
+            return f"<p>{html.escape(content)}</p>"
         else:
-            return f"<p>{content}</p>"
+            return f"<p>{html.escape(str(content))}</p>"
 
     def _format_dict(self, data: dict) -> str:
         """格式化字典为表格"""
@@ -258,8 +265,10 @@ class HTMLReportGenerator(BaseReportGenerator):
             if isinstance(value, dict | list):
                 value_str = self._format_content(value)
             else:
-                value_str = str(value)
-            rows.append(f"<tr><td><strong>{key}</strong></td><td>{value_str}</td></tr>")
+                value_str = html.escape(str(value))
+            rows.append(
+                f"<tr><td><strong>{html.escape(str(key))}</strong></td><td>{value_str}</td></tr>"
+            )
 
         return f"<table><thead><tr><th>指标</th><th>值</th></tr></thead><tbody>{''.join(rows)}</tbody></table>"
 
@@ -269,6 +278,7 @@ class HTMLReportGenerator(BaseReportGenerator):
         return f"<ul>{''.join(items)}</ul>"
 
     def save(self, content: str, filepath: str) -> bool:
+        validate_path_in_allowed_dirs(filepath)
         try:
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write(content)

@@ -14,6 +14,7 @@ CEHI = City Economic Health Index
 from __future__ import annotations
 
 import math
+import threading
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -116,6 +117,7 @@ class CEHIConfig:
     """CEHI 指标体系配置管理。"""
 
     _instance: CEHIConfig | None = None
+    _lock = threading.Lock()
 
     def __init__(self, config_path: Path | str | None = None) -> None:
         if config_path is None:
@@ -130,7 +132,9 @@ class CEHIConfig:
     @classmethod
     def default(cls) -> CEHIConfig:
         if cls._instance is None:
-            cls._instance = cls()
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = cls()
         return cls._instance
 
     def _load(self) -> dict[str, Any]:
@@ -235,7 +239,7 @@ class CEHIEngine:
 
     def _indicator_score(self, indicator: Indicator, value: float | None) -> IndicatorScore:
         """计算单个指标得分。"""
-        if value is None or math.isnan(value):
+        if value is None or (isinstance(value, (int, float)) and math.isnan(value)):
             return IndicatorScore(
                 indicator=indicator,
                 raw_value=None,
@@ -442,6 +446,8 @@ class CEHIEngine:
         similarities: list[tuple[str, float]] = []
         for pr in peer_results:
             peer_vec = [ds.score for ds in pr.dimension_scores]
+            if len(target_vec) != len(peer_vec):
+                raise ValueError(f"维度向量长度不一致: {len(target_vec)} vs {len(peer_vec)}")
             dist = math.sqrt(sum((a - b) ** 2 for a, b in zip(target_vec, peer_vec)))
             similarities.append((pr.city_name, dist))
         similarities.sort(key=lambda x: x[1])

@@ -18,3 +18,5 @@ if str(PROJECT_ROOT) not in sys.path:
 os.environ.setdefault("APP_ENV", "test")
 os.environ.setdefault("DEBUG", "false")
 os.environ.setdefault("SECRET_KEY", "test-secret-key-for-testing-only")
+# 测试环境允许加载 demo 外部插件
+os.environ.setdefault("ALLOWED_PLUGINS", "demo")

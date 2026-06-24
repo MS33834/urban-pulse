@@ -15,6 +15,16 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
+def _safe_float(value, default=0.0):
+    """安全转换为 float，None 和异常值返回默认值"""
+    if value is None:
+        return default
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
 @dataclass
 class AggregationConfig:
     """聚合配置"""
@@ -80,21 +90,21 @@ class CityDataAggregator:
                 if metric == "count":
                     group_result["count"] = len(group_items)
                 elif metric == "sum":
-                    group_result["sum"] = sum(float(item.get("value", 0)) for item in group_items)
+                    group_result["sum"] = sum(_safe_float(item.get("value")) for item in group_items)
                 elif metric == "avg":
-                    values = [float(item.get("value", 0)) for item in group_items]
+                    values = [_safe_float(item.get("value")) for item in group_items]
                     group_result["avg"] = statistics.mean(values) if values else 0
                 elif metric == "min":
-                    values = [float(item.get("value", 0)) for item in group_items]
+                    values = [_safe_float(item.get("value")) for item in group_items]
                     group_result["min"] = min(values) if values else 0
                 elif metric == "max":
-                    values = [float(item.get("value", 0)) for item in group_items]
+                    values = [_safe_float(item.get("value")) for item in group_items]
                     group_result["max"] = max(values) if values else 0
                 elif metric == "median":
-                    values = [float(item.get("value", 0)) for item in group_items]
+                    values = [_safe_float(item.get("value")) for item in group_items]
                     group_result["median"] = statistics.median(values) if values else 0
                 elif metric == "std":
-                    values = [float(item.get("value", 0)) for item in group_items]
+                    values = [_safe_float(item.get("value")) for item in group_items]
                     group_result["std"] = statistics.stdev(values) if len(values) > 1 else 0
 
             groups.append(group_result)
@@ -148,7 +158,7 @@ class CityDataAggregator:
         for item in data:
             city = item.get(city_field, "Unknown")
             indicator = item.get(indicator_field, "Unknown")
-            value = float(item.get(value_field, 0))
+            value = _safe_float(item.get(value_field))
 
             cities_data[city][indicator].append(value)
 
@@ -210,7 +220,7 @@ class CityDataAggregator:
 
             for item in data:
                 time_point = item.get(time_field)
-                value = float(item.get(value_field, 0))
+                value = _safe_float(item.get(value_field))
                 time_series[time_point].append(value)
 
             result: dict[str, Any] = {"time_points": [], "values": [], "trend": []}
@@ -233,7 +243,7 @@ class CityDataAggregator:
             for item in data:
                 key = tuple(item.get(field) for field in group_by)
                 time_point = item.get(time_field)
-                value = float(item.get(value_field, 0))
+                value = _safe_float(item.get(value_field))
 
                 grouped_series[key][time_point].append(value)
 
@@ -278,7 +288,7 @@ class CityDataAggregator:
         for item in data:
             city = item.get(city_field, "Unknown")
             region = item.get(region_field, "Unknown")
-            value = float(item.get(value_field, 0))
+            value = _safe_float(item.get(value_field))
 
             region_data[region]["cities"].add(city)
             region_data[region]["values"].append(value)
@@ -332,7 +342,7 @@ class CityDataAggregator:
             city = item.get(city_field)
             year = item.get(year_field)
             indicator = item.get("indicator")
-            value = float(item.get("value", 0))
+            value = _safe_float(item.get("value"))
 
             if indicator in indicators:
                 matrix[(city, year)][indicator] = value
@@ -388,9 +398,9 @@ class CityDataAggregator:
             if isinstance(condition, dict):
                 # 范围过滤
                 if "min" in condition:
-                    filtered = [item for item in filtered if float(item.get(field_name, 0)) >= condition["min"]]
+                    filtered = [item for item in filtered if _safe_float(item.get(field_name)) >= condition["min"]]
                 if "max" in condition:
-                    filtered = [item for item in filtered if float(item.get(field_name, 0)) <= condition["max"]]
+                    filtered = [item for item in filtered if _safe_float(item.get(field_name)) <= condition["max"]]
             else:
                 # 精确匹配
                 filtered = [item for item in filtered if item.get(field_name) == condition]
@@ -452,8 +462,12 @@ class CityDataAggregator:
             return "stable"
 
         # 用 numpy polyfit 计算斜率
-        x = np.arange(n, dtype=float)
-        y = np.array(values, dtype=float)
+        y_arr = np.array(values, dtype=float)
+        valid_mask = ~np.isnan(y_arr)
+        if valid_mask.sum() < 2:
+            return "stable"
+        x = np.arange(len(y_arr), dtype=float)[valid_mask]
+        y = y_arr[valid_mask]
         slope = float(np.polyfit(x, y, 1)[0])
 
         # 相对斜率：斜率 / |均值|，尺度无关

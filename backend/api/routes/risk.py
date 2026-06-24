@@ -18,7 +18,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field, field_validator
 
 from backend.core.forecast_engine import forecast_full_pipeline
@@ -29,6 +29,9 @@ from backend.data.city_data import get_all_forecast_cities, get_historical_data
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/risk", tags=["风险分析"])
+
+# 延迟导入 limiter 以避免与 backend.api.main 的循环依赖
+from backend.api.main import limiter  # noqa: E402
 
 
 class RiskAnalyzeRequest(BaseModel):
@@ -87,18 +90,19 @@ def _get_city_indicator_series(city_name: str, indicator: str) -> tuple[list[int
 
 
 @router.post("/analyze", response_model=RiskAnalyzeResponse, summary="城市经济指标风险分析")
-async def analyze_risk(request: RiskAnalyzeRequest) -> RiskAnalyzeResponse:
+@limiter.limit("5/minute")
+async def analyze_risk(request: Request, body: RiskAnalyzeRequest) -> RiskAnalyzeResponse:
     """
     对指定城市 × 指定指标进行综合风险分析。
 
     返回：滚动波动率、GARCH 条件波动率（若安装 arch 库）、VaR 95/99、
           四档情景预测、蒙特卡洛 P5/P50/P95 分位及尾部风险概率。
     """
-    if request.city_name not in get_all_forecast_cities():
-        raise HTTPException(status_code=404, detail=f"城市 {request.city_name} 不在预测城市列表中")
+    if body.city_name not in get_all_forecast_cities():
+        raise HTTPException(status_code=404, detail=f"城市 {body.city_name} 不在预测城市列表中")
 
     try:
-        years, values = _get_city_indicator_series(request.city_name, request.indicator)
+        years, values = _get_city_indicator_series(body.city_name, body.indicator)
     except HTTPException:
         raise
     except Exception as e:
@@ -108,7 +112,7 @@ async def analyze_risk(request: RiskAnalyzeRequest) -> RiskAnalyzeResponse:
     if len(values) < 5:
         raise HTTPException(
             status_code=400,
-            detail=f"指标 '{request.indicator}' 的历史样本不足（需要至少 5 年，实际 {len(values)} 年）",
+            detail=f"指标 '{body.indicator}' 的历史样本不足（需要至少 5 年，实际 {len(values)} 年）",
         )
 
     try:
@@ -116,7 +120,7 @@ async def analyze_risk(request: RiskAnalyzeRequest) -> RiskAnalyzeResponse:
         forecast_result = forecast_full_pipeline(
             values,
             start_year=years[0],
-            years=request.forecast_years,
+            years=body.forecast_years,
         )
         baseline = forecast_result["ensemble"]["predictions"]
     except Exception as e:
@@ -128,16 +132,16 @@ async def analyze_risk(request: RiskAnalyzeRequest) -> RiskAnalyzeResponse:
             values,
             baseline_predictions=baseline,
             starting_value=values[-1],
-            n_sims=request.n_sims,
+            n_sims=body.n_sims,
         )
     except Exception as e:
         logger.error("风险分析失败: %s", e, exc_info=True)
         raise HTTPException(status_code=503, detail="风险分析计算失败") from None
 
     return RiskAnalyzeResponse(
-        city=request.city_name,
-        indicator=request.indicator,
-        forecast_years=request.forecast_years,
+        city=body.city_name,
+        indicator=body.indicator,
+        forecast_years=body.forecast_years,
         historical_years=years,
         historical_values=[round(v, 4) for v in values],
         volatility=risk_result["volatility"],

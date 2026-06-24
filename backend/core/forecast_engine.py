@@ -243,11 +243,15 @@ def arima_forecast(values: list[float], years: int, confidence: float = 0.95) ->
                 # 重新 fit 以获取 model_ 与 residuals(轻量,仅一次)
                 sf_model.fit(y_arr)
                 resid = np.asarray(sf_model.model_.get("residuals", []))
-                if len(resid) != n:
+                # ARIMA 差分模型残差长度为 n-d,允许长度减少,仅当过短时回退
+                if len(resid) < n - 2:
                     raise RuntimeError("residuals length mismatch")
             except Exception:
                 resid = np.diff(y_arr, prepend=y_arr[0])
-            sigma = float(np.std(resid, ddof=1)) or 1.0
+            sigma = float(np.std(resid, ddof=1))
+            # np.std(ddof=1) 对单元素返回 NaN,bool(NaN) 为 True 会绕过 `or 1.0`,需显式判断
+            if not np.isfinite(sigma) or sigma == 0:
+                sigma = 1.0
             lower = [p - z * sigma * math.sqrt(i + 1) for i, p in enumerate(preds)]
             upper = [p + z * sigma * math.sqrt(i + 1) for i, p in enumerate(preds)]
 
@@ -260,7 +264,10 @@ def arima_forecast(values: list[float], years: int, confidence: float = 0.95) ->
                 upper = [float(x) for x in ci[:, 1]]
             else:
                 preds = [float(x) for x in fc]
-                resid_std = float(np.std(model.resid())) or 1.0
+                resid_std = float(np.std(model.resid()))
+                # 同上:显式判断 NaN/0,避免 `or 1.0` 被 NaN 绕过
+                if not np.isfinite(resid_std) or resid_std == 0:
+                    resid_std = 1.0
                 lower = [p - z * resid_std * math.sqrt(i + 1) for i, p in enumerate(preds)]
                 upper = [p + z * resid_std * math.sqrt(i + 1) for i, p in enumerate(preds)]
 
@@ -403,12 +410,12 @@ def linear_regression_forecast(values: list[float], years: int, confidence: floa
         lowers.append(float(p - hw))
         uppers.append(float(p + hw))
 
-    # AIC 估计:对 n 个残差,n+2 参数(α,β,σ²)
+    # AIC 估计:对 n 个残差,k=3 参数(α,β,σ²)
     rss = float(np.sum(resid**2))
     # 防止 rss=0 时 log(0) 报错
     rss_safe = max(rss, 1e-9 * n) if n > 0 else 1.0
-    aic = n * math.log(rss_safe / n) + 2 * 2  # 简化
-    bic = n * math.log(rss_safe / n) + math.log(max(n, 1)) * 2
+    aic = n * math.log(rss_safe / n) + 2 * 3  # k=3
+    bic = n * math.log(rss_safe / n) + math.log(max(n, 1)) * 3
     return {
         "predictions": [float(x) for x in preds],
         "lower_ci": lowers,
@@ -779,8 +786,12 @@ def forecast_full_pipeline(
     breaks = find_structural_breaks(values)
 
     # 5. 滚动 CV(用 ARIMA 跑)
-    n_test = min(3, max(1, len(values) - 6))
-    cv = backtest_forecast(values, n_test=n_test, model_func=lambda v, h: arima_forecast(v, h))
+    # backtest_forecast 要求 n >= n_test + 4;n_test=3 时需 n>=7,否则跳过
+    if len(values) >= 7:
+        n_test = min(3, max(1, len(values) - 6))
+        cv = backtest_forecast(values, n_test=n_test, model_func=lambda v, h: arima_forecast(v, h))
+    else:
+        cv = {"error": f"n={len(values)} too small for backtest (need >=7)", "metrics": {}}
 
     # 6. CAGR — 仅当首尾值同号且为正时才有意义，否则返回 NaN
     n = len(values)

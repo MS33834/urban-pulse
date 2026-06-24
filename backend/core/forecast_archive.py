@@ -9,15 +9,27 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import threading
 import uuid
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
+from backend.utils.path_security import validate_path_in_allowed_dirs
+
 logger = logging.getLogger(__name__)
+
+# 跨进程文件锁:Linux 下使用 fcntl.flock,Windows 不可用时回退到仅线程锁。
+try:
+    import fcntl as _fcntl
+
+    _HAS_FCNTL = True
+except ImportError:  # Windows 等平台无 fcntl
+    _HAS_FCNTL = False
 
 DEFAULT_ARCHIVE_DIR = Path(__file__).parents[2] / "data" / "forecasts"
 
@@ -69,20 +81,48 @@ class ForecastArchive:
     """预测存档管理器。"""
 
     # 进程级锁,保护 JSONL 文件的读-改-写操作,避免并发回填时丢更新。
-    # 注意:跨进程仍需依赖文件锁;单进程多线程场景下此锁足够。
+    # 跨进程并发通过 fcntl.flock 文件锁保护(见 _locked()),Windows 回退到仅线程锁。
     _write_lock = threading.Lock()
 
     def __init__(self, archive_dir: Path | str | None = None) -> None:
         self.archive_dir = Path(archive_dir) if archive_dir else DEFAULT_ARCHIVE_DIR
+        validate_path_in_allowed_dirs(self.archive_dir)
         self.archive_dir.mkdir(parents=True, exist_ok=True)
         self._archive_file = self.archive_dir / "forecast_archive.jsonl"
+        # 跨进程文件锁使用的锁文件(fcntl.flock,Linux 可用)
+        self._lock_file = self.archive_dir / "forecast_archive.jsonl.lock"
         # 内存缓存:按文件 mtime 失效,避免每次查询全量解析 JSONL
         self._cache: list[ForecastSnapshot] | None = None
         self._cache_mtime: float | None = None
 
+    @contextmanager
+    def _locked(self):
+        """
+        获取进程内线程锁 + 跨进程文件锁。
+
+        - threading.Lock 保护单进程多线程并发;
+        - fcntl.flock 保护多进程并发(Linux 下可用,Windows 回退到仅线程锁)。
+        """
+        with self._write_lock:
+            if not _HAS_FCNTL:
+                # Windows 等平台无 fcntl,仅依赖线程锁
+                yield
+                return
+            # 跨进程文件锁:对锁文件加排他锁(LOCK_EX)
+            lock_fd = open(self._lock_file, "w")
+            try:
+                _fcntl.flock(lock_fd.fileno(), _fcntl.LOCK_EX)
+                yield
+            finally:
+                try:
+                    _fcntl.flock(lock_fd.fileno(), _fcntl.LOCK_UN)
+                except OSError:
+                    pass
+                lock_fd.close()
+
     def save(self, snapshot: ForecastSnapshot) -> str:
         """保存预测快照，返回 forecast_id。"""
-        with self._write_lock:
+        with self._locked():
             with self._archive_file.open("a", encoding="utf-8") as f:
                 f.write(json.dumps(snapshot.to_dict(), ensure_ascii=False) + "\n")
             # 追加写后使缓存失效,下次读取重新加载
@@ -103,7 +143,7 @@ class ForecastArchive:
         if self._cache is not None and self._cache_mtime == current_mtime:
             return self._cache
         snapshots: list[ForecastSnapshot] = []
-        with self._write_lock:
+        with self._locked():
             with self._archive_file.open(encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
@@ -130,7 +170,7 @@ class ForecastArchive:
 
     def update_actual(self, forecast_id: str, actual_value: float) -> bool:
         """回填真实值。返回是否成功。"""
-        with self._write_lock:
+        with self._locked():
             snapshots = self._read_all_locked()
             updated = False
             for snapshot in snapshots:
@@ -159,7 +199,7 @@ class ForecastArchive:
 
         返回成功回填的记录数。
         """
-        with self._write_lock:
+        with self._locked():
             snapshots = self._read_all_locked()
             count = 0
             for snapshot in snapshots:
@@ -196,10 +236,25 @@ class ForecastArchive:
         return snapshots
 
     def _rewrite_locked(self, snapshots: list[ForecastSnapshot]) -> None:
-        """在已持有 _write_lock 的前提下重写整个存档文件。"""
-        with self._archive_file.open("w", encoding="utf-8") as f:
-            for snapshot in snapshots:
-                f.write(json.dumps(snapshot.to_dict(), ensure_ascii=False) + "\n")
+        """在已持有 _write_lock 的前提下重写整个存档文件(原子写入)。
+
+        先写入同目录下的临时文件(.tmp 后缀),完成后用 os.replace 原子替换原文件,
+        确保崩溃时原文件不被损坏。
+        """
+        tmp_path = self._archive_file.parent / (self._archive_file.name + ".tmp")
+        try:
+            with open(tmp_path, "w", encoding="utf-8") as f:
+                for snapshot in snapshots:
+                    f.write(json.dumps(snapshot.to_dict(), ensure_ascii=False) + "\n")
+            # os.replace 在同一文件系统内是原子操作
+            os.replace(tmp_path, self._archive_file)
+        finally:
+            # 异常时清理残留的临时文件(os.replace 成功后临时文件已不存在)
+            if tmp_path.exists():
+                try:
+                    tmp_path.unlink()
+                except OSError:
+                    pass
 
     def to_dataframe(self) -> pd.DataFrame:
         """导出为 DataFrame。"""
@@ -208,7 +263,7 @@ class ForecastArchive:
 
     def clear(self) -> None:
         """清空存档（主要用于测试）。"""
-        with self._write_lock:
+        with self._locked():
             if self._archive_file.exists():
                 self._archive_file.unlink()
             self._cache = None

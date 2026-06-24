@@ -4,7 +4,7 @@ Dataset API routes — upload, list, inspect, and delete datasets.
 
 import logging
 
-from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
 from pydantic import BaseModel
 
 from backend.core.importer import import_data
@@ -26,6 +26,9 @@ from backend.core.storage.record_store import (
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/datasets", tags=["数据集"])
 
+# 延迟导入 limiter 以避免与 backend.api.main 的循环依赖
+from backend.api.main import limiter  # noqa: E402
+
 MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB
 
 
@@ -38,7 +41,9 @@ class UpdateMetaRequest(BaseModel):
 
 
 @router.post("/upload", summary="上传 CSV / JSON 数据")
+@limiter.limit("10/minute")
 async def upload_dataset(
+    request: Request,
     file: UploadFile = File(...),
     name: str = Form(None),
     description: str = Form(""),

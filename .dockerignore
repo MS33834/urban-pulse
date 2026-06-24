@@ -44,3 +44,31 @@ public/
 Dockerfile
 docker-compose.yml
 .dockerignore
+
+# 非运行时文件
+tests/
+docs/
+scripts/
+_site/
+public/
+*.md
+LICENSE
+uv.lock
+pyproject.toml
+
+# 密钥/证书
+*.pem
+*.key
+*.crt
+id_rsa
+id_dsa
+
+# 云凭证目录
+.aws/
+.gcloud/
+.azure/
+.kube/
+
+# 日志文件
+*.log
+logs/

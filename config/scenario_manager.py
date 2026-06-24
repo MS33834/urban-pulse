@@ -10,6 +10,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+from backend.utils.path_security import validate_path_in_allowed_dirs
+
 logger = logging.getLogger(__name__)
 
 
@@ -260,6 +262,7 @@ class ScenarioManager:
 
     def save_scenarios(self, filepath: str):
         """保存场景到文件"""
+        validate_path_in_allowed_dirs(filepath)
         data = {"scenarios": [s.to_dict() for s in self._scenarios.values()]}
 
         with open(filepath, "w", encoding="utf-8") as f:
@@ -270,6 +273,7 @@ class ScenarioManager:
     def load_scenarios(self, filepath: str):
         """从文件加载场景"""
         try:
+            validate_path_in_allowed_dirs(filepath)
             with open(filepath, encoding="utf-8") as f:
                 data = json.load(f)
 

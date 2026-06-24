@@ -126,22 +126,24 @@ def _radar_chart_bytes(result: CEHIResult, width: float = 14 * cm, height: float
     angles_closed = angles + angles[:1]
 
     fig, ax = plt.subplots(figsize=(width / cm * 1.5, height / cm * 1.5), subplot_kw=dict(polar=True))
-    ax.plot(angles_closed, values_closed, color="#D08560", linewidth=2)
-    ax.fill(angles_closed, values_closed, color="#D08560", alpha=0.25)
-    ax.set_xticks(angles)
-    ax.set_xticklabels(labels, fontsize=11)
-    ax.set_ylim(0, 100)
-    ax.set_yticks([20, 40, 60, 80, 100])
-    ax.set_yticklabels(["20", "40", "60", "80", "100"], fontsize=9)
-    ax.grid(True, linestyle="--", alpha=0.6)
-    ax.set_title(FONT.text(f"{result.city_name} · {result.year} CEHI 雷达图"), fontsize=14, pad=20)
+    try:
+        ax.plot(angles_closed, values_closed, color="#D08560", linewidth=2)
+        ax.fill(angles_closed, values_closed, color="#D08560", alpha=0.25)
+        ax.set_xticks(angles)
+        ax.set_xticklabels(labels, fontsize=11)
+        ax.set_ylim(0, 100)
+        ax.set_yticks([20, 40, 60, 80, 100])
+        ax.set_yticklabels(["20", "40", "60", "80", "100"], fontsize=9)
+        ax.grid(True, linestyle="--", alpha=0.6)
+        ax.set_title(FONT.text(f"{result.city_name} · {result.year} CEHI 雷达图"), fontsize=14, pad=20)
 
-    buf = io.BytesIO()
-    fig.tight_layout()
-    fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
-    plt.close(fig)
-    buf.seek(0)
-    return buf.getvalue()
+        buf = io.BytesIO()
+        fig.tight_layout()
+        fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
+        buf.seek(0)
+        return buf.getvalue()
+    finally:
+        plt.close(fig)
 
 
 def _make_table(data: list[list[Any]], col_widths: list[float], style: TableStyle | None = None) -> Table:

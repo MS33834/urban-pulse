@@ -65,7 +65,7 @@ class DataCleaner:
                 continue
 
             if method == "linear":
-                df_clean[col] = df_clean[col].interpolate(method="linear")
+                df_clean[col] = df_clean[col].interpolate(method="linear", limit_direction="both")
             elif method == "mean":
                 df_clean[col] = df_clean[col].fillna(df_clean[col].mean())
             elif method == "median":
@@ -97,9 +97,12 @@ class DataCleaner:
         outliers_info: dict[str, Any] = {"method": "zscore", "threshold": threshold, "columns": {}}
 
         for col in target_columns:
-            z_scores = np.abs(stats.zscore(df[col].dropna()))
+            col_data = df[col].dropna()
+            if col_data.std() == 0:
+                continue  # 常数列，无异常值
+            z_scores = np.abs(stats.zscore(col_data))
             outlier_mask = z_scores > threshold
-            outlier_indices = df[col].dropna().index[outlier_mask].tolist()
+            outlier_indices = col_data.index[outlier_mask].tolist()
 
             if outlier_indices:
                 outliers_info["columns"][col] = {
@@ -178,8 +181,8 @@ class DataCleaner:
             if method == "iqr":
                 lower, upper = self._get_iqr_bounds(df_clean[col], threshold)
             else:
-                lower = df_clean[col].quantile(0.01)
-                upper = df_clean[col].quantile(0.99)
+                lower = df_clean[col].quantile(threshold / 100)
+                upper = df_clean[col].quantile(1 - threshold / 100)
 
             df_clean[col] = df_clean[col].clip(lower=lower, upper=upper)
 

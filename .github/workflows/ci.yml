@@ -12,8 +12,6 @@ concurrency:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 env:
   PYTHON_VERSION: "3.12"
@@ -86,6 +84,19 @@ jobs:
         run: |
           pytest tests/backend/ -q --tb=short --cov=backend --cov-report=term --cov-fail-under=30
 
+  security:
+    name: Dependency Audit
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pip-audit
+      - run: pip-audit -r requirements.txt
+
   build:
     name: Build Static Site
     needs: test
@@ -109,7 +120,10 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
