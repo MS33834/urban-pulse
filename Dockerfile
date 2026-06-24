@@ -2,20 +2,16 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# System deps
-# - curl: healthcheck
-# - build-essential, gfortran: pmdarima / arch 编译依赖
+# System deps — only curl for healthcheck; no build tools needed for runtime wheels
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
-    build-essential \
-    gfortran \
     && rm -rf /var/lib/apt/lists/*
 
-# Python deps — 先升 pip + setuptools + wheel,再装齐
+# Python deps
 COPY requirements.txt .
 # hadolint ignore=DL3013
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
+RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
 # App

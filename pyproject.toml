@@ -35,6 +35,29 @@ classifiers = [
     "Topic :: Office/Business :: Financial",
 ]
 
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pandas>=2.0",
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "plotly>=5.18",
+    "matplotlib>=3.8",
+    "seaborn>=0.13",
+    "scikit-learn>=1.3",
+    "statsmodels>=0.14",
+    "joblib>=1.3",
+    "sqlalchemy>=2.0.30",
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+    "pyyaml>=6.0",
+    "openpyxl>=3.1",
+    "reportlab>=4.0",
+    "python-multipart>=0.0.9",
+    "requests>=2.31",
+    "packaging>=24.0",
+]
+
 [project.urls]
 Homepage = "https://gitcode.com/badhope/urban-pulse"
 Source = "https://gitcode.com/badhope/urban-pulse"
@@ -115,9 +138,6 @@ ignore = [
 
 [tool.ruff.lint.isort]
 known-first-party = ["backend", "config"]
-
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
 
 [tool.mypy]
 python_version = "3.12"

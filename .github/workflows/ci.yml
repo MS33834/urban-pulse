@@ -30,12 +30,10 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
           cache-dependency-path: requirements.txt
-      - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential gfortran && rm -rf /var/lib/apt/lists/*
       - name: Install lint tools
         run: |
           pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install ruff
       - name: Run ruff check
         run: ruff check backend/ config/ scripts/ tests/
       - name: Check code format
@@ -53,9 +51,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
           cache-dependency-path: requirements.txt
-      - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential gfortran && rm -rf /var/lib/apt/lists/*
-      - name: Install type check tools
+      - name: Install runtime + type check tools
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt mypy
@@ -78,13 +74,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-          cache-dependency-path: requirements.txt
+          cache-dependency-path: pyproject.toml
       - name: Install system dependencies
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential gfortran && rm -rf /var/lib/apt/lists/*
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -e .[data,forecast,cli,dev]
           pip install -e plugins/urban-pulse-demo
       - name: Run tests
         run: |

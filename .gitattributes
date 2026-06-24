@@ -50,6 +50,8 @@ yarn.lock                      linguist-generated
 data/**                        linguist-vendored
 screenshots/**                 linguist-documentation
 *.lock                         linguist-generated
+_site/**                       linguist-generated
+public/**                      linguist-generated
 CHANGELOG.md                   linguist-documentation
 CODE_OF_CONDUCT.md             linguist-documentation
 SECURITY.md                    linguist-documentation
