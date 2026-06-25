@@ -41,7 +41,10 @@ def _build_config(
     if profile.entity_field:
         encoding.color = profile.entity_field
 
-    if chart_type in (ChartType.LINE, ChartType.AREA, ChartType.BAR):
+    if chart_type in (ChartType.LINE, ChartType.AREA):
+        encoding.y = numeric_field or (profile.numeric_fields[0] if profile.numeric_fields else None)
+    elif chart_type == ChartType.BAR:
+        encoding.x = profile.entity_field or (profile.category_fields[0] if profile.category_fields else encoding.x)
         encoding.y = numeric_field or (profile.numeric_fields[0] if profile.numeric_fields else None)
     elif chart_type == ChartType.SCATTER:
         if len(profile.numeric_fields) >= 2:
@@ -190,6 +193,45 @@ def recommend_charts(profile: DataProfile, data: list[dict[str, Any]] | None = N
                 numeric_field=profile.numeric_fields[0],
                 title=f"{profile.numeric_fields[0]} 仪表盘",
                 reason="单一关键指标可用仪表盘突出显示",
+            )
+        )
+
+    # 地图：有经纬度字段时推荐
+    has_longitude = any("lon" in f.name.lower() or "经度" in f.name for f in profile.fields)
+    has_latitude = any("lat" in f.name.lower() or "纬度" in f.name for f in profile.fields)
+    if has_longitude and has_latitude and num_numeric > 0:
+        recommendations.append(
+            _build_config(
+                ChartType.MAP,
+                profile,
+                numeric_field=profile.numeric_fields[0],
+                title="地理分布图",
+                reason="数据包含经纬度字段，可在地图上展示空间分布",
+            )
+        )
+
+    # 桑基图：有 source/target/value 字段时推荐
+    has_source = any(f.name.lower() in {"source", "from", "来源"} for f in profile.fields)
+    has_target = any(f.name.lower() in {"target", "to", "去向"} for f in profile.fields)
+    if has_source and has_target and num_numeric > 0:
+        recommendations.append(
+            _build_config(
+                ChartType.SANKEY,
+                profile,
+                title="流向桑基图",
+                reason="数据包含 source/target 字段，适合桑基图展示流向",
+            )
+        )
+
+    # 赛跑图：时间 + 实体 + 数值
+    if has_time and has_entity and num_numeric > 0:
+        recommendations.append(
+            _build_config(
+                ChartType.RACING_BAR,
+                profile,
+                numeric_field=profile.numeric_fields[0],
+                title=f"{profile.numeric_fields[0]} 排名变化",
+                reason="时间序列的多实体排名变化适合赛跑图",
             )
         )
 

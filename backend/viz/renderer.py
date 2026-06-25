@@ -182,8 +182,17 @@ def render_scatter(config: ChartConfig, data: list[dict[str, Any]]) -> dict[str,
     series = {
         "type": "scatter",
         "data": series_data,
-        "symbolSize": lambda val, params: val[2] if len(val) > 2 and isinstance(val[2], (int, float)) else 10,
+        "symbolSize": 10,
     }
+    if size_field:
+        opt["visualMap"] = {
+            "dimension": 2,
+            "min": min((d[2] for d in series_data if len(d) > 2 and isinstance(d[2], (int, float))), default=0),
+            "max": max((d[2] for d in series_data if len(d) > 2 and isinstance(d[2], (int, float))), default=100),
+            "calculable": True,
+            "inRange": {"symbolSize": [8, 30]},
+            "text": [size_field, ""],
+        }
     opt["series"] = [series]
     return opt
 
@@ -255,7 +264,7 @@ def render_heatmap(config: ChartConfig, data: list[dict[str, Any]]) -> dict[str,
 
 
 def render_box(config: ChartConfig, data: list[dict[str, Any]]) -> dict[str, Any]:
-    x_field = config.encoding.x or config.data_source.category_fields[0] if config.data_source.category_fields else None
+    x_field = config.encoding.x or config.data_source.category_field or config.data_source.entity_field
     y_field = config.encoding.y
     if not x_field or not y_field:
         raise ValueError("箱线图需要 encoding.x 和 encoding.y")
@@ -309,6 +318,130 @@ def render_gauge(config: ChartConfig, data: list[dict[str, Any]]) -> dict[str, A
     return opt
 
 
+def render_map(config: ChartConfig, data: list[dict[str, Any]]) -> dict[str, Any]:
+    """地理散点图：基于经纬度 + 数值"""
+    lon_field = config.encoding.x or "longitude"
+    lat_field = config.encoding.y or "latitude"
+    value_field = config.encoding.size or (config.data_source.value_fields[0] if config.data_source.value_fields else None)
+    name_field = config.encoding.color or config.data_source.entity_field or "name"
+
+    if not value_field:
+        raise ValueError("地图需要 encoding.size 或 value_fields 指定数值字段")
+
+    scatter_data = []
+    for row in data:
+        lon = _to_number(row.get(lon_field))
+        lat = _to_number(row.get(lat_field))
+        val = _to_number(row.get(value_field))
+        name = str(row.get(name_field, ""))
+        if lon is None or lat is None or val is None:
+            continue
+        scatter_data.append({"name": name, "value": [lon, lat, val]})
+
+    opt = _base_option(config)
+    opt.pop("xAxis", None)
+    opt.pop("yAxis", None)
+    opt["tooltip"] = {"trigger": "item", "formatter": "{b}<br/>" + value_field + ": {c}"}
+    opt["geo"] = {
+        "map": "china",
+        "roam": True,
+        "emphasis": {"itemStyle": {"areaColor": "#eee"}},
+        "itemStyle": {"areaColor": "#f3f3f3", "borderColor": "#999"},
+    }
+    # 预计算符号大小，避免 JSON 序列化函数
+    max_val = max((d["value"][2] for d in scatter_data if isinstance(d.get("value"), list) and len(d["value"]) > 2), default=1)
+    for d in scatter_data:
+        val = d.get("value")
+        if isinstance(val, list) and len(val) > 2 and max_val > 0:
+            d["symbolSize"] = max(8, min(50, 8 + (val[2] / max_val) * 42))
+        else:
+            d["symbolSize"] = 10
+
+    opt["series"] = [{
+        "type": "scatter",
+        "coordinateSystem": "geo",
+        "data": scatter_data,
+        "emphasis": {"scale": 1.5},
+    }]
+    return opt
+
+
+def render_sankey(config: ChartConfig, data: list[dict[str, Any]]) -> dict[str, Any]:
+    """桑基图：source -> target -> value"""
+    source_field = config.encoding.x or "source"
+    target_field = config.encoding.y or "target"
+    value_field = config.encoding.size or "value"
+
+    nodes = set()
+    links = []
+    for row in data:
+        source = str(row.get(source_field, ""))
+        target = str(row.get(target_field, ""))
+        value = _to_number(row.get(value_field))
+        if not source or not target or value is None:
+            continue
+        nodes.add(source)
+        nodes.add(target)
+        links.append({"source": source, "target": target, "value": value})
+
+    if not links:
+        raise ValueError("桑基图没有有效的 source/target/value 数据")
+
+    opt = _base_option(config)
+    opt["tooltip"] = {"trigger": "item", "triggerOn": "mousemove"}
+    opt["series"] = [{
+        "type": "sankey",
+        "data": [{"name": n} for n in nodes],
+        "links": links,
+        "emphasis": {"focus": "adjacency"},
+        "lineStyle": {"color": "gradient", "curveness": 0.5},
+    }]
+    return opt
+
+
+def render_racing_bar(config: ChartConfig, data: list[dict[str, Any]]) -> dict[str, Any]:
+    """赛跑图：时间序列排名动画"""
+    time_field = config.encoding.x or config.data_source.time_field
+    entity_field = config.encoding.color or config.data_source.entity_field
+    value_field = config.encoding.y or (config.data_source.value_fields[0] if config.data_source.value_fields else None)
+
+    if not time_field or not entity_field or not value_field:
+        raise ValueError("赛跑图需要 time_field、entity_field、value_field")
+
+    # 收集每个时间点的数据
+    time_values = sorted({str(row.get(time_field)) for row in data if row.get(time_field) is not None})
+    entities = sorted({str(row.get(entity_field)) for row in data if row.get(entity_field) is not None})
+
+    # 为每个时间点生成一个系列（取 Top N）
+    top_n = config.extra.get("top_n", 10)
+    series_list = []
+    for t in time_values:
+        items = []
+        for row in data:
+            if str(row.get(time_field)) == t:
+                items.append({
+                    "name": str(row.get(entity_field)),
+                    "value": _to_number(row.get(value_field)) or 0,
+                })
+        items = sorted(items, key=lambda x: x["value"], reverse=True)[:top_n]
+        series_list.append({
+            "data": items,
+            "type": "bar",
+            "realtimeSort": True,
+            "seriesLayoutBy": "column",
+            "label": {"show": True, "position": "right", "valueAnimation": True},
+        })
+
+    opt = _base_option(config)
+    opt["xAxis"] = {"max": "dataMax"}
+    opt["yAxis"] = {"type": "category", "inverse": True, "max": top_n - 1, "animationDuration": 300}
+    opt["series"] = series_list
+    opt["animationDuration"] = 0
+    opt["animationDurationUpdate"] = 500
+    opt["animationEasingUpdate"] = "linear"
+    return opt
+
+
 def render_echarts_option(config: ChartConfig, data: list[dict[str, Any]]) -> dict[str, Any]:
     """
     根据配置渲染 ECharts option。
@@ -322,6 +455,9 @@ def render_echarts_option(config: ChartConfig, data: list[dict[str, Any]]) -> di
         ChartType.HEATMAP: render_heatmap,
         ChartType.BOX: render_box,
         ChartType.GAUGE: render_gauge,
+        ChartType.MAP: render_map,
+        ChartType.SANKEY: render_sankey,
+        ChartType.RACING_BAR: render_racing_bar,
     }
     renderer = renderers.get(config.chart_type)
     if renderer is None:

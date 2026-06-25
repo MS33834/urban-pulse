@@ -48,11 +48,11 @@ class UrbanPulseAPI {
   }
 
   async listCities() {
-    return this.get("/cities/");
+    return this.get("/cities/list");
   }
 
   async getCityData(code, indicators = []) {
-    return this.get(`/cities/${code}?indicators=${indicators.join(",")}`);
+    return this.get(`/cities/${encodeURIComponent(code)}?indicators=${indicators.join(",")}`);
   }
 }
 

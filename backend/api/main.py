@@ -270,7 +270,7 @@ async def get_viz_demo():
 async def get_css(path: str):
     file_path = frontend_dir / "css" / path
     if file_path.exists() and file_path.is_file():
-        return FileResponse(file_path, media_type="text/css")
+        return FileResponse(file_path, media_type="text/css", headers={"Cache-Control": "no-cache, must-revalidate"})
     raise HTTPException(status_code=404, detail="CSS not found")
 
 
@@ -278,7 +278,7 @@ async def get_css(path: str):
 async def get_js(path: str):
     file_path = frontend_dir / "js" / path
     if file_path.exists() and file_path.is_file():
-        return FileResponse(file_path, media_type="application/javascript")
+        return FileResponse(file_path, media_type="application/javascript", headers={"Cache-Control": "no-cache, must-revalidate"})
     raise HTTPException(status_code=404, detail="JS not found")
 
 

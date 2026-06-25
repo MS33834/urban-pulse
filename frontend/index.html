@@ -759,6 +759,63 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
 .chart-error__detail { font-family: var(--font-mono); font-size: var(--fs-xs); }
 
 /* ============================================================
+ * 10b · Smart Viz Grid
+ * ============================================================ */
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6);
+}
+.viz-card {
+  background: var(--paper-50);
+  border: 1px solid var(--sand-200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.viz-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--sand-200);
+  background: var(--paper-100);
+}
+.viz-card-header h3 {
+  margin: 0;
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--stone-800);
+}
+.viz-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--copper-600);
+  background: var(--copper-50);
+  padding: 4px 8px;
+  border-radius: var(--radius-xs);
+}
+.viz-chart {
+  width: 100%;
+  min-height: 360px;
+  flex: 1 1 auto;
+}
+.viz-reason {
+  margin: 0;
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--fs-sm);
+  color: var(--stone-500);
+  border-top: 1px solid var(--sand-200);
+  background: var(--paper-50);
+}
+@media (max-width: 960px) {
+  .viz-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
  * 11 · City Cards Grid
  * ============================================================ */
 .city-grid {
@@ -1540,6 +1597,13 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17v-2H4.5A2.5 2.5 0 0 1 2 12.5v-9A2.5 2.5 0 0 1 4.5 1h15A2.5 2.5 0 0 1 22 3.5v9a2.5 2.5 0 0 1-2.5 2.5H15v2"/><path d="M12 11V7"/><path d="m9 11 3 3 3-3"/></svg>
       </span>
       <span class="tab-btn__label">预测档案</span>
+    </button>
+    <button class="tab-btn" type="button" role="tab" id="tab-btn-smart-viz" aria-selected="false" aria-controls="tab-smart-viz" data-tab="smart-viz" tabindex="-1">
+      <span class="tab-btn__num" aria-hidden="true">09</span>
+      <span class="tab-btn__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+      </span>
+      <span class="tab-btn__label">智能可视化</span>
     </button>
   </nav>
 
@@ -2466,6 +2530,68 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
       </article>
     </section>
 
+    <section id="tab-smart-viz" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-smart-viz" hidden>
+      <header class="panel-header">
+        <div class="panel-header__title">
+          <span class="eyebrow">SECTION 09 · SMART VIZ</span>
+          <h2>智能可视化</h2>
+          <p class="lede" id="smartVizLede">选择数据源，系统自动推荐并渲染高级交互图表。</p>
+        </div>
+      </header>
+
+      <article class="card">
+        <header class="card-head">
+          <div class="card-head__title">
+            <span class="card-head__rule card-head__rule--copper" aria-hidden="true"></span>
+            <div>
+              <span class="eyebrow">CONFIGURATION</span>
+              <h3>数据源与指标</h3>
+            </div>
+          </div>
+        </header>
+        <div class="card-body">
+          <div class="grid-3" style="align-items:end">
+            <div class="field">
+              <label class="field__label" for="smartVizDataset">数据集</label>
+              <select id="smartVizDataset" class="select">
+                <option value="city_gdp">城市 GDP 与财政收入时序</option>
+                <option value="city_multi">城市多维度指标</option>
+                <option value="custom">自定义 JSON</option>
+              </select>
+              <span class="field__help">基于真实城市数据或粘贴自定义数据</span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="smartVizCount">图表数量</label>
+              <select id="smartVizCount" class="select">
+                <option value="2">2 张</option>
+                <option value="3" selected>3 张</option>
+                <option value="4">4 张</option>
+                <option value="6">6 张</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:var(--space-3)">
+              <button id="btnSmartVizGenerate" type="button" class="btn btn--primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+                <span>自动生成图表</span>
+              </button>
+              <button id="btnSmartVizExport" type="button" class="btn btn--secondary" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+                <span>导出配置</span>
+              </button>
+            </div>
+          </div>
+          <div class="field" id="smartVizCustomWrap" style="margin-top:var(--space-4);display:none">
+            <label class="field__label" for="smartVizCustomData">自定义 JSON 数据</label>
+            <textarea id="smartVizCustomData" class="textarea" rows="6" placeholder='[{"city":"上海","year":2024,"gdp":53926}, ...]'></textarea>
+          </div>
+        </div>
+      </article>
+
+      <div id="smartVizStatus" class="card card--flat" style="display:none" aria-live="polite"></div>
+
+      <div id="smartVizGrid"></div>
+    </section>
+
   </main>
 
   <footer class="app-footer">
@@ -2527,6 +2653,8 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
 <!--
   Script: 见下 — IIFE 闭包内的完整 SPA 框架
 -->
+<script src="/js/api-client.js?v=2"></script>
+<script src="/js/viz-engine.js?v=2"></script>
 <script>
 /*
  * citylens — single-file SPA bootstrap
@@ -3944,6 +4072,136 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
     }
   };
 
+  // ---- Smart Visualization ----
+  Views.SmartViz = {
+    api: null,
+    dashboard: null,
+    lastResult: null,
+
+    async mount(apiClient) {
+      this.api = new UrbanPulseAPI(resolveApiBase());
+      this.dashboard = new VizDashboard("#smartVizGrid", this.api, {
+        onDrillDown: (params, chart) => {
+          window.__citylens_toast?.info(`下钻: ${params.name || params.seriesName} = ${params.value}`);
+        },
+      });
+      this._bindEvents();
+      window.__citylens_smartviz = this.dashboard;
+      await this._generate();
+    },
+
+    _bindEvents() {
+      const datasetSel = document.getElementById("smartVizDataset");
+      const customWrap = document.getElementById("smartVizCustomWrap");
+      datasetSel?.addEventListener("change", () => {
+        customWrap.style.display = datasetSel.value === "custom" ? "block" : "none";
+      });
+      document.getElementById("btnSmartVizGenerate")?.addEventListener("click", () => this._generate());
+      document.getElementById("btnSmartVizExport")?.addEventListener("click", () => this._exportConfig());
+    },
+
+    async _getData() {
+      const dataset = document.getElementById("smartVizDataset")?.value || "city_gdp";
+      if (dataset === "custom") {
+        const raw = document.getElementById("smartVizCustomData")?.value.trim() || "[]";
+        return JSON.parse(raw);
+      }
+      if (dataset === "city_multi") {
+        return this._fetchMultiIndicatorData();
+      }
+      return this._fetchCityGdpData();
+    },
+
+    async _fetchCityGdpData() {
+      const list = await this.api.listCities();
+      const cities = (list.cities || []).slice(0, 10);
+      const rows = [];
+      for (const city of cities) {
+        try {
+          const resp = await this.api.get(`/cities/${encodeURIComponent(city)}/historical`);
+          for (const row of resp.historical_data || []) {
+            rows.push({
+              city: city,
+              year: row.year,
+              gdp: row.gdp,
+              fiscal_revenue: row.fiscal_revenue,
+              population: row.population,
+            });
+          }
+        } catch (e) {
+          console.warn("[smart-viz] 历史数据加载失败:", city, e);
+        }
+      }
+      return rows;
+    },
+
+    async _fetchMultiIndicatorData() {
+      const list = await this.api.listCities();
+      const cities = (list.cities || []).slice(0, 8);
+      const rows = [];
+      for (const city of cities) {
+        try {
+          const resp = await this.api.get(`/cities/${encodeURIComponent(city)}?indicators=gdp,population,gdp_per_capita,growth_rate,industry_high_tech_ratio`);
+          rows.push({
+            city: city,
+            gdp: resp.data?.gdp,
+            population: resp.data?.population,
+            gdp_per_capita: resp.data?.gdp_per_capita,
+            growth_rate: resp.data?.growth_rate,
+            high_tech_ratio: resp.data?.industry_high_tech_ratio,
+          });
+        } catch (e) {
+          console.warn("[smart-viz] 城市数据加载失败:", city, e);
+        }
+      }
+      return rows;
+    },
+
+    async _generate() {
+      const status = document.getElementById("smartVizStatus");
+      const grid = document.getElementById("smartVizGrid");
+      const lede = document.getElementById("smartVizLede");
+      const exportBtn = document.getElementById("btnSmartVizExport");
+      try {
+        status.style.display = "block";
+        status.innerHTML = `<div style="display:flex;align-items:center;gap:var(--space-3);color:var(--ink-600)"><span class="spinner"></span>正在分析数据并生成图表…</div>`;
+        grid.innerHTML = "";
+        const data = await this._getData();
+        if (!data.length) throw new Error("没有可用的数据");
+        const count = parseInt(document.getElementById("smartVizCount")?.value || "3", 10);
+        const result = await this.dashboard.autoRender(data, count);
+        this.lastResult = result;
+        lede.textContent = `已生成 ${result.charts.length} 张图表 · 识别到 ${result.profile.total_rows} 行 × ${result.profile.total_cols} 列`;
+        exportBtn.disabled = false;
+        status.style.display = "none";
+      } catch (err) {
+        status.style.display = "block";
+        status.innerHTML = `<div style="color:var(--danger);display:flex;align-items:center;gap:var(--space-3)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>生成失败：${Utils.esc(err.message || "未知错误")}</div>`;
+        exportBtn.disabled = true;
+      }
+    },
+
+    _exportConfig() {
+      if (!this.lastResult) return;
+      const configs = this.lastResult.charts.map((c) => ({
+        chart_type: c.chart_type,
+        title: c.title,
+        reason: c.reason,
+        config: c.config,
+      }));
+      const blob = new Blob([JSON.stringify(configs, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `urban-pulse-viz-config-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      window.__citylens_toast?.success("配置已导出");
+    }
+  };
+
   // ---- Archive & Validation ----
   Views.Archive = {
     async _loadValidation(api) {
@@ -4190,7 +4448,7 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
 
       // Tab 路由
       router.bind();
-      const mounted = { dashboard: false, enterprise: false, government: false, cities: false, index: false, health: false, risk: false, archive: false };
+      const mounted = { dashboard: false, enterprise: false, government: false, cities: false, index: false, health: false, risk: false, archive: false, "smart-viz": false };
       let indexTab = null;
       let healthTab = null;
       const mountIfNeeded = (name) => {
@@ -4204,7 +4462,8 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
           index:      () => { indexTab = new IndexTab(api); return indexTab.load(); },
           health:     () => { healthTab = new HealthTab(api); return healthTab.mount(); },
           risk:       () => Views.Risk.mount(api),
-          archive:    () => Views.Archive.mount(api)
+          archive:    () => Views.Archive.mount(api),
+          "smart-viz": () => Views.SmartViz.mount(api)
         };
         Promise.resolve()
           .then(() => map[name]?.())
@@ -4219,6 +4478,7 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
       router.on("health",     () => mountIfNeeded("health"));
       router.on("risk",       () => mountIfNeeded("risk"));
       router.on("archive",    () => mountIfNeeded("archive"));
+      router.on("smart-viz",  () => mountIfNeeded("smart-viz"));
 
       // 全局错误兜底
       window.addEventListener("error", (e) => {
@@ -4234,6 +4494,7 @@ h4 { font-size: var(--fs-base); font-weight: 600; }
       window.addEventListener("beforeunload", () => {
         api.cancelAll("unload");
         charts.disposeAll();
+        window.__citylens_smartviz?.engines?.forEach((e) => e.clear());
       });
     }
   };
