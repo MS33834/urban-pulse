@@ -20,6 +20,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from backend.core.cache import cached, clear_compute_cache
 from backend.data.city_data import get_all_forecast_cities, get_historical_data
 
 logger = logging.getLogger(__name__)
@@ -377,6 +378,7 @@ def forecast_series(
 # --------------------------------------------------------------------------- #
 
 
+@cached(maxsize=512, ttl=3600)
 def forecast_city_indicator(
     city: str,
     indicator: str,
@@ -426,6 +428,7 @@ def forecast_city_indicator(
     }
 
 
+@cached(maxsize=256, ttl=3600)
 def forecast_province_indicator(
     province: str,
     indicator: str,

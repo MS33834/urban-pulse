@@ -127,7 +127,7 @@ class CitiesCompareRequest(BaseModel):
 
 
 @router.post("/aggregate", summary="数据聚合分析")
-async def aggregate_data(request: AggregationRequest):
+def aggregate_data(request: AggregationRequest):
     """
     数据聚合分析(基于真实注册城市数据)
 
@@ -168,7 +168,7 @@ async def aggregate_data(request: AggregationRequest):
 
 
 @router.post("/compare", summary="城市对比分析")
-async def compare_cities(request: CitiesCompareRequest):
+def compare_cities(request: CitiesCompareRequest):
     """
     城市对比分析(基于真实注册城市数据)
 
@@ -231,7 +231,7 @@ async def compare_cities(request: CitiesCompareRequest):
 
 
 @router.post("/time-series", summary="时间序列分析")
-async def time_series_analysis(request: TimeSeriesRequest):
+def time_series_analysis(request: TimeSeriesRequest):
     """
     时间序列分析(基于真实注册城市数据)
     """
@@ -308,7 +308,7 @@ async def time_series_analysis(request: TimeSeriesRequest):
 
 
 @router.post("/regional", summary="区域分析")
-async def regional_analysis(request: RegionalRequest):
+def regional_analysis(request: RegionalRequest):
     """
     区域分析(基于真实注册城市数据)
     """
@@ -336,7 +336,7 @@ async def regional_analysis(request: RegionalRequest):
 
 
 @router.post("/correlation", summary="相关性分析")
-async def correlation_analysis(request: CorrelationRequest):
+def correlation_analysis(request: CorrelationRequest):
     """
     指标相关性分析(基于真实注册城市数据)
     """
@@ -385,7 +385,7 @@ async def correlation_analysis(request: CorrelationRequest):
 
 
 @router.get("/rankings", summary="城市排名")
-async def get_city_rankings(
+def get_city_rankings(
     indicator: str = Query("gdp", min_length=1, description="指标代码"),
     year: int | None = Query(None, ge=1900, le=2200, description="年份"),
     limit: int = Query(10, ge=1, le=100, description="返回数量"),
@@ -436,7 +436,7 @@ async def get_city_rankings(
 
 
 @router.get("/dashboard", summary="城市仪表盘")
-async def get_city_dashboard(city_code: str = Query(..., min_length=1, description="城市代码")):
+def get_city_dashboard(city_code: str = Query(..., min_length=1, description="城市代码")):
     """
     获取城市仪表盘数据(基于真实注册城市数据)
     """
@@ -548,13 +548,13 @@ def get_scoring_benchmarks() -> dict[str, Any]:
 
 
 @router.get("/quality/report", summary="获取数据质量报告")
-async def get_data_quality_report() -> dict[str, Any]:
+def get_data_quality_report() -> dict[str, Any]:
     """获取完整的数据质量评估报告。"""
     return generate_data_quality_report()
 
 
 @router.get("/{city_name}", summary="获取指定城市详情")
-async def get_city_detail(city_name: str) -> dict[str, Any]:
+def get_city_detail(city_name: str) -> dict[str, Any]:
     """获取指定城市的详细数据。"""
     data = get_city_data(city_name)
     if not data:

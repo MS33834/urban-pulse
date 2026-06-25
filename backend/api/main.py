@@ -17,19 +17,16 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.routing import APIRoute
 
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
-from slowapi.util import get_remote_address
 
 from backend.api.auth import get_current_user
+from backend.api.ratelimit import limiter
 from backend.api.security_headers import SecurityHeadersMiddleware
 from config import settings
 
 logger = logging.getLogger(__name__)
-
-# 速率限制器实例 — 在路由文件中通过 @limiter.limit("5/minute") 使用
-limiter = Limiter(key_func=get_remote_address)
 
 
 # ── helper: seed city_manager from region registry ─────────────────────────

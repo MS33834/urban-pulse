@@ -26,8 +26,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/forecast", tags=["预测"])
 
-# 延迟导入 limiter 以避免与 backend.api.main 的循环依赖
-from backend.api.main import limiter  # noqa: E402
+from backend.api.ratelimit import limiter
 
 
 # --------------------------------------------------------------------------- #
@@ -83,7 +82,7 @@ async def list_supported_provinces() -> dict[str, Any]:
 
 
 @router.get("/gdp/{city_name}", summary="[兼容] 预测城市 GDP")
-async def forecast_city_gdp(
+def forecast_city_gdp(
     city_name: str,
     forecast_years: int = Query(5, ge=1, le=20, description="预测年数"),
 ) -> dict[str, Any]:
@@ -128,7 +127,7 @@ async def forecast_city_gdp(
 
 
 @router.get("/indicator/{city_name}", summary="预测城市任意指标")
-async def forecast_city_indicator_endpoint(
+def forecast_city_indicator_endpoint(
     city_name: str,
     indicator: str = Query("gdp", description=f"指标代码,支持: {', '.join(SUPPORTED_INDICATORS)}"),
     forecast_years: int = Query(5, ge=1, le=20, description="预测年数"),
@@ -212,7 +211,7 @@ def compare_city_forecasts(request: CompareRequest) -> dict[str, Any]:
 
 @router.get("/province/all", summary="全 7 省 × 单指标 批量预测报告")
 @limiter.limit("10/minute")
-async def forecast_all_provinces_endpoint(
+def forecast_all_provinces_endpoint(
     request: Request,
     indicator: str = Query("gdp", description="要预测的指标"),
     forecast_years: int = Query(5, ge=1, le=20, description="预测年数"),
@@ -238,7 +237,7 @@ async def forecast_all_provinces_endpoint(
 
 
 @router.post("/province/{province_name}", summary="省级 × 单指标 聚合 + 预测")
-async def forecast_province_endpoint(
+def forecast_province_endpoint(
     province_name: str,
     request: ProvinceRequest,
 ) -> dict[str, Any]:

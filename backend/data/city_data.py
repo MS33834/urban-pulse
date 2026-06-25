@@ -53,6 +53,11 @@ def refresh() -> None:
     CITY_DATA, HISTORICAL_DATA = _refresh_cache()
     get_score_benchmarks.cache_clear()
     get_score_weights.cache_clear()
+    get_historical_data.cache_clear()
+    # 失效预测/风险计算缓存,避免基于旧数据返回过期结果
+    from backend.core.cache import clear_compute_cache
+
+    clear_compute_cache()
     logger.info(f"城市数据缓存已刷新: {len(CITY_DATA)} 个城市")
 
 
@@ -72,6 +77,7 @@ def get_all_forecast_cities() -> list[str]:
     return [r.name for r in registry.list_forecastable("gdp")]
 
 
+@lru_cache(maxsize=128)
 def get_historical_data(city_name: str) -> pd.DataFrame:
     """获取城市历史数据（DataFrame 形式）"""
     rows = HISTORICAL_DATA.get(city_name, [])

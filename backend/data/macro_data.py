@@ -21,6 +21,7 @@
 from __future__ import annotations
 
 import logging
+from functools import lru_cache
 from typing import Any
 
 import pandas as pd
@@ -97,6 +98,7 @@ def list_macro_indicators() -> list[str]:
     return sorted(INDICATOR_META.keys())
 
 
+@lru_cache(maxsize=1)
 def get_macro_timeseries() -> pd.DataFrame:
     """返回 2010-2025 宏观时序 DataFrame"""
     records = []

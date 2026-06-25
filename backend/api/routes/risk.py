@@ -30,8 +30,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/risk", tags=["风险分析"])
 
-# 延迟导入 limiter 以避免与 backend.api.main 的循环依赖
-from backend.api.main import limiter  # noqa: E402
+from backend.api.ratelimit import limiter
 
 
 class RiskAnalyzeRequest(BaseModel):
@@ -91,7 +90,7 @@ def _get_city_indicator_series(city_name: str, indicator: str) -> tuple[list[int
 
 @router.post("/analyze", response_model=RiskAnalyzeResponse, summary="城市经济指标风险分析")
 @limiter.limit("5/minute")
-async def analyze_risk(request: Request, body: RiskAnalyzeRequest) -> RiskAnalyzeResponse:
+def analyze_risk(request: Request, body: RiskAnalyzeRequest) -> RiskAnalyzeResponse:
     """
     对指定城市 × 指定指标进行综合风险分析。
 

@@ -26,8 +26,7 @@ from backend.core.storage.record_store import (
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/datasets", tags=["数据集"])
 
-# 延迟导入 limiter 以避免与 backend.api.main 的循环依赖
-from backend.api.main import limiter  # noqa: E402
+from backend.api.ratelimit import limiter
 
 MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB
 

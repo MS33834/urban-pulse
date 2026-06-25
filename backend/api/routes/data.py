@@ -124,10 +124,18 @@ def get_example_data_path(filename: str):
     return base_dir / "examples" / "shenzhen_semiconductor_2025" / "data" / filename
 
 
-@router.get("/basic", summary="获取基础数据")
-def get_basic_data():
-    """获取深圳半导体产业基础数据"""
+_BASIC_CACHE: dict[Path, dict] = {}
+
+
+def _load_basic_data() -> dict:
+    """加载并缓存深圳半导体产业基础数据,避免每次请求重复读盘。
+
+    按文件路径缓存:路径变化(monkeypatch / 部署迁移)时自动重新读取。
+    """
     data_file = get_example_data_path("basic_data.json")
+    cached = _BASIC_CACHE.get(data_file)
+    if cached is not None:
+        return cached
     if not data_file.exists():
         raise HTTPException(status_code=404, detail="基础数据文件未找到")
     try:
@@ -136,7 +144,14 @@ def get_basic_data():
     except (json.JSONDecodeError, OSError) as e:
         logger.error("读取基础数据失败: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail="数据读取失败") from e
+    _BASIC_CACHE[data_file] = data
+    return data
 
+
+@router.get("/basic", summary="获取基础数据")
+def get_basic_data():
+    """获取深圳半导体产业基础数据"""
+    data = _load_basic_data()
     return {"region": "深圳", "industry": "半导体", "year": 2025, "data": data}
 
 

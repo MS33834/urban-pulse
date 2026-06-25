@@ -28,6 +28,7 @@ import numpy as np
 from scipy import stats
 from sklearn.linear_model import LinearRegression
 
+from backend.core.cache import cached
 from backend.core.engine_stack import (
     pmdarima_available,
     primary_arima_backend,
@@ -752,6 +753,7 @@ def backtest_forecast(
 # --------------------------------------------------------------------------- #
 
 
+@cached(maxsize=256, ttl=3600)
 def forecast_full_pipeline(
     values: list[float],
     start_year: int,

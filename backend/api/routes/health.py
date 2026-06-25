@@ -26,8 +26,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/health", tags=["健康指数"])
 
-# 延迟导入 limiter 以避免与 backend.api.main 的循环依赖
-from backend.api.main import limiter  # noqa: E402
+from backend.api.ratelimit import limiter
 
 
 # --------------------------------------------------------------------------- #
@@ -261,7 +260,7 @@ async def get_indicators() -> IndicatorsResponse:
 
 
 @router.post("/calculate", response_model=CEHIResultOut, summary="计算 CEHI")
-async def calculate_cehi(request: CalculateRequest) -> CEHIResultOut:
+def calculate_cehi(request: CalculateRequest) -> CEHIResultOut:
     """
     根据传入的城市指标原始值，计算该城市的 CEHI 综合得分、维度得分、健康等级与短板建议。
     """
@@ -282,7 +281,7 @@ async def calculate_cehi(request: CalculateRequest) -> CEHIResultOut:
 
 
 @router.post("/benchmark", response_model=BenchmarkResponse, summary="城市 CEHI 对标")
-async def benchmark_cehi(request: BenchmarkRequest) -> BenchmarkResponse:
+def benchmark_cehi(request: BenchmarkRequest) -> BenchmarkResponse:
     """
     将目标城市与一组对标城市进行 CEHI 综合得分排名、相似城市与最佳实践差距分析。
     """
@@ -304,7 +303,7 @@ async def benchmark_cehi(request: BenchmarkRequest) -> BenchmarkResponse:
 
 
 @router.get("/demo", response_model=CEHIResultOut, summary="示例城市 CEHI 结果")
-async def get_demo() -> CEHIResultOut:
+def get_demo() -> CEHIResultOut:
     """
     返回使用内置示例数据计算的 CEHI 结果，便于快速体验接口返回结构。
     """
@@ -389,7 +388,7 @@ def _pdf_filename(city_name: str, year: int) -> str:
 
 
 @router.post("/report/pdf", summary="导出 CEHI PDF 诊断报告")
-async def export_cehi_pdf(request: CalculateRequest) -> Response:
+def export_cehi_pdf(request: CalculateRequest) -> Response:
     """
     接收与 /calculate 相同的请求体，生成并返回 CEHI PDF 诊断报告。
     """

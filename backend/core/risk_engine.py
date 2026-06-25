@@ -17,6 +17,7 @@ from typing import Any
 
 import numpy as np
 
+from backend.core.cache import cached
 from backend.core.engine_stack import arch_available, primary_vol_backend
 
 logger = logging.getLogger(__name__)
@@ -358,6 +359,7 @@ def monte_carlo_simulation(
 # --------------------------------------------------------------------------- #
 
 
+@cached(maxsize=256, ttl=3600)
 def risk_full_pipeline(
     values: list[float],
     baseline_predictions: list[float],
