@@ -19,6 +19,7 @@ from backend.core.province_aggregator import SUPPORTED_INDICATORS, forecast_city
 from backend.data_collection.survey_collector import SurveyCollector
 from backend.regions import RegionLevel, get_registry
 from backend.regions.survey_integration import attach_survey_records, get_survey_indicators
+from config.regions import get_region_config, list_all_regions
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/regions", tags=["区域"])
@@ -301,4 +302,80 @@ async def get_region_survey_indicators(
         "code": code,
         "name": region.name,
         "survey_indicators": get_survey_indicators(region),
+    }
+
+
+# --------------------------------------------------------------------------- #
+# 区域配置详情（行政区划、指标权重、经济特征等）
+# --------------------------------------------------------------------------- #
+
+
+@router.get("/config/list", summary="列出所有已配置区域")
+async def list_region_configs() -> dict[str, Any]:
+    """返回所有有详细配置的城市名称列表。"""
+    return {
+        "success": True,
+        "count": len(list_all_regions()),
+        "regions": list_all_regions(),
+    }
+
+
+@router.get("/config/{name}", summary="获取区域配置详情")
+async def get_region_config_detail(name: str) -> dict[str, Any]:
+    """
+    获取指定区域的详细配置，包括：
+    - 行政区划（区县、开发区）
+    - 指标权重
+    - 经济特征标签
+    - 基准数据
+    - 数据来源
+    """
+    config_cls = get_region_config(name)
+    if config_cls is None:
+        raise HTTPException(status_code=404, detail=f"区域配置不存在: {name}")
+
+    config = config_cls()
+    return {
+        "success": True,
+        "name": config.name,
+        "code": config.code,
+        "province": config.province,
+        "country": config.country,
+        "statistical_caliber": config.statistical_caliber,
+        "administrative_divisions": config.administrative_divisions,
+        "indicator_weights": config.indicator_weights,
+        "economic_characteristics": config.economic_characteristics,
+        "benchmark_data": config.benchmark_data,
+        "data_sources": config.data_sources,
+    }
+
+
+@router.get("/config/{name}/districts", summary="获取区域行政区划")
+async def get_region_districts(name: str) -> dict[str, Any]:
+    """获取指定区域的区县和开发区列表。"""
+    config_cls = get_region_config(name)
+    if config_cls is None:
+        raise HTTPException(status_code=404, detail=f"区域配置不存在: {name}")
+
+    config = config_cls()
+    return {
+        "success": True,
+        "name": config.name,
+        "districts": config.administrative_divisions.get("districts", []),
+        "development_zones": config.administrative_divisions.get("development_zones", []),
+    }
+
+
+@router.get("/config/{name}/benchmarks", summary="获取区域基准数据")
+async def get_region_benchmarks(name: str) -> dict[str, Any]:
+    """获取指定区域的基准数据（人均GDP、平均工资、工业效率等）。"""
+    config_cls = get_region_config(name)
+    if config_cls is None:
+        raise HTTPException(status_code=404, detail=f"区域配置不存在: {name}")
+
+    config = config_cls()
+    return {
+        "success": True,
+        "name": config.name,
+        "benchmark_data": config.benchmark_data,
     }
