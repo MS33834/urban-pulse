@@ -3,6 +3,20 @@
 > 创建时间：2026-06-25
 > 目标：将 Urban Pulse 从「基础城市经济数据展示」升级为「灵活可视化 + 经济数学模型驱动」的城市经济智能平台。
 
+## 当前进展
+
+- [x] 通用可视化配置协议（VCP）与数据画像
+- [x] 图表推荐器：折线、面积、柱状、散点、雷达、热力图、箱线图、仪表盘、地图、桑基图、赛跑图
+- [x] 后端 ECharts 预渲染器：支持 line / bar / scatter / radar / heatmap / box / gauge / map / sankey / racing_bar
+- [x] 可视化 API：`/viz/profile`、`/viz/recommend`、`/viz/render`、`/viz/auto`
+- [x] 前端通用可视化引擎 `frontend/js/viz-engine.js`（含下钻回调）
+- [x] 智能可视化模块整合进主仪表盘 `index.html`（第 9 个标签页）
+- [x] 从真实城市数据自动画像并生成高级图表
+- [x] 图表配置导出、下钻提示等高级交互
+- [x] 数学模型库：VAR、XGBoost、TFP、区位商、DPSR 韧性模型
+- [x] 数据库扩展：model_runs、forecasts、indicator_scores、viz_configs 表
+- [ ] 智能报告与政策建议生成（待后续迭代）
+
 ---
 
 ## 一、背景与目标
