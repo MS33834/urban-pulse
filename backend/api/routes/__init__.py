@@ -11,12 +11,12 @@ from backend.api.routes.forecast_archive import router as archive_router
 from backend.api.routes.health import router as health_router
 from backend.api.routes.index import router as index_router
 from backend.api.routes.industries import router as industries_router
+from backend.api.routes.models import router as models_router
 from backend.api.routes.regions import router as regions_router
 from backend.api.routes.risk import router as risk_router
 from backend.api.routes.static import router as static_router
 from backend.api.routes.validation import router as validation_router
 from backend.api.routes.viz import router as viz_router
-from backend.api.routes.models import router as models_router
 
 __all__ = [
     "analysis_router",

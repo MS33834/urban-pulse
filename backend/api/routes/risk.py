@@ -21,6 +21,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field, field_validator
 
+from backend.api.ratelimit import limiter
 from backend.core.forecast_engine import forecast_full_pipeline
 from backend.core.province_aggregator import SUPPORTED_INDICATORS
 from backend.core.risk_engine import risk_full_pipeline
@@ -29,8 +30,6 @@ from backend.data.city_data import get_all_forecast_cities, get_historical_data
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/risk", tags=["风险分析"])
-
-from backend.api.ratelimit import limiter
 
 
 class RiskAnalyzeRequest(BaseModel):

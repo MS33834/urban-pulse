@@ -9,11 +9,13 @@
 """
 
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
+from backend.api.ratelimit import limiter
 from backend.core.province_aggregator import (
     SUPPORTED_INDICATORS,
     forecast_all_provinces,
@@ -25,8 +27,6 @@ from backend.data.city_data import get_all_cities, get_all_forecast_cities
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/forecast", tags=["预测"])
-
-from backend.api.ratelimit import limiter
 
 
 # --------------------------------------------------------------------------- #
@@ -164,10 +164,15 @@ def compare_city_forecasts(request: CompareRequest) -> dict[str, Any]:
     if not valid_cities:
         raise HTTPException(status_code=400, detail="未提供有效的城市名称")
 
+    # 各城市预测相互独立,用线程池并行(ARIMA 拟合释放 GIL)
+    with ThreadPoolExecutor(max_workers=min(len(valid_cities), 4)) as pool:
+        results = list(
+            pool.map(lambda c: forecast_city_indicator(c, request.indicator, request.forecast_years), valid_cities)
+        )
+
     forecasts: dict[str, Any] = {}
     errors: dict[str, str] = {}
-    for city in valid_cities:
-        r = forecast_city_indicator(city, request.indicator, request.forecast_years)
+    for city, r in zip(valid_cities, results):
         if "error" in r:
             errors[city] = r["error"]
             continue
@@ -275,9 +280,11 @@ def get_full_forecast_report(
         raise HTTPException(status_code=400, detail=f"Indicator '{indicator}' not supported.")
 
     cities = get_all_forecast_cities()
+    # 各城市预测相互独立,用线程池并行(ARIMA 拟合释放 GIL)
+    with ThreadPoolExecutor(max_workers=min(len(cities), 4)) as pool:
+        results = list(pool.map(lambda c: forecast_city_indicator(c, indicator, forecast_years), cities))
     city_results: dict[str, Any] = {}
-    for city in cities:
-        r = forecast_city_indicator(city, indicator, forecast_years)
+    for city, r in zip(cities, results):
         if "error" not in r:
             city_results[city] = r
 

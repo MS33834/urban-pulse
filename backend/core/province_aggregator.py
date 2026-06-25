@@ -15,12 +15,13 @@
 import logging
 import math
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 import numpy as np
 import pandas as pd
 
-from backend.core.cache import cached, clear_compute_cache
+from backend.core.cache import cached
 from backend.data.city_data import get_all_forecast_cities, get_historical_data
 
 logger = logging.getLogger(__name__)
@@ -149,7 +150,7 @@ def get_province_timeseries(
     years = sorted(set().union(*[set(df["year"].dropna().astype(int)) for df in city_dfs.values()])) if city_dfs else []
 
     # 预构建 {year: row} 索引,将内层 O(n) 全列扫描降为 O(1) 查找
-    # 同时预取 population 列,避免重复 .iloc[0] 调用
+    # 整个函数已由 @cached 缓存,此处仅缓存未命中时执行一次
     city_year_index: dict[str, dict[int, pd.Series]] = {}
     for city, df in city_dfs.items():
         if indicator not in df.columns:
@@ -487,8 +488,13 @@ def forecast_all_provinces(
         "provinces": {},
         "comparison": [],
     }
-    for prov in provinces:
-        result = forecast_province_indicator(prov, indicator, years)
+
+    # 各省份预测相互独立,用线程池并行(ARIMA 拟合释放 GIL)。
+    # 结果顺序与 provinces 一致,保证输出确定性。
+    with ThreadPoolExecutor(max_workers=min(len(provinces), 4)) as pool:
+        results = list(pool.map(lambda p: forecast_province_indicator(p, indicator, years), provinces))
+
+    for prov, result in zip(provinces, results):
         if "error" not in result:
             out["provinces"][prov] = {
                 "historical_years": result["historical_years"],

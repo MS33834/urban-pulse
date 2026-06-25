@@ -15,6 +15,7 @@ import pandas as pd
 from fastapi import APIRouter, File, HTTPException, Query, Request, UploadFile
 from pydantic import BaseModel, Field
 
+from backend.api.ratelimit import limiter
 from backend.core.province_aggregator import SUPPORTED_INDICATORS, forecast_city_indicator
 from backend.data_collection.survey_collector import SurveyCollector
 from backend.regions import RegionLevel, get_registry
@@ -23,8 +24,6 @@ from config.regions import get_region_config, list_all_regions
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/regions", tags=["区域"])
-
-from backend.api.ratelimit import limiter
 
 MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB
 

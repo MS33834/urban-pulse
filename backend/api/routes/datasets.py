@@ -7,6 +7,7 @@ import logging
 from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
 from pydantic import BaseModel
 
+from backend.api.ratelimit import limiter
 from backend.core.importer import import_data
 from backend.core.storage.dataset_store import (
     delete_dataset,
@@ -25,8 +26,6 @@ from backend.core.storage.record_store import (
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/datasets", tags=["数据集"])
-
-from backend.api.ratelimit import limiter
 
 MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB
 

@@ -18,6 +18,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, File, HTTPException, Query, Request, Response, UploadFile
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
+from backend.api.ratelimit import limiter
 from backend.core.health_data_io import export_indicator_template, parse_indicator_data
 from backend.core.health_index import CEHIConfig, CEHIEngine, CEHIResult, get_demo_values, health_index_demo
 from backend.core.health_report import generate_cehi_pdf
@@ -25,8 +26,6 @@ from backend.core.health_report import generate_cehi_pdf
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/health", tags=["健康指数"])
-
-from backend.api.ratelimit import limiter
 
 
 # --------------------------------------------------------------------------- #
