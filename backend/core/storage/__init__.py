@@ -142,6 +142,68 @@ def init_db() -> None:
             -- datasets 按创建时间倒序列表
             CREATE INDEX IF NOT EXISTS idx_datasets_created
                 ON datasets(created_at DESC);
+
+            -- 模型运行记录
+            CREATE TABLE IF NOT EXISTS model_runs (
+                id              TEXT PRIMARY KEY,
+                model_type      TEXT NOT NULL,
+                model_name      TEXT NOT NULL,
+                parameters      TEXT,
+                input_summary   TEXT,
+                output_summary  TEXT,
+                status          TEXT DEFAULT 'success',
+                error_message   TEXT,
+                created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            -- 预测结果
+            CREATE TABLE IF NOT EXISTS forecasts (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id          TEXT REFERENCES model_runs(id) ON DELETE CASCADE,
+                entity          TEXT NOT NULL,
+                indicator       TEXT NOT NULL,
+                year            INTEGER,
+                forecast_value  REAL,
+                lower_95        REAL,
+                upper_95        REAL,
+                method          TEXT,
+                created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            -- 指标得分（健康度/韧性/质量）
+            CREATE TABLE IF NOT EXISTS indicator_scores (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id          TEXT REFERENCES model_runs(id) ON DELETE CASCADE,
+                entity          TEXT NOT NULL,
+                dimension       TEXT,
+                indicator       TEXT,
+                raw_value       REAL,
+                score           REAL,
+                weight          REAL,
+                status          TEXT,
+                year            INTEGER,
+                created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            -- 可视化配置
+            CREATE TABLE IF NOT EXISTS viz_configs (
+                id              TEXT PRIMARY KEY,
+                name            TEXT NOT NULL,
+                description     TEXT,
+                config_json     TEXT NOT NULL,
+                dataset_id      TEXT,
+                created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_model_runs_type
+                ON model_runs(model_type, model_name);
+            CREATE INDEX IF NOT EXISTS idx_forecasts_run
+                ON forecasts(run_id);
+            CREATE INDEX IF NOT EXISTS idx_indicator_scores_run
+                ON indicator_scores(run_id);
+            CREATE INDEX IF NOT EXISTS idx_viz_configs_dataset
+                ON viz_configs(dataset_id);
         """)
         conn.commit()
     logger.info("Database tables initialized")

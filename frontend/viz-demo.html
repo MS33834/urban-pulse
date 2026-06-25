@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Urban Pulse - 智能可视化演示</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Urban Pulse · 智能可视化引擎</h1>
+    <nav>
+      <a href="/">返回旧版仪表盘</a>
+      <a href="/viz-demo.html">智能可视化</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <section class="card">
+      <h2>上传数据，自动推荐高级图表</h2>
+      <p>支持任意表格数据：后端会自动识别时间、实体、数值字段，并推荐折线、柱状、雷达、热力图、箱线图等。</p>
+
+      <div class="form-group">
+        <label>示例数据</label>
+        <select id="sample-select">
+          <option value="cities">35 城市 GDP 与财政收入（2018-2024）</option>
+          <option value="multi_indicators">多维度城市指标（雷达图）</option>
+          <option value="category">分类对比数据</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>或粘贴 JSON 数据</label>
+        <textarea id="data-input" rows="8" placeholder='[{"city":"上海","year":2024,"gdp":50000,"fiscal_revenue":8000}, ...]'></textarea>
+      </div>
+
+      <div style="display: flex; gap: 1rem;">
+        <button class="btn" id="btn-auto-viz">自动生成图表</button>
+        <button class="btn btn-secondary" id="btn-profile">查看数据画像</button>
+      </div>
+    </section>
+
+    <section class="card" id="profile-card" style="display: none;">
+      <h2>数据画像</h2>
+      <div id="profile-content"></div>
+    </section>
+
+    <section id="dashboard"></section>
+  </div>
+
+  <script src="/js/api-client.js"></script>
+  <script src="/js/viz-engine.js"></script>
+  <script>
+    const api = new UrbanPulseAPI();
+    const dashboard = new VizDashboard("#dashboard", api, {
+      onDrillDown: (params, chart) => {
+        console.log("下钻：", params, chart);
+        alert(`你点击了：${params.name} = ${params.value}`);
+      },
+    });
+
+    const samples = {
+      cities: [
+        {"city":"上海","year":2020,"gdp":38700,"fiscal_revenue":7046},
+        {"city":"上海","year":2021,"gdp":43214,"fiscal_revenue":7771},
+        {"city":"上海","year":2022,"gdp":44652,"fiscal_revenue":7608},
+        {"city":"上海","year":2023,"gdp":47218,"fiscal_revenue":8312},
+        {"city":"上海","year":2024,"gdp":53926,"fiscal_revenue":9089},
+        {"city":"北京","year":2020,"gdp":36102,"fiscal_revenue":5483},
+        {"city":"北京","year":2021,"gdp":40269,"fiscal_revenue":5932},
+        {"city":"北京","year":2022,"gdp":41610,"fiscal_revenue":5714},
+        {"city":"北京","year":2023,"gdp":43760,"fiscal_revenue":6181},
+        {"city":"北京","year":2024,"gdp":49843,"fiscal_revenue":6852},
+        {"city":"深圳","year":2020,"gdp":27670,"fiscal_revenue":3857},
+        {"city":"深圳","year":2021,"gdp":30664,"fiscal_revenue":4257},
+        {"city":"深圳","year":2022,"gdp":32387,"fiscal_revenue":4012},
+        {"city":"深圳","year":2023,"gdp":34606,"fiscal_revenue":4112},
+        {"city":"深圳","year":2024,"gdp":36801,"fiscal_revenue":4500},
+        {"city":"广州","year":2020,"gdp":25019,"fiscal_revenue":1721},
+        {"city":"广州","year":2021,"gdp":28231,"fiscal_revenue":1883},
+        {"city":"广州","year":2022,"gdp":28839,"fiscal_revenue":1854},
+        {"city":"广州","year":2023,"gdp":30355,"fiscal_revenue":1944},
+        {"city":"广州","year":2024,"gdp":32800,"fiscal_revenue":2100},
+        {"city":"成都","year":2020,"gdp":17716,"fiscal_revenue":1520},
+        {"city":"成都","year":2021,"gdp":19916,"fiscal_revenue":1697},
+        {"city":"成都","year":2022,"gdp":20817,"fiscal_revenue":1722},
+        {"city":"成都","year":2023,"gdp":22074,"fiscal_revenue":1929},
+        {"city":"成都","year":2024,"gdp":23511,"fiscal_revenue":2050},
+        {"city":"杭州","year":2020,"gdp":16106,"fiscal_revenue":2093},
+        {"city":"杭州","year":2021,"gdp":18109,"fiscal_revenue":2386},
+        {"city":"杭州","year":2022,"gdp":18753,"fiscal_revenue":2450},
+        {"city":"杭州","year":2023,"gdp":20059,"fiscal_revenue":2616},
+        {"city":"杭州","year":2024,"gdp":21860,"fiscal_revenue":2800},
+      ],
+      multi_indicators: [
+        {"city":"上海","创新":95,"协调":82,"绿色":78,"开放":96,"共享":88},
+        {"city":"北京","创新":98,"协调":80,"绿色":75,"开放":94,"共享":85},
+        {"city":"深圳","创新":96,"协调":78,"绿色":80,"开放":95,"共享":83},
+        {"city":"广州","创新":82,"协调":85,"绿色":78,"开放":88,"共享":84},
+        {"city":"杭州","创新":90,"协调":80,"绿色":82,"开放":85,"共享":80},
+        {"city":"成都","创新":78,"协调":83,"绿色":80,"开放":75,"共享":82},
+      ],
+      category: [
+        {"category":"制造业","value":120},
+        {"category":"金融业","value":85},
+        {"category":"科技业","value":95},
+        {"category":"服务业","value":70},
+        {"category":"农业","value":30},
+      ],
+    };
+
+    function getData() {
+      const raw = document.getElementById("data-input").value.trim();
+      if (raw) return JSON.parse(raw);
+      const key = document.getElementById("sample-select").value;
+      return samples[key];
+    }
+
+    document.getElementById("sample-select").addEventListener("change", () => {
+      const key = document.getElementById("sample-select").value;
+      document.getElementById("data-input").value = JSON.stringify(samples[key], null, 2);
+    });
+    document.getElementById("sample-select").dispatchEvent(new Event("change"));
+
+    document.getElementById("btn-auto-viz").addEventListener("click", async () => {
+      const data = getData();
+      document.getElementById("dashboard").innerHTML = "<p>正在生成图表...</p>";
+      try {
+        await dashboard.autoRender(data, 4);
+      } catch (err) {
+        document.getElementById("dashboard").innerHTML = `<p style="color:red">错误：${err.message}</p>`;
+      }
+    });
+
+    document.getElementById("btn-profile").addEventListener("click", async () => {
+      const data = getData();
+      try {
+        const result = await api.vizProfile(data);
+        const p = result.profile;
+        let html = `
+          <p><strong>行数：</strong>${p.total_rows}，<strong>列数：</strong>${p.total_cols}</p>
+          <p><strong>时间字段：</strong>${p.time_field || "无"}，<strong>实体字段：</strong>${p.entity_field || "无"}</p>
+          <p><strong>数值字段：</strong>${p.numeric_fields.join(", ") || "无"}</p>
+          <table class="profile-table">
+            <tr><th>字段</th><th>类型</th><th>非空</th><th>唯一值</th><th>最小值</th><th>最大值</th><th>样本</th></tr>
+        `;
+        p.fields.forEach(f => {
+          html += `<tr>
+            <td>${f.name}</td>
+            <td>${f.data_type}</td>
+            <td>${f.non_null_count}</td>
+            <td>${f.unique_count}</td>
+            <td>${f.min_value !== null ? f.min_value.toFixed(2) : "-"}</td>
+            <td>${f.max_value !== null ? f.max_value.toFixed(2) : "-"}</td>
+            <td>${f.sample_values.map(v => JSON.stringify(v)).join(", ")}</td>
+          </tr>`;
+        });
+        html += "</table>";
+        document.getElementById("profile-content").innerHTML = html;
+        document.getElementById("profile-card").style.display = "block";
+      } catch (err) {
+        alert("画像失败：" + err.message);
+      }
+    });
+  </script>
+</body>
+</html>

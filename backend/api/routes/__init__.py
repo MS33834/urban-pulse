@@ -15,6 +15,8 @@ from backend.api.routes.regions import router as regions_router
 from backend.api.routes.risk import router as risk_router
 from backend.api.routes.static import router as static_router
 from backend.api.routes.validation import router as validation_router
+from backend.api.routes.viz import router as viz_router
+from backend.api.routes.models import router as models_router
 
 __all__ = [
     "analysis_router",
@@ -30,4 +32,6 @@ __all__ = [
     "risk_router",
     "static_router",
     "validation_router",
+    "viz_router",
+    "models_router",
 ]

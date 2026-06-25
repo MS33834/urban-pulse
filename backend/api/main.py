@@ -11,7 +11,7 @@ from datetime import datetime
 from pathlib import Path
 
 import uvicorn
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, Response
@@ -185,10 +185,12 @@ from backend.api.routes import (
     health_router,
     index_router,
     industries_router,
+    models_router,
     regions_router,
     risk_router,
     static_router,
     validation_router,
+    viz_router,
 )
 
 app.include_router(data_router, prefix=settings.API_V1_STR)
@@ -203,6 +205,8 @@ app.include_router(risk_router, prefix=settings.API_V1_STR)
 app.include_router(validation_router, prefix=settings.API_V1_STR)
 app.include_router(index_router, prefix=settings.API_V1_STR)
 app.include_router(industries_router, prefix=settings.API_V1_STR)
+app.include_router(viz_router, prefix=settings.API_V1_STR)
+app.include_router(models_router, prefix=settings.API_V1_STR)
 app.include_router(static_router)
 
 
@@ -244,6 +248,7 @@ def _apply_auth_to_write_routes() -> None:
 _apply_auth_to_write_routes()
 
 frontend_index = Path(__file__).parent.parent.parent / "frontend" / "index.html"
+frontend_dir = Path(__file__).parent.parent.parent / "frontend"
 
 
 @app.get("/dashboard", tags=["页面"])
@@ -251,6 +256,30 @@ async def get_dashboard():
     if frontend_index.exists():
         return FileResponse(frontend_index, media_type="text/html")
     return {"error": "frontend not built", "hint": "frontend/index.html missing"}
+
+
+@app.get("/viz-demo.html", tags=["页面"])
+async def get_viz_demo():
+    demo_path = frontend_dir / "viz-demo.html"
+    if demo_path.exists():
+        return FileResponse(demo_path, media_type="text/html")
+    return {"error": "viz demo not built", "hint": "frontend/viz-demo.html missing"}
+
+
+@app.get("/css/{path:path}", tags=["静态资源"], include_in_schema=False)
+async def get_css(path: str):
+    file_path = frontend_dir / "css" / path
+    if file_path.exists() and file_path.is_file():
+        return FileResponse(file_path, media_type="text/css")
+    raise HTTPException(status_code=404, detail="CSS not found")
+
+
+@app.get("/js/{path:path}", tags=["静态资源"], include_in_schema=False)
+async def get_js(path: str):
+    file_path = frontend_dir / "js" / path
+    if file_path.exists() and file_path.is_file():
+        return FileResponse(file_path, media_type="application/javascript")
+    raise HTTPException(status_code=404, detail="JS not found")
 
 
 @app.get("/", tags=["根路径"])
