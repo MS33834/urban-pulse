@@ -27,7 +27,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-          cache-dependency-path: requirements.txt
+          cache-dependency-path: pyproject.toml
       - name: Install lint tools
         run: |
           pip install --upgrade pip
@@ -48,12 +48,13 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-          cache-dependency-path: requirements.txt
+          cache-dependency-path: pyproject.toml
       - name: Install runtime + type check tools
         run: |
           pip install --upgrade pip
-          pip install -r requirements.txt mypy
-          pip install pandas-stubs types-PyYAML types-reportlab
+          pip install -e .[data,forecast,cli,dev]
+          pip install -e plugins/urban-pulse-demo
+          pip install mypy pandas-stubs types-PyYAML types-reportlab
       - name: Run mypy
         run: mypy backend/ config/ scripts/
 
@@ -80,22 +81,74 @@ jobs:
           pip install --upgrade pip
           pip install -e .[data,forecast,cli,dev]
           pip install -e plugins/urban-pulse-demo
-      - name: Run tests
+      - name: Run tests with coverage
         run: |
-          pytest tests/backend/ -q --tb=short --cov=backend --cov-report=term --cov-fail-under=30
+          pytest -q --tb=short --cov=backend --cov-report=term --cov-fail-under=40
+
+  contract:
+    name: API Contract Tests
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -e .[dev]
+          pip install -e plugins/urban-pulse-demo
+      - name: Run contract tests
+        run: pytest tests/backend/test_api_contracts.py -q --tb=short
+
+  e2e:
+    name: E2E Browser Tests
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential gfortran && rm -rf /var/lib/apt/lists/*
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -e .[data,forecast,cli,dev]
+          pip install -e plugins/urban-pulse-demo
+      - name: Install Playwright browsers
+        run: playwright install --with-deps chromium
+      - name: Run E2E tests
+        run: pytest tests/e2e --e2e -q --tb=short
 
   security:
     name: Dependency Audit
     needs: test
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install pip-audit
-      - run: pip-audit -r requirements.txt
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install audit tools
+        run: |
+          pip install --upgrade pip
+          pip install pip-audit
+      - name: Audit production dependencies
+        run: pip-audit -r requirements.txt
+      - name: Run custom security audit
+        run: python scripts/security_audit.py
 
   build:
     name: Build Static Site
@@ -108,6 +161,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -e .[data,forecast,cli,dev]
+          pip install -e plugins/urban-pulse-demo
       - name: Build showcase site
         run: python scripts/build_site.py
       - name: Upload Pages artifact

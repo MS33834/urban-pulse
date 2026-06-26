@@ -1,11 +1,101 @@
+# GitCode CI 流水线 (.codechina-ci.yml)
+# 语法兼容 GitLab CI，阶段：lint → test → security → deploy
+
+stages:
+  - lint
+  - test
+  - security
+  - deploy
+
+variables:
+  PYTHON_VERSION: "3.12"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  key: "${CI_COMMIT_REF_SLUG}"
+  paths:
+    - .cache/pip
+
+# --------------------------------------------------------------------------- #
+# lint
+# --------------------------------------------------------------------------- #
+
+lint:
+  stage: lint
+  image: python:${PYTHON_VERSION}
+  script:
+    - pip install --upgrade pip
+    - pip install ruff
+    - ruff check backend/ config/ scripts/ tests/
+    - ruff format --check .
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# --------------------------------------------------------------------------- #
+# test
+# --------------------------------------------------------------------------- #
+
+test:
+  stage: test
+  image: python:${PYTHON_VERSION}
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends build-essential gfortran && rm -rf /var/lib/apt/lists/*
+  script:
+    - pip install --upgrade pip
+    - pip install -e .[data,forecast,cli,dev]
+    - pip install -e plugins/urban-pulse-demo
+    - pytest -q --tb=short --cov=backend --cov-report=term --cov-fail-under=40
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# --------------------------------------------------------------------------- #
+# security
+# --------------------------------------------------------------------------- #
+
+security:
+  stage: security
+  image: python:${PYTHON_VERSION}
+  script:
+    - pip install --upgrade pip
+    - pip install pip-audit
+    - pip-audit -r requirements.txt
+    - python scripts/security_audit.py
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# --------------------------------------------------------------------------- #
+# build + deploy (GitCode Pages)
+# --------------------------------------------------------------------------- #
+
+build_site:
+  stage: deploy
+  image: python:${PYTHON_VERSION}
+  script:
+    - pip install --upgrade pip
+    - pip install -e .[data,forecast,cli,dev]
+    - pip install -e plugins/urban-pulse-demo
+    - python scripts/build_site.py
+  artifacts:
+    paths:
+      - public
+      - _site
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
 pages:
   stage: deploy
   image: alpine:3.20
+  needs:
+    - job: build_site
+      artifacts: true
   script:
     - echo "Deploying static site to GitCode Pages..."
     - test -f public/index.html
   artifacts:
     paths:
       - public
-  only:
-    - main
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
