@@ -153,6 +153,30 @@ class Settings(BaseSettings):
         return self
 
 
+class _JsonFormatter(logging.Formatter):
+    """轻量级 JSON 日志格式化器(无第三方依赖)。"""
+
+    def format(self, record: logging.LogRecord) -> str:
+        import json
+
+        payload = {
+            "timestamp": self.formatTime(record),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "module": record.module,
+            "function": record.funcName,
+            "line": record.lineno,
+        }
+        if record.exc_info:
+            payload["exception"] = self.formatException(record.exc_info)
+        # 合并 extra 字段
+        for key, value in record.__dict__.items():
+            if key not in payload and not key.startswith("_"):
+                payload[key] = value
+        return json.dumps(payload, ensure_ascii=False, default=str)
+
+
 def setup_logging(settings: Settings):
     """Configure the application-wide logging system."""
     log_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)
@@ -161,7 +185,17 @@ def setup_logging(settings: Settings):
     if settings.LOG_FILE:
         handlers.append(logging.FileHandler(settings.LOG_FILE, encoding="utf-8"))
 
-    logging.basicConfig(level=log_level, format=settings.LOG_FORMAT, handlers=handlers)
+    if settings.LOG_FORMAT.lower() == "json":
+        formatter: logging.Formatter = _JsonFormatter()
+    else:
+        formatter = logging.Formatter(settings.LOG_FORMAT)
+
+    for handler in handlers:
+        handler.setFormatter(formatter)
+
+    logging.basicConfig(level=log_level, handlers=handlers)
+    # 第三方库通常较吵,保持 WARNING 以上
+    logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 
 
 settings = Settings()
