@@ -92,6 +92,8 @@ dev = [
     "hypothesis>=6.100",
     "httpx2>=0.27",
     "ruff>=0.4",
+    "jsonschema>=4.0",
+    "playwright>=1.44",
 ]
 
 [tool.pytest.ini_options]
@@ -104,6 +106,8 @@ markers = [
     "unit: fast unit tests with no external dependencies",
     "integration: tests that exercise multiple components",
     "slow: tests that take > 1s",
+    "e2e: browser-based end-to-end tests requiring playwright",
+    "contract: API schema contract tests",
 ]
 
 [tool.coverage.run]
