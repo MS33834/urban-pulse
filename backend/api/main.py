@@ -21,6 +21,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
 from backend.api.auth import get_current_user
+from backend.api.compression import CompressionMiddleware
 from backend.api.ratelimit import limiter
 from backend.api.security_headers import SecurityHeadersMiddleware
 from config import settings
@@ -169,6 +170,10 @@ app.add_middleware(SecurityHeadersMiddleware, hsts=ENABLE_HSTS)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
+
+# 响应压缩 — 作为最外层中间件,在 SecurityHeadersMiddleware 之后压缩最终响应体
+# 对 text/* / application/json / application/javascript 等大于 200B 的响应启用 gzip/br
+app.add_middleware(CompressionMiddleware, minimum_size=200, compresslevel=6)
 
 # ----- Routes -----
 from backend.api.routes import (

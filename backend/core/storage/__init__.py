@@ -64,6 +64,17 @@ def get_connection() -> sqlite3.Connection:
                 conn.execute("PRAGMA busy_timeout=5000")
                 # 正常同步级别:WAL 下 fsync 只作用于 WAL,性能可接受
                 conn.execute("PRAGMA synchronous=NORMAL")
+                # 4KB 页大小,与常见文件系统块对齐
+                conn.execute("PRAGMA page_size=4096")
+                # 64MB 页缓存(负值表示 KB),提升热查询命中率
+                conn.execute("PRAGMA cache_size=-64000")
+                # 临时表/索引放内存,减少小查询的磁盘 I/O
+                conn.execute("PRAGMA temp_store=MEMORY")
+                # 内存映射 256MB,只读路径可走 mmap(失败也不影响功能)
+                try:
+                    conn.execute("PRAGMA mmap_size=268435456")
+                except sqlite3.OperationalError:
+                    logger.debug("当前环境不支持 SQLite mmap,已回退到普通 I/O")
                 _connection = conn
                 logger.info("SQLite database opened: %s", db_path)
                 # 创建数据库文件后设置权限
