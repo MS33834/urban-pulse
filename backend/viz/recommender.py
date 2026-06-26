@@ -6,11 +6,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 from backend.viz.profiler import DataProfile
-from backend.viz.schema import ChartType, ChartConfig, DataSource, Encoding
+from backend.viz.schema import ChartConfig, ChartType, DataSource, Encoding
 
 
 @dataclass

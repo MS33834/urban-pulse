@@ -410,7 +410,6 @@ def render_racing_bar(config: ChartConfig, data: list[dict[str, Any]]) -> dict[s
 
     # 收集每个时间点的数据
     time_values = sorted({str(row.get(time_field)) for row in data if row.get(time_field) is not None})
-    entities = sorted({str(row.get(entity_field)) for row in data if row.get(entity_field) is not None})
 
     # 为每个时间点生成一个系列（取 Top N）
     top_n = config.extra.get("top_n", 10)

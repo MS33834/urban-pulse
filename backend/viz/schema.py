@@ -7,13 +7,13 @@
 
 from __future__ import annotations
 
-from enum import Enum
-from typing import Any, Literal
+from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
 
-class ChartType(str, Enum):
+class ChartType(StrEnum):
     """支持的图表类型"""
 
     LINE = "line"
@@ -94,7 +94,7 @@ class ChartConfig(BaseModel):
     extra: dict[str, Any] = Field(default_factory=dict, description="图表类型专有配置")
 
     @model_validator(mode="after")
-    def check_required_encoding(self) -> "ChartConfig":
+    def check_required_encoding(self) -> ChartConfig:
         ct = self.chart_type
         enc = self.encoding
         if ct in (ChartType.LINE, ChartType.BAR, ChartType.SCATTER, ChartType.AREA):

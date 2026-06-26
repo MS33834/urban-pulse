@@ -42,7 +42,7 @@ class VARModel:
         self.residuals: pd.DataFrame | None = None
         self.fitted: pd.DataFrame | None = None
 
-    def fit(self, df: pd.DataFrame) -> "VARModel":
+    def fit(self, df: pd.DataFrame) -> VARModel:
         """
         拟合 VAR 模型。
 
@@ -52,7 +52,6 @@ class VARModel:
         df = df.dropna()
         self.variables = list(df.columns)
         n = len(df)
-        k = len(self.variables)
 
         # 构建滞后矩阵
         X = np.ones((n - self.lags, 1))

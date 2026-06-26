@@ -456,7 +456,6 @@ class CityDataAggregator:
         if len(values) < 2:
             return "insufficient_data"
 
-        n = len(values)
         y_mean = statistics.mean(values)
         if y_mean == 0:
             return "stable"

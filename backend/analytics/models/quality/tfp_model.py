@@ -29,7 +29,7 @@ class TFPModel:
         self.beta: float | None = None
         self.tfp_values: pd.Series | None = None
 
-    def fit(self, df: pd.DataFrame) -> "TFPModel":
+    def fit(self, df: pd.DataFrame) -> TFPModel:
         data = df[[self.output_col, self.capital_col, self.labor_col]].dropna().copy()
         data = data[data[self.output_col] > 0]
         data = data[data[self.capital_col] > 0]

@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import numpy as np
 import pandas as pd
 
 
@@ -34,7 +33,7 @@ class XGBoostForecastModel:
                 data[f"{col}_lag{lag}"] = data[col].shift(lag)
         return data.dropna()
 
-    def fit(self, df: pd.DataFrame) -> "XGBoostForecastModel":
+    def fit(self, df: pd.DataFrame) -> XGBoostForecastModel:
         data = self._build_lagged_features(df)
         X = data.drop(columns=[self.target] + self.features)
         y = data[self.target]
