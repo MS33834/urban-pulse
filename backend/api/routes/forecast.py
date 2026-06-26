@@ -41,12 +41,35 @@ class CompareRequest(BaseModel):
     indicator: str = Field("gdp", description="要预测的指标,默认 gdp")
     forecast_years: int = Field(5, ge=1, le=20, description="预测年数")
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "city_names": ["深圳", "上海", "北京"],
+                    "indicator": "gdp",
+                    "forecast_years": 5,
+                }
+            ]
+        }
+    }
+
 
 class ProvinceRequest(BaseModel):
     """省级聚合 + 预测"""
 
     indicator: str = Field("gdp", description="要预测的指标")
     forecast_years: int = Field(5, ge=1, le=20, description="预测年数")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "indicator": "gdp",
+                    "forecast_years": 5,
+                }
+            ]
+        }
+    }
 
 
 # --------------------------------------------------------------------------- #

@@ -29,6 +29,24 @@ class AnalysisRequest(BaseModel):
     year: int = Field(AnalysisConfig.DEFAULT_YEAR, ge=1900, le=2200, description="分析年份")
     data: dict[str, Any] | None = None
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "region": "深圳",
+                    "industry": "半导体",
+                    "year": 2025,
+                    "data": {
+                        "land_price": 800.0,
+                        "salary_level": 15000.0,
+                        "energy_cost": 1.2,
+                        "financing_cost": 4.5,
+                    },
+                }
+            ]
+        }
+    }
+
 
 @router.post("/enterprise", summary="企业端综合分析")
 def enterprise_analysis(request: AnalysisRequest):

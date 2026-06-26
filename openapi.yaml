@@ -1,0 +1,5064 @@
+components:
+  schemas:
+    AggregationRequest:
+      description: 聚合分析请求
+      examples:
+      - group_by:
+        - city
+        limit: 5
+        metrics:
+        - sum
+        sort_by: sum
+        sort_order: desc
+      properties:
+        filters:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          description: 过滤条件
+          title: Filters
+        group_by:
+          description: 分组字段
+          items:
+            type: string
+          minItems: 1
+          title: Group By
+          type: array
+        limit:
+          anyOf:
+          - maximum: 1000.0
+            minimum: 1.0
+            type: integer
+          - type: 'null'
+          description: 限制数量
+          title: Limit
+        metrics:
+          description: 聚合指标
+          items:
+            type: string
+          minItems: 1
+          title: Metrics
+          type: array
+        sort_by:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 排序字段
+          title: Sort By
+        sort_order:
+          default: desc
+          description: 排序顺序
+          pattern: ^(asc|desc)$
+          title: Sort Order
+          type: string
+      required:
+      - group_by
+      - metrics
+      title: AggregationRequest
+      type: object
+    AnalysisRequest:
+      description: 分析请求
+      examples:
+      - data:
+          energy_cost: 1.2
+          financing_cost: 4.5
+          land_price: 800.0
+          salary_level: 15000.0
+        industry: 半导体
+        region: 深圳
+        year: 2025
+      properties:
+        data:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Data
+        industry:
+          default: 半导体
+          title: Industry
+          type: string
+        region:
+          default: 深圳
+          title: Region
+          type: string
+        year:
+          default: 2025
+          description: 分析年份
+          maximum: 2200.0
+          minimum: 1900.0
+          title: Year
+          type: integer
+      title: AnalysisRequest
+      type: object
+    ArchiveCreateRequest:
+      description: 创建预测存档请求
+      properties:
+        city_name:
+          description: 城市名称
+          minLength: 1
+          title: City Name
+          type: string
+        forecast_years:
+          default: 5
+          description: 预测年数
+          maximum: 20.0
+          minimum: 1.0
+          title: Forecast Years
+          type: integer
+        indicator:
+          default: gdp
+          description: '指标代码,支持: data_quality, fiscal_revenue, gdp, gdp_growth, industry_high_tech_ratio,
+            land_price, local_support_rate, policy_coverage, population, rd_intensity,
+            rd_subsidy, supplier_count, tax_reduction'
+          title: Indicator
+          type: string
+        model:
+          default: ensemble
+          description: 模型标识，默认 ensemble
+          title: Model
+          type: string
+        plugin_type:
+          default: forecaster
+          description: 插件类型
+          title: Plugin Type
+          type: string
+      required:
+      - city_name
+      title: ArchiveCreateRequest
+      type: object
+    ArchiveSnapshotOut:
+      description: 预测快照输出
+      properties:
+        actual_value:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Actual Value
+        city_code:
+          title: City Code
+          type: string
+        confidence_interval:
+          anyOf:
+          - maxItems: 2
+            minItems: 2
+            prefixItems:
+            - type: number
+            - type: number
+            type: array
+          - type: 'null'
+          title: Confidence Interval
+        forecast_date:
+          title: Forecast Date
+          type: string
+        forecast_id:
+          title: Forecast Id
+          type: string
+        indicator:
+          title: Indicator
+          type: string
+        metadata:
+          additionalProperties: true
+          title: Metadata
+          type: object
+        model:
+          title: Model
+          type: string
+        plugin_type:
+          title: Plugin Type
+          type: string
+        predicted_value:
+          title: Predicted Value
+          type: number
+        target_year:
+          title: Target Year
+          type: integer
+      required:
+      - forecast_id
+      - model
+      - city_code
+      - indicator
+      - forecast_date
+      - target_year
+      - predicted_value
+      - plugin_type
+      title: ArchiveSnapshotOut
+      type: object
+    AutoVizRequest:
+      description: 自动可视化请求
+      properties:
+        data:
+          description: 数据行列表
+          items:
+            additionalProperties: true
+            type: object
+          minItems: 1
+          title: Data
+          type: array
+        max_charts:
+          default: 3
+          description: 返回图表数量
+          maximum: 10.0
+          minimum: 1.0
+          title: Max Charts
+          type: integer
+      required:
+      - data
+      title: AutoVizRequest
+      type: object
+    BackfillByMatchRequest:
+      description: 按条件批量回填真实值请求
+      properties:
+        actual_value:
+          description: 真实值
+          title: Actual Value
+          type: number
+        city_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: City Code
+        indicator:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Indicator
+        model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Model
+        target_year:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Target Year
+      required:
+      - actual_value
+      title: BackfillByMatchRequest
+      type: object
+    BackfillRequest:
+      description: 回填真实值请求
+      properties:
+        actual_value:
+          description: 真实值
+          title: Actual Value
+          type: number
+      required:
+      - actual_value
+      title: BackfillRequest
+      type: object
+    BatchForecastRequest:
+      description: 批量区域预测请求
+      properties:
+        codes:
+          description: 区域编码列表
+          items:
+            type: string
+          maxItems: 50
+          minItems: 1
+          title: Codes
+          type: array
+        forecast_years:
+          default: 5
+          description: 预测年数
+          maximum: 20.0
+          minimum: 1.0
+          title: Forecast Years
+          type: integer
+        indicator:
+          default: gdp
+          description: '预测指标,支持: data_quality, fiscal_revenue, gdp, gdp_growth, industry_high_tech_ratio,
+            land_price, local_support_rate, policy_coverage, population, rd_intensity,
+            rd_subsidy, supplier_count, tax_reduction'
+          title: Indicator
+          type: string
+      required:
+      - codes
+      title: BatchForecastRequest
+      type: object
+    BenchmarkRequest:
+      description: 城市对标请求
+      properties:
+        peers:
+          additionalProperties:
+            additionalProperties:
+              type: number
+            type: object
+          description: '对标城市集 {city_name: {indicator_id: value}}'
+          title: Peers
+          type: object
+        target_city:
+          description: 目标城市名称
+          minLength: 1
+          title: Target City
+          type: string
+        target_values:
+          anyOf:
+          - additionalProperties:
+              type: number
+            type: object
+          - type: 'null'
+          description: 目标城市指标原始值，为空时使用演示数据
+          title: Target Values
+        year:
+          default: 2024
+          description: 数据年份
+          maximum: 2200.0
+          minimum: 1900.0
+          title: Year
+          type: integer
+      required:
+      - target_city
+      - peers
+      title: BenchmarkRequest
+      type: object
+    BenchmarkResponse:
+      description: 城市对标结果输出
+      properties:
+        best_practice:
+          additionalProperties: true
+          title: Best Practice
+          type: object
+        rankings:
+          items:
+            additionalProperties: true
+            type: object
+          title: Rankings
+          type: array
+        similar_cities:
+          items:
+            additionalProperties: true
+            type: object
+          title: Similar Cities
+          type: array
+        target_city:
+          title: Target City
+          type: string
+        target_score:
+          title: Target Score
+          type: number
+        target_status:
+          title: Target Status
+          type: string
+      required:
+      - target_city
+      - target_score
+      - target_status
+      - rankings
+      - similar_cities
+      - best_practice
+      title: BenchmarkResponse
+      type: object
+    Body_import_indicators_api_v1_health_import_post:
+      properties:
+        file:
+          contentMediaType: application/octet-stream
+          description: 要上传的 Excel 或 CSV 文件
+          title: File
+          type: string
+      required:
+      - file
+      title: Body_import_indicators_api_v1_health_import_post
+      type: object
+    Body_upload_dataset_api_v1_datasets_upload_post:
+      properties:
+        description:
+          default: ''
+          title: Description
+          type: string
+        file:
+          contentMediaType: application/octet-stream
+          title: File
+          type: string
+        name:
+          title: Name
+          type: string
+      required:
+      - file
+      title: Body_upload_dataset_api_v1_datasets_upload_post
+      type: object
+    Body_upload_survey_data_api_v1_regions_survey_upload_post:
+      properties:
+        file:
+          contentMediaType: application/octet-stream
+          description: CSV/Excel 调查数据文件
+          title: File
+          type: string
+      required:
+      - file
+      title: Body_upload_survey_data_api_v1_regions_survey_upload_post
+      type: object
+    CEHIResultOut:
+      additionalProperties: true
+      description: CEHI 计算结果输出
+      properties:
+        advice:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Advice
+        cehi_score:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Cehi Score
+        city:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: City
+        city_name:
+          title: City Name
+          type: string
+        dimension_scores:
+          items:
+            $ref: '#/components/schemas/DimensionScoreOut'
+          title: Dimension Scores
+          type: array
+        dimensions:
+          anyOf:
+          - additionalProperties:
+              type: number
+            type: object
+          - type: 'null'
+          title: Dimensions
+        level:
+          $ref: '#/components/schemas/HealthLevelOut'
+        recommendations:
+          items:
+            type: string
+          title: Recommendations
+          type: array
+        score:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Score
+        status:
+          title: Status
+          type: string
+        status_name:
+          title: Status Name
+          type: string
+        strengths:
+          anyOf:
+          - items:
+              additionalProperties: true
+              type: object
+            type: array
+          - type: 'null'
+          title: Strengths
+        suggestions:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Suggestions
+        top_strengths:
+          items:
+            $ref: '#/components/schemas/IndicatorScoreOut'
+          title: Top Strengths
+          type: array
+        top_weaknesses:
+          items:
+            $ref: '#/components/schemas/IndicatorScoreOut'
+          title: Top Weaknesses
+          type: array
+        total_score:
+          title: Total Score
+          type: number
+        weaknesses:
+          anyOf:
+          - items:
+              additionalProperties: true
+              type: object
+            type: array
+          - type: 'null'
+          title: Weaknesses
+        year:
+          title: Year
+          type: integer
+      required:
+      - city_name
+      - year
+      - total_score
+      - status
+      - status_name
+      - level
+      - dimension_scores
+      - top_strengths
+      - top_weaknesses
+      - recommendations
+      title: CEHIResultOut
+      type: object
+    CalculateRequest:
+      additionalProperties: true
+      description: CEHI 计算请求
+      properties:
+        city_name:
+          description: 城市名称
+          minLength: 1
+          title: City Name
+          type: string
+        indicator_values:
+          anyOf:
+          - additionalProperties:
+              type: number
+            type: object
+          - type: 'null'
+          description: '指标原始值 {indicator_id: value}，为空时使用演示数据'
+          title: Indicator Values
+        year:
+          description: 数据年份
+          maximum: 2200.0
+          minimum: 1900.0
+          title: Year
+          type: integer
+      required:
+      - city_name
+      - year
+      title: CalculateRequest
+      type: object
+    ChartConfig:
+      description: 通用图表配置协议
+      properties:
+        chart_type:
+          $ref: '#/components/schemas/ChartType'
+        data_source:
+          $ref: '#/components/schemas/DataSource'
+        encoding:
+          $ref: '#/components/schemas/Encoding'
+        extra:
+          additionalProperties: true
+          description: 图表类型专有配置
+          title: Extra
+          type: object
+        interaction:
+          $ref: '#/components/schemas/Interaction'
+        style:
+          $ref: '#/components/schemas/Style'
+        subtitle:
+          default: ''
+          title: Subtitle
+          type: string
+        title:
+          default: ''
+          title: Title
+          type: string
+        version:
+          default: '1.0'
+          title: Version
+          type: string
+      required:
+      - chart_type
+      - data_source
+      title: ChartConfig
+      type: object
+    ChartType:
+      description: 支持的图表类型
+      enum:
+      - line
+      - bar
+      - scatter
+      - pie
+      - radar
+      - heatmap
+      - map
+      - sankey
+      - box
+      - racing_bar
+      - gauge
+      - area
+      - scatter_matrix
+      title: ChartType
+      type: string
+    CitiesCompareRequest:
+      description: 城市对比请求 (L-02 替换裸 request.json())
+      properties:
+        city_codes:
+          description: 城市代码列表,1-20 个
+          items:
+            type: string
+          maxItems: 20
+          minItems: 1
+          title: City Codes
+          type: array
+        indicators:
+          description: 对比指标列表,最多 10 个
+          items:
+            type: string
+          maxItems: 10
+          title: Indicators
+          type: array
+        year_end:
+          default: 2025
+          description: 结束年份
+          maximum: 2200.0
+          minimum: 1900.0
+          title: Year End
+          type: integer
+        year_start:
+          default: 2020
+          description: 开始年份
+          maximum: 2200.0
+          minimum: 1900.0
+          title: Year Start
+          type: integer
+      required:
+      - city_codes
+      title: CitiesCompareRequest
+      type: object
+    CompareRequest:
+      description: 多城市 × 单指标 预测对比
+      examples:
+      - city_names:
+        - 深圳
+        - 上海
+        - 北京
+        forecast_years: 5
+        indicator: gdp
+      properties:
+        city_names:
+          description: 城市名称列表
+          items:
+            type: string
+          maxItems: 20
+          minItems: 1
+          title: City Names
+          type: array
+        forecast_years:
+          default: 5
+          description: 预测年数
+          maximum: 20.0
+          minimum: 1.0
+          title: Forecast Years
+          type: integer
+        indicator:
+          default: gdp
+          description: 要预测的指标,默认 gdp
+          title: Indicator
+          type: string
+      required:
+      - city_names
+      title: CompareRequest
+      type: object
+    ComputeRequest:
+      properties:
+        city_codes:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: City Codes
+        method:
+          default: entropy
+          title: Method
+          type: string
+      title: ComputeRequest
+      type: object
+    CorrelationRequest:
+      description: 相关性分析请求
+      examples:
+      - city_codes:
+        - CN-GD-SZ
+        - CN-SH-SH
+        - CN-BJ-BJ
+        indicators:
+        - gdp
+        - population
+        year_end: 2025
+        year_start: 2016
+      properties:
+        city_codes:
+          description: 城市代码列表,至少 2 个
+          items:
+            type: string
+          maxItems: 20
+          minItems: 2
+          title: City Codes
+          type: array
+        indicators:
+          description: 指标列表,至少 2 个
+          items:
+            type: string
+          maxItems: 10
+          minItems: 2
+          title: Indicators
+          type: array
+        year_end:
+          description: 结束年份
+          maximum: 2200.0
+          minimum: 1900.0
+          title: Year End
+          type: integer
+        year_start:
+          description: 开始年份
+          maximum: 2200.0
+          minimum: 1900.0
+          title: Year Start
+          type: integer
+      required:
+      - year_start
+      - year_end
+      - city_codes
+      - indicators
+      title: CorrelationRequest
+      type: object
+    DPSRInput:
+      description: DPSR 韧性模型输入
+      properties:
+        data:
+          description: 数据行列表
+          items:
+            additionalProperties: true
+            type: object
+          minItems: 1
+          title: Data
+          type: array
+        driver_indicators:
+          items:
+            type: string
+          title: Driver Indicators
+          type: array
+        entity_col:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 实体列名
+          title: Entity Col
+        pressure_indicators:
+          items:
+            type: string
+          title: Pressure Indicators
+          type: array
+        response_indicators:
+          items:
+            type: string
+          title: Response Indicators
+          type: array
+        state_indicators:
+          items:
+            type: string
+          title: State Indicators
+          type: array
+        weights:
+          anyOf:
+          - additionalProperties:
+              type: number
+            type: object
+          - type: 'null'
+          title: Weights
+      required:
+      - data
+      title: DPSRInput
+      type: object
+    DataInput:
+      description: 数据输入
+      properties:
+        data:
+          description: 数据行列表
+          items:
+            additionalProperties: true
+            type: object
+          minItems: 1
+          title: Data
+          type: array
+        title:
+          default: ''
+          title: Title
+          type: string
+      required:
+      - data
+      title: DataInput
+      type: object
+    DataSource:
+      description: 数据源定义
+      properties:
+        category_field:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 分类字段名，如 region
+          title: Category Field
+        data:
+          anyOf:
+          - items:
+              additionalProperties: true
+              type: object
+            type: array
+          - type: 'null'
+          description: 内联数据，优先级高于 dataset_id
+          title: Data
+        dataset_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 数据集 ID，用于从 records 表读取
+          title: Dataset Id
+        entity_field:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 实体字段名，如 city
+          title: Entity Field
+        time_field:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 时间字段名，如 year
+          title: Time Field
+        value_fields:
+          description: 数值字段列表
+          items:
+            type: string
+          title: Value Fields
+          type: array
+      title: DataSource
+      type: object
+    DimensionOut:
+      description: 维度定义输出
+      properties:
+        description:
+          title: Description
+          type: string
+        id:
+          title: Id
+          type: string
+        indicators:
+          items:
+            $ref: '#/components/schemas/IndicatorOut'
+          title: Indicators
+          type: array
+        name:
+          title: Name
+          type: string
+        weight:
+          title: Weight
+          type: number
+      required:
+      - id
+      - name
+      - weight
+      - description
+      - indicators
+      title: DimensionOut
+      type: object
+    DimensionScoreOut:
+      description: 维度评分输出
+      properties:
+        dimension:
+          $ref: '#/components/schemas/DimensionOut'
+        indicator_scores:
+          items:
+            $ref: '#/components/schemas/IndicatorScoreOut'
+          title: Indicator Scores
+          type: array
+        score:
+          title: Score
+          type: number
+        status:
+          title: Status
+          type: string
+        status_name:
+          title: Status Name
+          type: string
+        weight:
+          title: Weight
+          type: number
+      required:
+      - dimension
+      - score
+      - status
+      - status_name
+      - indicator_scores
+      - weight
+      title: DimensionScoreOut
+      type: object
+    Encoding:
+      description: 视觉编码定义
+      properties:
+        color:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 颜色分组字段
+          title: Color
+        facet:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 分面字段
+          title: Facet
+        radius:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 雷达图半径字段
+          title: Radius
+        shape:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 形状编码字段
+          title: Shape
+        size:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 大小编码字段
+          title: Size
+        theta:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 饼图角度字段
+          title: Theta
+        x:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: X 轴字段
+          title: X
+        y:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Y 轴字段
+          title: Y
+      title: Encoding
+      type: object
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          title: Detail
+          type: array
+      title: HTTPValidationError
+      type: object
+    HealthLevelOut:
+      description: 健康等级输出
+      properties:
+        color:
+          title: Color
+          type: string
+        description:
+          title: Description
+          type: string
+        emoji:
+          title: Emoji
+          type: string
+        level:
+          title: Level
+          type: string
+        min_score:
+          title: Min Score
+          type: number
+        name:
+          title: Name
+          type: string
+      required:
+      - level
+      - name
+      - color
+      - emoji
+      - min_score
+      - description
+      title: HealthLevelOut
+      type: object
+    ImportResponse:
+      description: 指标数据导入结果输出
+      properties:
+        indicator_values:
+          additionalProperties:
+            type: number
+          title: Indicator Values
+          type: object
+        invalid:
+          items:
+            additionalProperties: true
+            type: object
+          title: Invalid
+          type: array
+        missing:
+          items:
+            type: string
+          title: Missing
+          type: array
+      required:
+      - indicator_values
+      - missing
+      - invalid
+      title: ImportResponse
+      type: object
+    Indicator:
+      description: 指标响应
+      properties:
+        category:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Category
+        code:
+          title: Code
+          type: string
+        id:
+          title: Id
+          type: integer
+        month:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Month
+        name:
+          title: Name
+          type: string
+        quarter:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Quarter
+        region:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Region
+        source:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source
+        timestamp:
+          title: Timestamp
+          type: string
+        unit:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Unit
+        value:
+          title: Value
+          type: number
+        year:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Year
+      required:
+      - code
+      - name
+      - value
+      - id
+      - timestamp
+      title: Indicator
+      type: object
+    IndicatorCreate:
+      description: 创建指标请求
+      properties:
+        category:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Category
+        code:
+          title: Code
+          type: string
+        month:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Month
+        name:
+          title: Name
+          type: string
+        quarter:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Quarter
+        region:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Region
+        source:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source
+        unit:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Unit
+        value:
+          title: Value
+          type: number
+        year:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Year
+      required:
+      - code
+      - name
+      - value
+      title: IndicatorCreate
+      type: object
+    IndicatorOut:
+      description: 指标定义输出
+      properties:
+        data_source:
+          title: Data Source
+          type: string
+        description:
+          title: Description
+          type: string
+        dimension_id:
+          title: Dimension Id
+          type: string
+        direction:
+          enum:
+          - positive
+          - negative
+          title: Direction
+          type: string
+        id:
+          title: Id
+          type: string
+        name:
+          title: Name
+          type: string
+        thresholds:
+          additionalProperties:
+            type: number
+          title: Thresholds
+          type: object
+        unit:
+          title: Unit
+          type: string
+        weight:
+          title: Weight
+          type: number
+      required:
+      - id
+      - name
+      - dimension_id
+      - unit
+      - direction
+      - description
+      - thresholds
+      - weight
+      - data_source
+      title: IndicatorOut
+      type: object
+    IndicatorScoreOut:
+      description: 指标评分输出
+      properties:
+        contribution:
+          title: Contribution
+          type: number
+        indicator:
+          $ref: '#/components/schemas/IndicatorOut'
+        raw_value:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Raw Value
+        score:
+          title: Score
+          type: number
+        status:
+          title: Status
+          type: string
+        status_name:
+          title: Status Name
+          type: string
+      required:
+      - indicator
+      - raw_value
+      - score
+      - status
+      - status_name
+      - contribution
+      title: IndicatorScoreOut
+      type: object
+    IndicatorsResponse:
+      description: 完整指标体系输出
+      properties:
+        dimensions:
+          items:
+            $ref: '#/components/schemas/DimensionOut'
+          title: Dimensions
+          type: array
+        health_levels:
+          items:
+            $ref: '#/components/schemas/HealthLevelOut'
+          title: Health Levels
+          type: array
+        index_description:
+          title: Index Description
+          type: string
+        index_name:
+          title: Index Name
+          type: string
+        index_short_name:
+          title: Index Short Name
+          type: string
+        indicators:
+          items:
+            $ref: '#/components/schemas/IndicatorOut'
+          title: Indicators
+          type: array
+        schema_version:
+          title: Schema Version
+          type: string
+      required:
+      - index_name
+      - index_short_name
+      - index_description
+      - schema_version
+      - dimensions
+      - indicators
+      - health_levels
+      title: IndicatorsResponse
+      type: object
+    IndustryCreateRequest:
+      description: 创建产业请求
+      properties:
+        category:
+          default: ''
+          description: 产业分类
+          title: Category
+          type: string
+        code:
+          description: 产业编码，如 semiconductor
+          title: Code
+          type: string
+        factors:
+          description: 影响因素列表
+          items:
+            additionalProperties: true
+            type: object
+          title: Factors
+          type: array
+        historical_data:
+          description: 年度历史数据
+          items:
+            additionalProperties: true
+            type: object
+          title: Historical Data
+          type: array
+        key_indicators:
+          additionalProperties: true
+          description: 关键指标定义
+          title: Key Indicators
+          type: object
+        level:
+          $ref: '#/components/schemas/IndustryLevel'
+          default: secondary
+        name:
+          description: 产业名称
+          title: Name
+          type: string
+        region_code:
+          description: 所属区域编码，如 CN-GD-SZ
+          title: Region Code
+          type: string
+      required:
+      - code
+      - name
+      - region_code
+      title: IndustryCreateRequest
+      type: object
+    IndustryForecastRequest:
+      description: 产业预测请求
+      properties:
+        forecast_years:
+          default: 5
+          description: 预测年数
+          maximum: 20.0
+          minimum: 1.0
+          title: Forecast Years
+          type: integer
+        indicator:
+          default: output_value
+          description: 要预测的指标名
+          title: Indicator
+          type: string
+        use_factors:
+          default: true
+          description: 是否启用多因素调整
+          title: Use Factors
+          type: boolean
+      title: IndustryForecastRequest
+      type: object
+    IndustryLevel:
+      description: 产业层级
+      enum:
+      - primary
+      - secondary
+      - tertiary
+      title: IndustryLevel
+      type: string
+    Interaction:
+      description: 交互能力开关
+      properties:
+        animation:
+          default: true
+          title: Animation
+          type: boolean
+        brush:
+          default: false
+          title: Brush
+          type: boolean
+        datazoom:
+          default: true
+          title: Datazoom
+          type: boolean
+        drilldown:
+          default: false
+          title: Drilldown
+          type: boolean
+        legend_toggle:
+          default: true
+          title: Legend Toggle
+          type: boolean
+        toolbox:
+          default: true
+          title: Toolbox
+          type: boolean
+        tooltip:
+          default: true
+          title: Tooltip
+          type: boolean
+        zoom:
+          default: true
+          title: Zoom
+          type: boolean
+      title: Interaction
+      type: object
+    LQInput:
+      description: 区位商模型输入
+      properties:
+        data:
+          description: 数据行列表
+          items:
+            additionalProperties: true
+            type: object
+          minItems: 1
+          title: Data
+          type: array
+        entity_col:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 实体列名
+          title: Entity Col
+        industry_col:
+          default: industry
+          title: Industry Col
+          type: string
+        region_col:
+          default: region
+          title: Region Col
+          type: string
+        value_col:
+          default: value
+          title: Value Col
+          type: string
+      required:
+      - data
+      title: LQInput
+      type: object
+    ProvinceRequest:
+      description: 省级聚合 + 预测
+      examples:
+      - forecast_years: 5
+        indicator: gdp
+      properties:
+        forecast_years:
+          default: 5
+          description: 预测年数
+          maximum: 20.0
+          minimum: 1.0
+          title: Forecast Years
+          type: integer
+        indicator:
+          default: gdp
+          description: 要预测的指标
+          title: Indicator
+          type: string
+      title: ProvinceRequest
+      type: object
+    RegionLevel:
+      description: 区域层级
+      enum:
+      - country
+      - province
+      - city
+      - district
+      title: RegionLevel
+      type: string
+    RegionalRequest:
+      description: 区域分析请求
+      examples:
+      - indicators:
+        - gdp
+        - population
+        region_field: province
+      properties:
+        indicators:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          description: 指标列表
+          title: Indicators
+        region_field:
+          default: province
+          description: 区域字段名
+          title: Region Field
+          type: string
+      title: RegionalRequest
+      type: object
+    RenderRequest:
+      description: 渲染请求
+      properties:
+        config:
+          $ref: '#/components/schemas/ChartConfig'
+        data:
+          description: 数据行列表
+          items:
+            additionalProperties: true
+            type: object
+          minItems: 1
+          title: Data
+          type: array
+      required:
+      - config
+      - data
+      title: RenderRequest
+      type: object
+    RiskAnalyzeRequest:
+      description: 风险分析请求
+      properties:
+        city_name:
+          description: 城市名称
+          minLength: 1
+          title: City Name
+          type: string
+        forecast_years:
+          default: 5
+          description: 预测年数
+          maximum: 20.0
+          minimum: 1.0
+          title: Forecast Years
+          type: integer
+        indicator:
+          default: gdp
+          description: '指标代码,支持: data_quality, fiscal_revenue, gdp, gdp_growth, industry_high_tech_ratio,
+            land_price, local_support_rate, policy_coverage, population, rd_intensity,
+            rd_subsidy, supplier_count, tax_reduction'
+          title: Indicator
+          type: string
+        n_sims:
+          default: 1000
+          description: 蒙特卡洛模拟次数
+          maximum: 10000.0
+          minimum: 100.0
+          title: N Sims
+          type: integer
+      required:
+      - city_name
+      title: RiskAnalyzeRequest
+      type: object
+    RiskAnalyzeResponse:
+      description: 风险分析响应
+      properties:
+        city:
+          title: City
+          type: string
+        engine_stack:
+          additionalProperties: true
+          title: Engine Stack
+          type: object
+        forecast_years:
+          title: Forecast Years
+          type: integer
+        garch:
+          additionalProperties: true
+          title: Garch
+          type: object
+        historical_values:
+          items:
+            type: number
+          title: Historical Values
+          type: array
+        historical_years:
+          items:
+            type: integer
+          title: Historical Years
+          type: array
+        indicator:
+          title: Indicator
+          type: string
+        monte_carlo:
+          additionalProperties: true
+          title: Monte Carlo
+          type: object
+        scenarios:
+          additionalProperties: true
+          title: Scenarios
+          type: object
+        var_95:
+          additionalProperties: true
+          title: Var 95
+          type: object
+        var_99:
+          additionalProperties: true
+          title: Var 99
+          type: object
+        volatility:
+          additionalProperties: true
+          title: Volatility
+          type: object
+      required:
+      - city
+      - indicator
+      - forecast_years
+      - historical_years
+      - historical_values
+      - volatility
+      - garch
+      - var_95
+      - var_99
+      - scenarios
+      - monte_carlo
+      - engine_stack
+      title: RiskAnalyzeResponse
+      type: object
+    Style:
+      description: 样式配置
+      properties:
+        background_color:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Background Color
+        color_palette:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Color Palette
+        height:
+          default: 480
+          title: Height
+          type: integer
+        label_font_size:
+          default: 12
+          title: Label Font Size
+          type: integer
+        theme:
+          default: urban_pulse
+          title: Theme
+          type: string
+        title_font_size:
+          default: 18
+          title: Title Font Size
+          type: integer
+        width:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Width
+      title: Style
+      type: object
+    TFPInput:
+      description: TFP 模型输入
+      properties:
+        capital_col:
+          default: capital
+          title: Capital Col
+          type: string
+        data:
+          description: 数据行列表
+          items:
+            additionalProperties: true
+            type: object
+          minItems: 1
+          title: Data
+          type: array
+        entity_col:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 实体列名
+          title: Entity Col
+        labor_col:
+          default: labor
+          title: Labor Col
+          type: string
+        output_col:
+          default: gdp
+          title: Output Col
+          type: string
+      required:
+      - data
+      title: TFPInput
+      type: object
+    TimeSeriesRequest:
+      description: 时间序列分析请求
+      examples:
+      - city_codes:
+        - CN-GD-SZ
+        - CN-SH-SH
+        indicator: gdp
+        year_end: 2025
+        year_start: 2016
+      properties:
+        city_codes:
+          description: 城市代码列表
+          items:
+            type: string
+          maxItems: 20
+          minItems: 1
+          title: City Codes
+          type: array
+        group_by:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          description: 分组字段
+          title: Group By
+        indicator:
+          description: 指标代码
+          minLength: 1
+          title: Indicator
+          type: string
+        year_end:
+          description: 结束年份
+          maximum: 2200.0
+          minimum: 1900.0
+          title: Year End
+          type: integer
+        year_start:
+          description: 开始年份
+          maximum: 2200.0
+          minimum: 1900.0
+          title: Year Start
+          type: integer
+      required:
+      - year_start
+      - year_end
+      - city_codes
+      - indicator
+      title: TimeSeriesRequest
+      type: object
+    UpdateMetaRequest:
+      properties:
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+      title: UpdateMetaRequest
+      type: object
+    VARInput:
+      description: VAR 模型输入
+      properties:
+        data:
+          description: 数据行列表
+          items:
+            additionalProperties: true
+            type: object
+          minItems: 1
+          title: Data
+          type: array
+        entity_col:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 实体列名
+          title: Entity Col
+        lags:
+          default: 2
+          maximum: 5.0
+          minimum: 1.0
+          title: Lags
+          type: integer
+        steps:
+          default: 3
+          maximum: 10.0
+          minimum: 1.0
+          title: Steps
+          type: integer
+        variables:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          description: 参与建模的变量，为空则使用所有数值列
+          title: Variables
+      required:
+      - data
+      title: VARInput
+      type: object
+    ValidationError:
+      properties:
+        ctx:
+          title: Context
+          type: object
+        input:
+          title: Input
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          title: Location
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+      type: object
+    XGBoostInput:
+      description: XGBoost 模型输入
+      properties:
+        data:
+          description: 数据行列表
+          items:
+            additionalProperties: true
+            type: object
+          minItems: 1
+          title: Data
+          type: array
+        entity_col:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 实体列名
+          title: Entity Col
+        features:
+          description: 特征变量
+          items:
+            type: string
+          title: Features
+          type: array
+        lags:
+          default: 2
+          maximum: 5.0
+          minimum: 1.0
+          title: Lags
+          type: integer
+        steps:
+          default: 3
+          maximum: 10.0
+          minimum: 1.0
+          title: Steps
+          type: integer
+        target:
+          description: 目标变量
+          title: Target
+          type: string
+      required:
+      - data
+      - target
+      title: XGBoostInput
+      type: object
+info:
+  description: 中国城市经济数据 REST API：35 城、16 年指标、集成预测与企业/政府/产业分析。
+  license:
+    name: GPL-3.0-or-later
+    url: https://www.gnu.org/licenses/gpl-3.0.html
+  title: Urban Pulse
+  version: 1.0.0
+openapi: 3.1.0
+paths:
+  /:
+    get:
+      operationId: root__get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      summary: Root
+      tags:
+      - 根路径
+  /api/v1/analysis/config:
+    get:
+      description: 获取分析平台的默认配置。
+      operationId: get_analysis_config_api_v1_analysis_config_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      summary: 获取分析配置
+      tags:
+      - 企业端
+  /api/v1/analysis/enterprise:
+    post:
+      description: 基于真实城市数据，对企业选址进行成本、供应链、政策环境评分。
+      operationId: enterprise_analysis_api_v1_analysis_enterprise_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalysisRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 企业端综合分析
+      tags:
+      - 企业端
+  /api/v1/analysis/enterprise/case/semiconductor:
+    get:
+      description: 半导体制造企业选址案例分析。
+      operationId: get_semiconductor_case_api_v1_analysis_enterprise_case_semiconductor_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Get Semiconductor Case Api V1 Analysis Enterprise
+                  Case Semiconductor Get
+                type: object
+          description: Successful Response
+      summary: 半导体企业选址案例
+      tags:
+      - 企业端
+  /api/v1/analysis/enterprise/compare:
+    post:
+      description: 对比多个城市的企业选址友好度。
+      operationId: compare_enterprises_api_v1_analysis_enterprise_compare_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                type: string
+              title: City Names
+              type: array
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Compare Enterprises Api V1 Analysis Enterprise Compare
+                  Post
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 多城市企业选址对比
+      tags:
+      - 企业端
+  /api/v1/analysis/enterprise/location/{city_name}:
+    get:
+      description: 分析指定城市的企业选址友好度。
+      operationId: analyze_enterprise_location_api_v1_analysis_enterprise_location__city_name__get
+      parameters:
+      - in: path
+        name: city_name
+        required: true
+        schema:
+          title: City Name
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Analyze Enterprise Location Api V1 Analysis Enterprise
+                  Location  City Name  Get
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 企业选址分析
+      tags:
+      - 企业端
+  /api/v1/analysis/enterprise/sample:
+    get:
+      description: 返回企业端分析所需的指标模板，可在此基础上修改后提交分析。
+      operationId: get_enterprise_sample_data_api_v1_analysis_enterprise_sample_get
+      parameters:
+      - in: query
+        name: region
+        required: false
+        schema:
+          default: 深圳
+          title: Region
+          type: string
+      - in: query
+        name: industry
+        required: false
+        schema:
+          default: 半导体
+          title: Industry
+          type: string
+      - in: query
+        name: year
+        required: false
+        schema:
+          default: 2025
+          title: Year
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 获取企业端示例数据
+      tags:
+      - 企业端
+  /api/v1/analysis/government:
+    post:
+      description: 基于真实城市数据，评估财政杠杆、产业带动效应与产业链完整性。
+      operationId: government_analysis_api_v1_analysis_government_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalysisRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 政府端产业分析
+      tags:
+      - 企业端
+      - 政府端
+  /api/v1/cities/aggregate:
+    post:
+      description: '数据聚合分析(基于真实注册城市数据)
+
+
+        支持按 city_code / year / indicator / province 等字段分组;
+
+        metrics 支持 count / sum / avg / min / max / median / std。'
+      operationId: aggregate_data_api_v1_cities_aggregate_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AggregationRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 数据聚合分析
+      tags:
+      - 城市
+  /api/v1/cities/benchmarks/scores:
+    get:
+      description: 获取评分系统的基准值与权重。
+      operationId: get_scoring_benchmarks_api_v1_cities_benchmarks_scores_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Get Scoring Benchmarks Api V1 Cities Benchmarks Scores
+                  Get
+                type: object
+          description: Successful Response
+      summary: 获取评分基准
+      tags:
+      - 城市
+  /api/v1/cities/compare:
+    post:
+      description: '城市对比分析(基于真实注册城市数据)
+
+
+        对比多个城市在指定指标上的表现;数据空集时返回 503。'
+      operationId: compare_cities_api_v1_cities_compare_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CitiesCompareRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 城市对比分析
+      tags:
+      - 城市
+  /api/v1/cities/correlation:
+    post:
+      description: 指标相关性分析(基于真实注册城市数据)
+      operationId: correlation_analysis_api_v1_cities_correlation_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorrelationRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 相关性分析
+      tags:
+      - 城市
+  /api/v1/cities/dashboard:
+    get:
+      description: 获取城市仪表盘数据(基于真实注册城市数据)
+      operationId: get_city_dashboard_api_v1_cities_dashboard_get
+      parameters:
+      - description: 城市代码
+        in: query
+        name: city_code
+        required: true
+        schema:
+          description: 城市代码
+          minLength: 1
+          title: City Code
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 城市仪表盘
+      tags:
+      - 城市
+  /api/v1/cities/list:
+    get:
+      description: 获取系统支持的所有城市列表。
+      operationId: list_cities_api_v1_cities_list_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response List Cities Api V1 Cities List Get
+                type: object
+          description: Successful Response
+      summary: 获取所有城市列表
+      tags:
+      - 城市
+  /api/v1/cities/quality/report:
+    get:
+      description: 获取完整的数据质量评估报告。
+      operationId: get_data_quality_report_api_v1_cities_quality_report_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Get Data Quality Report Api V1 Cities Quality Report
+                  Get
+                type: object
+          description: Successful Response
+      summary: 获取数据质量报告
+      tags:
+      - 城市
+  /api/v1/cities/rankings:
+    get:
+      description: 获取城市排名(基于真实注册城市数据)
+      operationId: get_city_rankings_api_v1_cities_rankings_get
+      parameters:
+      - description: 指标代码
+        in: query
+        name: indicator
+        required: false
+        schema:
+          default: gdp
+          description: 指标代码
+          minLength: 1
+          title: Indicator
+          type: string
+      - description: 年份
+        in: query
+        name: year
+        required: false
+        schema:
+          anyOf:
+          - maximum: 2200
+            minimum: 1900
+            type: integer
+          - type: 'null'
+          description: 年份
+          title: Year
+      - description: 返回数量
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 10
+          description: 返回数量
+          maximum: 100
+          minimum: 1
+          title: Limit
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 城市排名
+      tags:
+      - 城市
+  /api/v1/cities/regional:
+    post:
+      description: 区域分析(基于真实注册城市数据)
+      operationId: regional_analysis_api_v1_cities_regional_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegionalRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 区域分析
+      tags:
+      - 城市
+  /api/v1/cities/time-series:
+    post:
+      description: 时间序列分析(基于真实注册城市数据)
+      operationId: time_series_analysis_api_v1_cities_time_series_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeSeriesRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 时间序列分析
+      tags:
+      - 城市
+  /api/v1/cities/{city_name}:
+    get:
+      description: 获取指定城市的详细数据。
+      operationId: get_city_detail_api_v1_cities__city_name__get
+      parameters:
+      - in: path
+        name: city_name
+        required: true
+        schema:
+          title: City Name
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Get City Detail Api V1 Cities  City Name  Get
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 获取指定城市详情
+      tags:
+      - 城市
+  /api/v1/cities/{city_name}/historical:
+    get:
+      description: 获取指定城市的历史时间序列数据。
+      operationId: get_city_historical_api_v1_cities__city_name__historical_get
+      parameters:
+      - in: path
+        name: city_name
+        required: true
+        schema:
+          title: City Name
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Get City Historical Api V1 Cities  City Name  Historical
+                  Get
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 获取城市历史数据
+      tags:
+      - 城市
+  /api/v1/data/:
+    get:
+      description: 查询经济指标列表
+      operationId: list_indicators_api_v1_data__get
+      parameters:
+      - description: 指标代码
+        in: query
+        name: code
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 指标代码
+          title: Code
+      - description: 类别
+        in: query
+        name: category
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 类别
+          title: Category
+      - description: 年份
+        in: query
+        name: year
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: 年份
+          title: Year
+      - description: 地区
+        in: query
+        name: region
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 地区
+          title: Region
+      - description: 页码
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          description: 页码
+          minimum: 1
+          title: Page
+          type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        required: false
+        schema:
+          default: 20
+          description: 每页数量
+          maximum: 100
+          minimum: 1
+          title: Page Size
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 查询指标列表
+      tags:
+      - 数据
+    post:
+      description: 创建单条经济指标记录(示例内存存储,生产环境应替换为持久化层)
+      operationId: create_indicator_api_v1_data__post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IndicatorCreate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicator'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 创建指标记录
+      tags:
+      - 数据
+  /api/v1/data/basic:
+    get:
+      description: 获取深圳半导体产业基础数据
+      operationId: get_basic_data_api_v1_data_basic_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      summary: 获取基础数据
+      tags:
+      - 数据
+  /api/v1/data/categories/list:
+    get:
+      description: 获取所有指标类别
+      operationId: list_categories_api_v1_data_categories_list_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      summary: 获取所有类别
+      tags:
+      - 数据
+  /api/v1/data/codes/list:
+    get:
+      description: 获取所有指标代码
+      operationId: list_codes_api_v1_data_codes_list_get
+      parameters:
+      - in: query
+        name: category
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Category
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 获取所有指标代码
+      tags:
+      - 数据
+  /api/v1/data/map:
+    get:
+      description: 获取产业地图数据(示例数据)
+      operationId: get_map_data_api_v1_data_map_get
+      parameters:
+      - in: query
+        name: indicator
+        required: false
+        schema:
+          default: output
+          title: Indicator
+          type: string
+      - in: query
+        name: year
+        required: false
+        schema:
+          default: 2025
+          maximum: 2200
+          minimum: 1900
+          title: Year
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 获取地图数据
+      tags:
+      - 数据
+  /api/v1/data/trend:
+    get:
+      description: 获取产业趋势数据(示例数据)
+      operationId: get_trend_data_api_v1_data_trend_get
+      parameters:
+      - in: query
+        name: region
+        required: false
+        schema:
+          default: 深圳
+          title: Region
+          type: string
+      - in: query
+        name: industry
+        required: false
+        schema:
+          default: 半导体
+          title: Industry
+          type: string
+      - in: query
+        name: start_year
+        required: false
+        schema:
+          default: 2020
+          maximum: 2200
+          minimum: 1900
+          title: Start Year
+          type: integer
+      - in: query
+        name: end_year
+        required: false
+        schema:
+          default: 2025
+          maximum: 2200
+          minimum: 1900
+          title: End Year
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 获取趋势数据
+      tags:
+      - 数据
+  /api/v1/data/{indicator_id}:
+    get:
+      description: 获取单个经济指标详情
+      operationId: get_indicator_api_v1_data__indicator_id__get
+      parameters:
+      - in: path
+        name: indicator_id
+        required: true
+        schema:
+          title: Indicator Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicator'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 获取单个指标
+      tags:
+      - 数据
+  /api/v1/datasets:
+    get:
+      description: Return all datasets, newest first.
+      operationId: list_all_datasets_api_v1_datasets_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      summary: 数据集列表
+      tags:
+      - 数据集
+  /api/v1/datasets/upload:
+    post:
+      description: Upload a CSV or JSON file. Auto-detects entity/time/indicator columns.
+      operationId: upload_dataset_api_v1_datasets_upload_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_upload_dataset_api_v1_datasets_upload_post'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 上传 CSV / JSON 数据
+      tags:
+      - 数据集
+  /api/v1/datasets/{dataset_id}:
+    delete:
+      description: Delete a dataset and all its records.
+      operationId: delete_dataset_endpoint_api_v1_datasets__dataset_id__delete
+      parameters:
+      - in: path
+        name: dataset_id
+        required: true
+        schema:
+          title: Dataset Id
+          type: string
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 删除数据集
+      tags:
+      - 数据集
+    get:
+      description: Return dataset metadata + column info.
+      operationId: get_dataset_detail_api_v1_datasets__dataset_id__get
+      parameters:
+      - in: path
+        name: dataset_id
+        required: true
+        schema:
+          title: Dataset Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 数据集详情
+      tags:
+      - 数据集
+    put:
+      description: Update dataset name and/or description.
+      operationId: update_dataset_meta_api_v1_datasets__dataset_id__put
+      parameters:
+      - in: path
+        name: dataset_id
+        required: true
+        schema:
+          title: Dataset Id
+          type: string
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMetaRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 更新数据集元信息
+      tags:
+      - 数据集
+  /api/v1/datasets/{dataset_id}/data:
+    get:
+      description: Return raw records with optional filters.
+      operationId: get_dataset_data_api_v1_datasets__dataset_id__data_get
+      parameters:
+      - in: path
+        name: dataset_id
+        required: true
+        schema:
+          title: Dataset Id
+          type: string
+      - in: query
+        name: entity
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Entity
+      - in: query
+        name: indicator
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Indicator
+      - in: query
+        name: year_start
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Year Start
+      - in: query
+        name: year_end
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Year End
+      - in: query
+        name: limit
+        required: false
+        schema:
+          default: 200
+          maximum: 5000
+          minimum: 1
+          title: Limit
+          type: integer
+      - in: query
+        name: offset
+        required: false
+        schema:
+          default: 0
+          minimum: 0
+          title: Offset
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 原始数据
+      tags:
+      - 数据集
+  /api/v1/datasets/{dataset_id}/entities:
+    get:
+      description: Return all distinct entity names.
+      operationId: list_dataset_entities_api_v1_datasets__dataset_id__entities_get
+      parameters:
+      - in: path
+        name: dataset_id
+        required: true
+        schema:
+          title: Dataset Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 实体列表
+      tags:
+      - 数据集
+  /api/v1/datasets/{dataset_id}/indicators:
+    get:
+      description: Return all distinct indicator names.
+      operationId: list_dataset_indicators_api_v1_datasets__dataset_id__indicators_get
+      parameters:
+      - in: path
+        name: dataset_id
+        required: true
+        schema:
+          title: Dataset Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 指标列表
+      tags:
+      - 数据集
+  /api/v1/datasets/{dataset_id}/pivot:
+    get:
+      description: Return pivoted table (entity × indicators as columns).
+      operationId: get_dataset_pivot_api_v1_datasets__dataset_id__pivot_get
+      parameters:
+      - in: path
+        name: dataset_id
+        required: true
+        schema:
+          title: Dataset Id
+          type: string
+      - description: Comma-separated indicator names
+        in: query
+        name: indicators
+        required: false
+        schema:
+          description: Comma-separated indicator names
+          title: Indicators
+          type: string
+      - description: Comma-separated entity names
+        in: query
+        name: entities
+        required: false
+        schema:
+          description: Comma-separated entity names
+          title: Entities
+          type: string
+      - in: query
+        name: year
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Year
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 透视数据
+      tags:
+      - 数据集
+  /api/v1/forecast/archives:
+    get:
+      description: 列出所有预测快照，支持城市、指标、模型筛选与待回填过滤。
+      operationId: list_archives_api_v1_forecast_archives_get
+      parameters:
+      - description: 按城市筛选
+        in: query
+        name: city_code
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 按城市筛选
+          title: City Code
+      - description: 按指标筛选
+        in: query
+        name: indicator
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 按指标筛选
+          title: Indicator
+      - description: 按模型筛选
+        in: query
+        name: model
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 按模型筛选
+          title: Model
+      - description: 仅返回待回填真实值的快照
+        in: query
+        name: pending_only
+        required: false
+        schema:
+          default: false
+          description: 仅返回待回填真实值的快照
+          title: Pending Only
+          type: boolean
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response List Archives Api V1 Forecast Archives Get
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 列出预测存档
+      tags:
+      - 预测存档
+    post:
+      description: '对指定城市指标运行预测，并将每年的预测结果保存为快照。
+
+
+        返回创建的预测快照列表，可用于后续真实值回填与准确率验证。'
+      operationId: create_archive_api_v1_forecast_archives_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArchiveCreateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ArchiveSnapshotOut'
+                title: Response Create Archive Api V1 Forecast Archives Post
+                type: array
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 运行预测并一键存档
+      tags:
+      - 预测存档
+  /api/v1/forecast/archives/backfill-by-match:
+    post:
+      description: '按 model + city_code + indicator + target_year 批量匹配并回填真实值。
+
+
+        返回成功回填的记录数。'
+      operationId: backfill_by_match_api_v1_forecast_archives_backfill_by_match_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BackfillByMatchRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Backfill By Match Api V1 Forecast Archives Backfill
+                  By Match Post
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 按条件批量回填真实值
+      tags:
+      - 预测存档
+  /api/v1/forecast/archives/{forecast_id}:
+    delete:
+      description: 删除指定 forecast_id 的预测快照。
+      operationId: delete_archive_api_v1_forecast_archives__forecast_id__delete
+      parameters:
+      - in: path
+        name: forecast_id
+        required: true
+        schema:
+          title: Forecast Id
+          type: string
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Delete Archive Api V1 Forecast Archives  Forecast
+                  Id  Delete
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 删除预测快照
+      tags:
+      - 预测存档
+    get:
+      description: 按 forecast_id 获取预测快照详情。
+      operationId: get_archive_api_v1_forecast_archives__forecast_id__get
+      parameters:
+      - in: path
+        name: forecast_id
+        required: true
+        schema:
+          title: Forecast Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArchiveSnapshotOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 获取单个预测快照
+      tags:
+      - 预测存档
+  /api/v1/forecast/archives/{forecast_id}/backfill:
+    post:
+      description: 为指定 forecast_id 回填真实值，用于后续准确率验证。
+      operationId: backfill_archive_api_v1_forecast_archives__forecast_id__backfill_post
+      parameters:
+      - in: path
+        name: forecast_id
+        required: true
+        schema:
+          title: Forecast Id
+          type: string
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BackfillRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArchiveSnapshotOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 回填单个快照真实值
+      tags:
+      - 预测存档
+  /api/v1/forecast/compare:
+    post:
+      description: 对比多个城市 × 同一指标 的预测结果。
+      operationId: compare_city_forecasts_api_v1_forecast_compare_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompareRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Compare City Forecasts Api V1 Forecast Compare Post
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 多城市 × 单指标 预测对比
+      tags:
+      - 预测
+  /api/v1/forecast/gdp/{city_name}:
+    get:
+      description: '兼容旧端点:预测指定城市 GDP。
+
+        内部走新的 forecast_city_indicator 逻辑,真实置信区间。'
+      operationId: forecast_city_gdp_api_v1_forecast_gdp__city_name__get
+      parameters:
+      - in: path
+        name: city_name
+        required: true
+        schema:
+          title: City Name
+          type: string
+      - description: 预测年数
+        in: query
+        name: forecast_years
+        required: false
+        schema:
+          default: 5
+          description: 预测年数
+          maximum: 20
+          minimum: 1
+          title: Forecast Years
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Forecast City Gdp Api V1 Forecast Gdp  City Name  Get
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: '[兼容] 预测城市 GDP'
+      tags:
+      - 预测
+  /api/v1/forecast/indicator/{city_name}:
+    get:
+      description: 预测指定城市 × 任意指标的未来 years 年值。
+      operationId: forecast_city_indicator_endpoint_api_v1_forecast_indicator__city_name__get
+      parameters:
+      - in: path
+        name: city_name
+        required: true
+        schema:
+          title: City Name
+          type: string
+      - description: '指标代码,支持: data_quality, fiscal_revenue, gdp, gdp_growth, industry_high_tech_ratio,
+          land_price, local_support_rate, policy_coverage, population, rd_intensity,
+          rd_subsidy, supplier_count, tax_reduction'
+        in: query
+        name: indicator
+        required: false
+        schema:
+          default: gdp
+          description: '指标代码,支持: data_quality, fiscal_revenue, gdp, gdp_growth, industry_high_tech_ratio,
+            land_price, local_support_rate, policy_coverage, population, rd_intensity,
+            rd_subsidy, supplier_count, tax_reduction'
+          title: Indicator
+          type: string
+      - description: 预测年数
+        in: query
+        name: forecast_years
+        required: false
+        schema:
+          default: 5
+          description: 预测年数
+          maximum: 20
+          minimum: 1
+          title: Forecast Years
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Forecast City Indicator Endpoint Api V1 Forecast Indicator  City
+                  Name  Get
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 预测城市任意指标
+      tags:
+      - 预测
+  /api/v1/forecast/indicators:
+    get:
+      description: 列出所有可作为预测目标的指标(用于前端下拉框)
+      operationId: list_supported_indicators_api_v1_forecast_indicators_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response List Supported Indicators Api V1 Forecast Indicators
+                  Get
+                type: object
+          description: Successful Response
+      summary: 列出所有支持的预测指标
+      tags:
+      - 预测
+  /api/v1/forecast/province/all:
+    get:
+      description: '一次性对所有 7 个省份 × 1 个指标做"过去发展找规律 + 未来预测"。
+
+
+        适合:
+
+        - 数学建模课程的"按省份 GDP 演化"展示
+
+        - 政策评估报告的横向对比
+
+        - 政府决策者一页看完全国趋势
+
+
+        注意:此路由必须在 `/province/{province_name}` 之前,否则会被路径参数
+
+        `province_name="all"` 抢先匹配。FastAPI 按声明顺序匹配,先到先得。'
+      operationId: forecast_all_provinces_endpoint_api_v1_forecast_province_all_get
+      parameters:
+      - description: 要预测的指标
+        in: query
+        name: indicator
+        required: false
+        schema:
+          default: gdp
+          description: 要预测的指标
+          title: Indicator
+          type: string
+      - description: 预测年数
+        in: query
+        name: forecast_years
+        required: false
+        schema:
+          default: 5
+          description: 预测年数
+          maximum: 20
+          minimum: 1
+          title: Forecast Years
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Forecast All Provinces Endpoint Api V1 Forecast Province
+                  All Get
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 全 7 省 × 单指标 批量预测报告
+      tags:
+      - 预测
+  /api/v1/forecast/province/{province_name}:
+    post:
+      description: '对指定省份 × 指定指标,先把省内各城市历史数据按"绝对量求和/率加权"
+
+        聚合,再对未来 years 年做预测。'
+      operationId: forecast_province_endpoint_api_v1_forecast_province__province_name__post
+      parameters:
+      - in: path
+        name: province_name
+        required: true
+        schema:
+          title: Province Name
+          type: string
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProvinceRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Forecast Province Endpoint Api V1 Forecast Province  Province
+                  Name  Post
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 省级 × 单指标 聚合 + 预测
+      tags:
+      - 预测
+  /api/v1/forecast/provinces:
+    get:
+      description: 从 cities.yaml 反推省份→城市映射,列出可预测的省份。
+      operationId: list_supported_provinces_api_v1_forecast_provinces_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response List Supported Provinces Api V1 Forecast Provinces
+                  Get
+                type: object
+          description: Successful Response
+      summary: 列出所有支持预测的省份
+      tags:
+      - 预测
+  /api/v1/forecast/report/full:
+    get:
+      description: 城市级完整预测报告 — 8 个城市 × 单指标批量预测。
+      operationId: get_full_forecast_report_api_v1_forecast_report_full_get
+      parameters:
+      - description: 默认 gdp
+        in: query
+        name: indicator
+        required: false
+        schema:
+          default: gdp
+          description: 默认 gdp
+          title: Indicator
+          type: string
+      - in: query
+        name: forecast_years
+        required: false
+        schema:
+          default: 5
+          maximum: 20
+          minimum: 1
+          title: Forecast Years
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Get Full Forecast Report Api V1 Forecast Report Full
+                  Get
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 完整预测报告(8 城 × 1 指标)
+      tags:
+      - 预测
+  /api/v1/health/benchmark:
+    post:
+      description: 将目标城市与一组对标城市进行 CEHI 综合得分排名、相似城市与最佳实践差距分析。
+      operationId: benchmark_cehi_api_v1_health_benchmark_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BenchmarkRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BenchmarkResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 城市 CEHI 对标
+      tags:
+      - 健康指数
+  /api/v1/health/calculate:
+    post:
+      description: 根据传入的城市指标原始值，计算该城市的 CEHI 综合得分、维度得分、健康等级与短板建议。
+      operationId: calculate_cehi_api_v1_health_calculate_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalculateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CEHIResultOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 计算 CEHI
+      tags:
+      - 健康指数
+  /api/v1/health/demo:
+    get:
+      description: 返回使用内置示例数据计算的 CEHI 结果，便于快速体验接口返回结构。
+      operationId: get_demo_api_v1_health_demo_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CEHIResultOut'
+          description: Successful Response
+      summary: 示例城市 CEHI 结果
+      tags:
+      - 健康指数
+  /api/v1/health/import:
+    post:
+      description: 上传 CEHI 指标数据文件，解析后返回有效指标值、缺失指标与无效值信息。
+      operationId: import_indicators_api_v1_health_import_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_import_indicators_api_v1_health_import_post'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 导入 CEHI 指标数据
+      tags:
+      - 健康指数
+  /api/v1/health/indicators:
+    get:
+      description: 返回完整的 CEHI 指标体系，包括维度、指标、阈值、权重与健康等级。
+      operationId: get_indicators_api_v1_health_indicators_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndicatorsResponse'
+          description: Successful Response
+      summary: 获取 CEHI 指标体系
+      tags:
+      - 健康指数
+  /api/v1/health/report/pdf:
+    post:
+      description: 接收与 /calculate 相同的请求体，生成并返回 CEHI PDF 诊断报告。
+      operationId: export_cehi_pdf_api_v1_health_report_pdf_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalculateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 导出 CEHI PDF 诊断报告
+      tags:
+      - 健康指数
+  /api/v1/health/template:
+    get:
+      description: 下载 CEHI 指标录入模板（Excel 或 CSV），包含全部指标定义与空 value 列。
+      operationId: download_template_api_v1_health_template_get
+      parameters:
+      - description: 模板格式：xlsx 或 csv
+        in: query
+        name: format
+        required: false
+        schema:
+          default: xlsx
+          description: 模板格式：xlsx 或 csv
+          enum:
+          - xlsx
+          - csv
+          title: Format
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 下载 CEHI 指标录入模板
+      tags:
+      - 健康指数
+  /api/v1/index/compute:
+    post:
+      description: '计算综合竞争力指数
+
+
+        - city_codes: 可选，指定城市名称列表，默认全部
+
+        - method: "entropy"（熵权法，默认）或 "default"（等权）'
+      operationId: compute_index_api_v1_index_compute_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComputeRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Compute Index
+      tags:
+      - 竞争力指数
+  /api/v1/index/rankings:
+    get:
+      description: '获取排名列表
+
+
+        - dimension: 可选，指定维度名（如 "科技力"），默认返回综合排名'
+      operationId: get_rankings_api_v1_index_rankings_get
+      parameters:
+      - in: query
+        name: dimension
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Dimension
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Rankings
+      tags:
+      - 竞争力指数
+  /api/v1/index/report/{city}:
+    post:
+      description: 单城市竞争力分析报告
+      operationId: city_report_api_v1_index_report__city__post
+      parameters:
+      - in: path
+        name: city
+        required: true
+        schema:
+          title: City
+          type: string
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: City Report
+      tags:
+      - 竞争力指数
+  /api/v1/industries:
+    get:
+      description: 列出产业，支持按区域过滤。
+      operationId: list_industries_api_v1_industries_get
+      parameters:
+      - description: 按区域编码过滤
+        in: query
+        name: region_code
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 按区域编码过滤
+          title: Region Code
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response List Industries Api V1 Industries Get
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 列出产业
+      tags:
+      - 产业
+    post:
+      description: 注册一个新的产业实体。
+      operationId: create_industry_api_v1_industries_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IndustryCreateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Create Industry Api V1 Industries Post
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 注册产业
+      tags:
+      - 产业
+  /api/v1/industries/summary:
+    get:
+      description: 返回当前注册的产业总数及按区域分布。
+      operationId: industry_summary_api_v1_industries_summary_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Industry Summary Api V1 Industries Summary Get
+                type: object
+          description: Successful Response
+      summary: 产业覆盖总览
+      tags:
+      - 产业
+  /api/v1/industries/{region_code}/{industry_code}:
+    get:
+      description: 获取指定区域下某产业的完整信息。
+      operationId: get_industry_api_v1_industries__region_code___industry_code__get
+      parameters:
+      - in: path
+        name: region_code
+        required: true
+        schema:
+          title: Region Code
+          type: string
+      - in: path
+        name: industry_code
+        required: true
+        schema:
+          title: Industry Code
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Get Industry Api V1 Industries  Region Code   Industry
+                  Code  Get
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 获取产业详情
+      tags:
+      - 产业
+  /api/v1/industries/{region_code}/{industry_code}/forecast:
+    post:
+      description: '对指定产业做未来 N 年预测。
+
+
+        模型：基准时序预测（ARIMA + ETS + LR 集成）+ 多因素增速调整。
+
+        因素包括政策支持、技术成熟度、市场需求、供应链风险、社会情绪等。'
+      operationId: forecast_industry_endpoint_api_v1_industries__region_code___industry_code__forecast_post
+      parameters:
+      - in: path
+        name: region_code
+        required: true
+        schema:
+          title: Region Code
+          type: string
+      - in: path
+        name: industry_code
+        required: true
+        schema:
+          title: Industry Code
+          type: string
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IndustryForecastRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Forecast Industry Endpoint Api V1 Industries  Region
+                  Code   Industry Code  Forecast Post
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 产业未来预测
+      tags:
+      - 产业
+  /api/v1/models/dpsr:
+    post:
+      description: DPSR 经济韧性评估：驱动力-压力-状态-响应四维框架。
+      operationId: run_dpsr_api_v1_models_dpsr_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DPSRInput'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Run Dpsr Api V1 Models Dpsr Post
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: DPSR 经济韧性评估
+      tags:
+      - 数学模型
+  /api/v1/models/list:
+    get:
+      description: 返回当前可用的数学模型列表。
+      operationId: list_models_api_v1_models_list_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response List Models Api V1 Models List Get
+                type: object
+          description: Successful Response
+      summary: 列出可用模型
+      tags:
+      - 数学模型
+  /api/v1/models/location-quotient:
+    post:
+      description: 区位商模型：识别地区专业化产业与比较优势。
+      operationId: run_location_quotient_api_v1_models_location_quotient_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LQInput'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Run Location Quotient Api V1 Models Location Quotient
+                  Post
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 区位商产业分析
+      tags:
+      - 数学模型
+  /api/v1/models/tfp:
+    post:
+      description: 基于 Cobb-Douglas 生产函数测算全要素生产率。
+      operationId: run_tfp_api_v1_models_tfp_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TFPInput'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Run Tfp Api V1 Models Tfp Post
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 全要素生产率 TFP 测算
+      tags:
+      - 数学模型
+  /api/v1/models/var:
+    post:
+      description: 向量自回归模型：分析多变量联动关系并预测未来走势。
+      operationId: run_var_api_v1_models_var_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VARInput'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Run Var Api V1 Models Var Post
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: VAR 多变量预测
+      tags:
+      - 数学模型
+  /api/v1/models/xgboost:
+    post:
+      description: 基于梯度提升的多因素非线性预测。
+      operationId: run_xgboost_api_v1_models_xgboost_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/XGBoostInput'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Run Xgboost Api V1 Models Xgboost Post
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: XGBoost 非线性预测
+      tags:
+      - 数学模型
+  /api/v1/regions:
+    get:
+      description: 列出区域，支持层级、大区、父区域、可预测性过滤。
+      operationId: list_regions_api_v1_regions_get
+      parameters:
+      - description: '按层级过滤: country/province/city/district'
+        in: query
+        name: level
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/RegionLevel'
+          - type: 'null'
+          description: '按层级过滤: country/province/city/district'
+          title: Level
+      - description: 按地理大区过滤,如华东、华南
+        in: query
+        name: region
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 按地理大区过滤,如华东、华南
+          title: Region
+      - description: 按父区域编码过滤
+        in: query
+        name: parent_code
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 按父区域编码过滤
+          title: Parent Code
+      - description: 仅返回可用于预测的区域
+        in: query
+        name: forecastable
+        required: false
+        schema:
+          default: false
+          description: 仅返回可用于预测的区域
+          title: Forecastable
+          type: boolean
+      - description: 返回数量上限
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 1000
+          description: 返回数量上限
+          maximum: 5000
+          minimum: 1
+          title: Limit
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response List Regions Api V1 Regions Get
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 列出所有区域
+      tags:
+      - 区域
+  /api/v1/regions/batch/forecast:
+    post:
+      description: 对多个城市/省份批量预测同一指标，并给出排名。
+      operationId: batch_forecast_regions_api_v1_regions_batch_forecast_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchForecastRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Batch Forecast Regions Api V1 Regions Batch Forecast
+                  Post
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 批量区域预测
+      tags:
+      - 区域
+  /api/v1/regions/config/list:
+    get:
+      description: 返回所有有详细配置的城市名称列表。
+      operationId: list_region_configs_api_v1_regions_config_list_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response List Region Configs Api V1 Regions Config List Get
+                type: object
+          description: Successful Response
+      summary: 列出所有已配置区域
+      tags:
+      - 区域
+  /api/v1/regions/config/{name}:
+    get:
+      description: '获取指定区域的详细配置，包括：
+
+        - 行政区划（区县、开发区）
+
+        - 指标权重
+
+        - 经济特征标签
+
+        - 基准数据
+
+        - 数据来源'
+      operationId: get_region_config_detail_api_v1_regions_config__name__get
+      parameters:
+      - in: path
+        name: name
+        required: true
+        schema:
+          title: Name
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Get Region Config Detail Api V1 Regions Config  Name  Get
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 获取区域配置详情
+      tags:
+      - 区域
+  /api/v1/regions/config/{name}/benchmarks:
+    get:
+      description: 获取指定区域的基准数据（人均GDP、平均工资、工业效率等）。
+      operationId: get_region_benchmarks_api_v1_regions_config__name__benchmarks_get
+      parameters:
+      - in: path
+        name: name
+        required: true
+        schema:
+          title: Name
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Get Region Benchmarks Api V1 Regions Config  Name  Benchmarks
+                  Get
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 获取区域基准数据
+      tags:
+      - 区域
+  /api/v1/regions/config/{name}/districts:
+    get:
+      description: 获取指定区域的区县和开发区列表。
+      operationId: get_region_districts_api_v1_regions_config__name__districts_get
+      parameters:
+      - in: path
+        name: name
+        required: true
+        schema:
+          title: Name
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Get Region Districts Api V1 Regions Config  Name  Districts
+                  Get
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 获取区域行政区划
+      tags:
+      - 区域
+  /api/v1/regions/summary:
+    get:
+      description: 返回当前注册的区域总数、层级分布、可预测区域数、地理大区列表。
+      operationId: region_summary_api_v1_regions_summary_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Region Summary Api V1 Regions Summary Get
+                type: object
+          description: Successful Response
+      summary: 区域覆盖总览
+      tags:
+      - 区域
+  /api/v1/regions/survey/upload:
+    post:
+      description: '上传社会实践或调查数据文件，按标准格式（region_code, year, indicator, value）
+
+        挂接到已有区域。这是开放数据社区的核心贡献入口之一。'
+      operationId: upload_survey_data_api_v1_regions_survey_upload_post
+      parameters:
+      - description: 是否覆盖已有同名调查指标
+        in: query
+        name: overwrite
+        required: false
+        schema:
+          default: false
+          description: 是否覆盖已有同名调查指标
+          title: Overwrite
+          type: boolean
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_upload_survey_data_api_v1_regions_survey_upload_post'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Upload Survey Data Api V1 Regions Survey Upload Post
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 上传调查数据
+      tags:
+      - 区域
+  /api/v1/regions/{code}:
+    get:
+      description: 按区域编码获取完整信息，包括指标快照、历史时序、元数据。
+      operationId: get_region_api_v1_regions__code__get
+      parameters:
+      - in: path
+        name: code
+        required: true
+        schema:
+          title: Code
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Get Region Api V1 Regions  Code  Get
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 获取区域详情
+      tags:
+      - 区域
+  /api/v1/regions/{code}/forecast/{indicator}:
+    get:
+      description: 对指定区域（目前仅 city 层级实现）的某指标做未来 N 年预测。
+      operationId: forecast_region_indicator_api_v1_regions__code__forecast__indicator__get
+      parameters:
+      - in: path
+        name: code
+        required: true
+        schema:
+          title: Code
+          type: string
+      - in: path
+        name: indicator
+        required: true
+        schema:
+          title: Indicator
+          type: string
+      - description: 预测年数
+        in: query
+        name: forecast_years
+        required: false
+        schema:
+          default: 5
+          description: 预测年数
+          maximum: 20
+          minimum: 1
+          title: Forecast Years
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Forecast Region Indicator Api V1 Regions  Code  Forecast  Indicator  Get
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 预测区域指标
+      tags:
+      - 区域
+  /api/v1/regions/{code}/survey:
+    get:
+      description: 返回某区域已挂载的社会实践/调查指标列表或单个指标时序。
+      operationId: get_region_survey_indicators_api_v1_regions__code__survey_get
+      parameters:
+      - in: path
+        name: code
+        required: true
+        schema:
+          title: Code
+          type: string
+      - description: 指定调查指标名
+        in: query
+        name: indicator
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 指定调查指标名
+          title: Indicator
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Get Region Survey Indicators Api V1 Regions  Code  Survey
+                  Get
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 获取区域调查指标
+      tags:
+      - 区域
+  /api/v1/regions/{code}/time-series/{indicator}:
+    get:
+      description: 获取指定区域某指标的历史时间序列。
+      operationId: get_region_time_series_api_v1_regions__code__time_series__indicator__get
+      parameters:
+      - in: path
+        name: code
+        required: true
+        schema:
+          title: Code
+          type: string
+      - in: path
+        name: indicator
+        required: true
+        schema:
+          title: Indicator
+          type: string
+      - description: 起始年份
+        in: query
+        name: start_year
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: 起始年份
+          title: Start Year
+      - description: 结束年份
+        in: query
+        name: end_year
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: 结束年份
+          title: End Year
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Get Region Time Series Api V1 Regions  Code  Time
+                  Series  Indicator  Get
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 获取区域某指标时序
+      tags:
+      - 区域
+  /api/v1/risk/analyze:
+    post:
+      description: "对指定城市 × 指定指标进行综合风险分析。\n\n返回：滚动波动率、GARCH 条件波动率（若安装 arch 库）、VaR\
+        \ 95/99、\n      四档情景预测、蒙特卡洛 P5/P50/P95 分位及尾部风险概率。"
+      operationId: analyze_risk_api_v1_risk_analyze_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RiskAnalyzeRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskAnalyzeResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 城市经济指标风险分析
+      tags:
+      - 风险分析
+  /api/v1/risk/indicators:
+    get:
+      description: 返回风险分析支持的指标列表（与预测指标一致）。
+      operationId: list_risk_indicators_api_v1_risk_indicators_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response List Risk Indicators Api V1 Risk Indicators Get
+                type: object
+          description: Successful Response
+      summary: 列出风险分析支持的指标
+      tags:
+      - 风险分析
+  /api/v1/static/charts/list:
+    get:
+      description: 列出所有可用图表（必须声明在 /charts/{filename} 之前，避免被路径参数吞掉）。
+      operationId: list_charts_api_v1_static_charts_list_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      summary: List Charts
+      tags:
+      - 静态
+  /api/v1/static/charts/{filename}:
+    get:
+      description: 获取分析图表
+      operationId: get_chart_api_v1_static_charts__filename__get
+      parameters:
+      - in: path
+        name: filename
+        required: true
+        schema:
+          title: Filename
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Chart
+      tags:
+      - 静态
+  /api/v1/validation/dashboard:
+    get:
+      description: 渲染可嵌入 GitHub Pages 的静态 HTML 验证仪表板。
+      operationId: validation_dashboard_api_v1_validation_dashboard_get
+      responses:
+        '200':
+          content:
+            text/html:
+              schema:
+                type: string
+          description: Successful Response
+      summary: 验证仪表板（HTML）
+      tags:
+      - 预测验证
+  /api/v1/validation/dashboard-download:
+    get:
+      description: 下载验证仪表板 HTML 文件。
+      operationId: download_dashboard_api_v1_validation_dashboard_download_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      summary: 下载验证仪表板 HTML
+      tags:
+      - 预测验证
+  /api/v1/validation/metrics:
+    get:
+      description: 返回总体验证指标摘要（已回填真实值的样本）。
+      operationId: validation_metrics_api_v1_validation_metrics_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Validation Metrics Api V1 Validation Metrics Get
+                type: object
+          description: Successful Response
+      summary: 核心验证指标
+      tags:
+      - 预测验证
+  /api/v1/validation/report:
+    get:
+      description: 按模型、城市、指标维度拆分准确率，并返回置信区间命中率。
+      operationId: validation_report_api_v1_validation_report_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Validation Report Api V1 Validation Report Get
+                type: object
+          description: Successful Response
+      summary: 完整验证报告（JSON）
+      tags:
+      - 预测验证
+  /api/v1/viz/auto:
+    post:
+      description: 上传数据，自动完成画像、推荐、渲染全流程。
+      operationId: viz_auto_api_v1_viz_auto_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutoVizRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Viz Auto Api V1 Viz Auto Post
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 自动可视化
+      tags:
+      - 可视化
+  /api/v1/viz/profile:
+    post:
+      description: 分析数据集结构，返回字段类型、时间维度、实体维度、数值指标等。
+      operationId: viz_profile_api_v1_viz_profile_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataInput'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Viz Profile Api V1 Viz Profile Post
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 数据集画像
+      tags:
+      - 可视化
+  /api/v1/viz/recommend:
+    post:
+      description: 根据数据画像推荐图表类型与配置。
+      operationId: viz_recommend_api_v1_viz_recommend_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataInput'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Viz Recommend Api V1 Viz Recommend Post
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 图表推荐
+      tags:
+      - 可视化
+  /api/v1/viz/render:
+    post:
+      description: 根据通用图表配置协议，生成 ECharts option。
+      operationId: viz_render_api_v1_viz_render_post
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenderRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                title: Response Viz Render Api V1 Viz Render Post
+                type: object
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: 渲染 ECharts 配置
+      tags:
+      - 可视化
+  /dashboard:
+    get:
+      operationId: get_dashboard_dashboard_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      summary: Get Dashboard
+      tags:
+      - 页面
+  /health:
+    get:
+      operationId: health_check_health_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      summary: Health Check
+      tags:
+      - 系统
+  /viz-demo.html:
+    get:
+      operationId: get_viz_demo_viz_demo_html_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      summary: Get Viz Demo
+      tags:
+      - 页面
+tags:
+- description: 国家/省/市/区县多层级区域发现、时序与预测。
+  name: 区域
+- description: 城市列表、详情、历史数据、排名与对比。
+  name: 城市
+- description: 企业选址、成本、供应链与政策环境分析。
+  name: 企业端
+- description: 财政杠杆、产业带动与产业链完整性分析。
+  name: 政府端
+- description: 产业注册、预测与因素调整。
+  name: 产业端
+- description: 时序预测。
+  name: 预测
+- description: 预测快照存档、查询与真实值回填。
+  name: 预测存档
+- description: 预测准确率验证报告与 HTML 仪表板。
+  name: 预测验证
+- description: 波动率、VaR/CVaR、情景分析与蒙特卡洛模拟。
+  name: 风险分析
+- description: 竞争力指数计算与排名。
+  name: 指数
+- description: 数据集上传、查询、导入与导出。
+  name: 数据管理
+- description: 健康检查、元数据与静态资源。
+  name: 系统
+- description: 仪表盘与静态页面入口。
+  name: 页面

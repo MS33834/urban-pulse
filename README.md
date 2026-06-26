@@ -172,6 +172,51 @@ python scripts/build_site.py
 
 生成 `_site/` 目录，可部署到任意静态页面托管服务。
 
+## 部署
+
+### 本地开发
+
+```bash
+# 1. 安装依赖（推荐 Python 3.11–3.13）
+pip install -e ".[data,forecast,cli,dev]"
+pip install -e plugins/urban-pulse-demo
+
+# 2. 启动服务
+uvicorn backend.api.main:app --reload --port 8000
+# 或
+python -m backend.api.main
+
+# 3. 访问
+# API docs: http://localhost:8000/docs
+# Dashboard:  http://localhost:8000/dashboard
+```
+
+### Docker
+
+```bash
+docker compose up --build
+```
+
+### 生产环境注意事项
+
+- 必须设置 `SECRET_KEY`、`API_KEYS` 等环境变量，禁止沿用开发默认值。
+- `APP_ENV=production` 会自动关闭交互式文档（`/docs`、`/redoc`）。
+- 建议在 HTTPS 反向代理后启用 `ENABLE_HSTS=1` 与 `HSTS_PRELOAD=1`。
+- 日志格式可通过 `LOG_FORMAT=json` 开启结构化 JSON 输出，便于接入日志平台。
+
+### CI/CD
+
+- **GitHub Actions**: 推送/PR 至 `main` 触发 lint、typecheck、多 Python 版本测试、API 契约测试、E2E 浏览器测试、安全审计，并自动部署到 GitHub Pages。
+- **GitCode CI**: 推送/PR 至 `main` 触发 lint、test、security 与 Pages 部署。
+
+### 导出 OpenAPI
+
+```bash
+python scripts/export_openapi.py
+```
+
+生成 `openapi.json` 与 `openapi.yaml`，可用于 SDK 生成或外部文档。
+
 ## License
 
 GPL-3.0-or-later

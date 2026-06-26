@@ -88,12 +88,39 @@ class AggregationRequest(BaseModel):
     sort_order: str = Field("desc", pattern="^(asc|desc)$", description="排序顺序")
     limit: int | None = Field(None, ge=1, le=1000, description="限制数量")
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "group_by": ["city"],
+                    "metrics": ["sum"],
+                    "sort_by": "sum",
+                    "sort_order": "desc",
+                    "limit": 5,
+                }
+            ]
+        }
+    }
+
 
 class ComparisonRequest(_YearRangeModel):
     """城市对比请求"""
 
     city_codes: list[str] = Field(..., min_length=1, max_length=20, description="城市代码列表")
     indicators: list[str] = Field(..., min_length=1, max_length=10, description="要对比的指标列表")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "city_codes": ["CN-GD-SZ", "CN-SH-SH"],
+                    "indicators": ["gdp", "population"],
+                    "year_start": 2020,
+                    "year_end": 2025,
+                }
+            ]
+        }
+    }
 
 
 class TimeSeriesRequest(_YearRangeModel):
@@ -103,6 +130,19 @@ class TimeSeriesRequest(_YearRangeModel):
     indicator: str = Field(..., min_length=1, description="指标代码")
     group_by: list[str] | None = Field(None, description="分组字段")
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "city_codes": ["CN-GD-SZ", "CN-SH-SH"],
+                    "indicator": "gdp",
+                    "year_start": 2016,
+                    "year_end": 2025,
+                }
+            ]
+        }
+    }
+
 
 class RegionalRequest(BaseModel):
     """区域分析请求"""
@@ -110,12 +150,36 @@ class RegionalRequest(BaseModel):
     region_field: str = Field("province", description="区域字段名")
     indicators: list[str] | None = Field(None, description="指标列表")
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "region_field": "province",
+                    "indicators": ["gdp", "population"],
+                }
+            ]
+        }
+    }
+
 
 class CorrelationRequest(_YearRangeModel):
     """相关性分析请求"""
 
     city_codes: list[str] = Field(..., min_length=2, max_length=20, description="城市代码列表,至少 2 个")
     indicators: list[str] = Field(..., min_length=2, max_length=10, description="指标列表,至少 2 个")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "city_codes": ["CN-GD-SZ", "CN-SH-SH", "CN-BJ-BJ"],
+                    "indicators": ["gdp", "population"],
+                    "year_start": 2016,
+                    "year_end": 2025,
+                }
+            ]
+        }
+    }
 
 
 class CitiesCompareRequest(_YearRangeModel):
